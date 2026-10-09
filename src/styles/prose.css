@@ -72,7 +72,6 @@
     padding: var(--space-2xs) 0 var(--space-2xs) var(--space-l);
     border-left: var(--space-2xs) solid var(--text-muted);
     color: var(--text-muted);
-    font-style: italic;
   }
 
   & hr {

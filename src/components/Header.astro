@@ -23,6 +23,7 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
         viewBox="0 0 24 24"
         stroke="currentColor"
         stroke-width="2"
+        stroke-linecap="round"
         aria-hidden="true"
       >
         <path d="M4 6h16"></path>
@@ -79,7 +80,7 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
     font-size: var(--text-brand);
     font-weight: var(--weight-title);
     line-height: var(--leading-brand);
-    letter-spacing: -0.05em;
+    letter-spacing: var(--tracking-brand);
     white-space: nowrap;
 
     & a {
@@ -162,7 +163,7 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
   @media (prefers-reduced-motion: no-preference) {
     path,
     ul {
-      transition: 0.3s var(--ease) allow-discrete;
+      transition: var(--settle) var(--ease) allow-discrete;
       transition-property: transform, opacity, translate, display, overlay;
     }
 

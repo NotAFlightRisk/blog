@@ -8,7 +8,7 @@ html {
   scroll-padding-top: calc(var(--bar-height) + var(--space-m));
   scrollbar-color: var(--text-muted) var(--bg);
   accent-color: var(--accent);
-  caret-color: var(--accent);
+  caret-color: var(--link);
   text-size-adjust: none;
 }
 
@@ -104,6 +104,17 @@ pre {
 
   &[aria-current] {
     background: var(--button-bg-current);
+  }
+
+  /* down on the page the bar's tint vanishes, so these get a panel and fill yellow instead */
+  &.raised {
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+
+    &:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
   }
 }
 

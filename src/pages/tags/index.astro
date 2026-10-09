@@ -11,7 +11,7 @@ const tags = byTag(await getPosts());
   <ul>
     {tags.map(([tag, posts]) => (
       <li>
-        <a class="button" href={tagUrl(tag)}>
+        <a class="button raised" href={tagUrl(tag)}>
           #{tag} <span>{posts.length}</span>
         </a>
       </li>
@@ -31,14 +31,7 @@ const tags = byTag(await getPosts());
   }
 
   a {
-    background: var(--surface);
     font-size: var(--text-base);
-    box-shadow: var(--panel-shadow);
-
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
-    }
   }
 
   span {

@@ -11,7 +11,7 @@ export default defineConfig({
   trailingSlash: 'always',
   markdown,
   build: { inlineStylesheets: 'always' },
-  image: { layout: 'constrained' },
+  image: { layout: 'constrained', domains: ['i.ytimg.com'] },
   integrations: [mdx(), sitemap({ filter: (page) => !/\/(404|500|search)\/$/.test(page) })],
   fonts: [
     {

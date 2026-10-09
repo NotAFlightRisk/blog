@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+
 interface Props {
   title: string;
   youtube?: string;
@@ -8,19 +10,14 @@ interface Props {
 
 const { title, youtube, src, poster } = Astro.props;
 if (!youtube === !src) throw new Error(`<Video title="${title}"> wants a youtube id or a src`);
+// fetched at build time and served from here, so YouTube hears nothing until you press play
+const thumbnail = youtube && `https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`;
 ---
 
 <figure>
-  {youtube ? (
+  {thumbnail ? (
     <a class="facade" href={`https://www.youtube.com/watch?v=${youtube}`} data-youtube={youtube}>
-      <img
-        src={`https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`}
-        alt=""
-        width="480"
-        height="360"
-        loading="lazy"
-        decoding="async"
-      />
+      <Image src={thumbnail} alt="" inferSize />
       <span class="play">
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />

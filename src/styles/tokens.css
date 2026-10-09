@@ -48,7 +48,8 @@
   --leading-title: 1;
   --leading-brand: 0.8;
   --tracking-title: -0.04em;
-  --measure: 68ch;
+  /* about 70 characters, since Bricolage's nought is wider than most of its letters */
+  --measure: 34em;
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;
@@ -60,7 +61,7 @@
   --space-2xl: 4rem;
   --gutter: clamp(1rem, 3vw, 4rem);
   --rail: 13rem;
-  --page: 70rem;
+  --page: 60rem;
 
   --radius: 3px;
   --bar-height: 4rem;
@@ -78,7 +79,8 @@
   --separator: 1px solid var(--border);
 
   --ease: cubic-bezier(0.2, 0, 0, 1);
-  --bounce: cubic-bezier(0.25, 1.2, 0.5, 1);
+  /* peng.ly's spring, just enough to feel alive, and only the penguin gets it */
+  --peek-ease: cubic-bezier(0.25, 1.2, 0.5, 1);
   --quick: 0.15s;
   --peek: 0.8s;
   --blink-every: 7s;

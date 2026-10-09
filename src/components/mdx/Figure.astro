@@ -28,9 +28,14 @@ const width = Math.min(src.width, 720);
     margin: var(--space-l) 0;
   }
 
+  /* the hairline keeps an edge on a screenshot that's the same colour as the page */
   figure :global(img) {
+    width: 100%;
+    height: auto;
     border-radius: var(--radius);
-    box-shadow: var(--panel-shadow);
+    box-shadow:
+      var(--panel-shadow),
+      0 0 0 1px var(--border);
   }
 
   figcaption {

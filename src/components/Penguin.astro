@@ -46,7 +46,7 @@ import { site } from '../site';
 
   @media (prefers-reduced-motion: no-preference) {
     svg {
-      animation: peek var(--peek) var(--bounce) both;
+      animation: peek var(--peek) var(--peek-ease) both;
     }
 
     .eyes {
@@ -54,7 +54,7 @@ import { site } from '../site';
     }
 
     .beak {
-      transition: scale var(--quick) var(--bounce);
+      transition: scale var(--quick) var(--peek-ease);
     }
 
     /* give him a prod and he'll noot at you */

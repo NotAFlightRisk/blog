@@ -11,7 +11,20 @@ const { headings } = Astro.props;
 
 <nav aria-label="Contents">
   <details>
-    <summary>Contents</summary>
+    <summary>
+      Contents
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m9 6 6 6-6 6"></path>
+      </svg>
+    </summary>
     <ol>
       {headings.map(({ depth, slug, text }) => (
         <li class:list={{ sub: depth > 2 }}>
@@ -44,8 +57,25 @@ const { headings } = Astro.props;
   }
 
   summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     padding: var(--space-xs) var(--space-m);
+    list-style: none;
     cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+
+  svg {
+    width: var(--icon-small);
+    height: var(--icon-small);
+  }
+
+  [open] svg {
+    rotate: 90deg;
   }
 
   summary,
@@ -81,6 +111,12 @@ const { headings } = Astro.props;
       color: var(--text);
       text-decoration: underline;
       text-decoration-color: var(--accent);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    svg {
+      transition: rotate var(--quick) var(--ease);
     }
   }
 

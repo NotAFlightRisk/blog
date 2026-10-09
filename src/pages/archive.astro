@@ -11,7 +11,7 @@ const plural = posts.length === 1 ? 'post' : 'posts';
 
 <Base title="Archive" description={`Every post on the blog, ${posts.length} so far, newest first.`}>
   <Intro title="Archive">
-    Every post so far, all {posts.length} {plural} of them, newest first.
+    Every post so far, all {`${posts.length} ${plural}`} of them, newest first.
   </Intro>
   {[...years].map(([year, list]) => (
     <section aria-labelledby={`y${year}`}>

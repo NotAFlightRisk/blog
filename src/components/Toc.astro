@@ -6,11 +6,12 @@ interface Props {
 }
 
 const { headings } = Astro.props;
+// a fold on a phone and an open list in the rail, and only one of them is ever shown
 ---
 
-<nav aria-labelledby="contents">
+<nav aria-label="Contents">
   <details>
-    <summary id="contents">Contents</summary>
+    <summary>Contents</summary>
     <ol>
       {headings.map(({ depth, slug, text }) => (
         <li class:list={{ sub: depth > 2 }}>
@@ -19,6 +20,16 @@ const { headings } = Astro.props;
       ))}
     </ol>
   </details>
+  <div>
+    <p>Contents</p>
+    <ol>
+      {headings.map(({ depth, slug, text }) => (
+        <li class:list={{ sub: depth > 2 }}>
+          <a href={`#${slug}`}>{text}</a>
+        </li>
+      ))}
+    </ol>
+  </div>
 </nav>
 
 <style>
@@ -26,22 +37,34 @@ const { headings } = Astro.props;
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: var(--panel-shadow);
+
+    & ol {
+      padding: 0 var(--space-m) var(--space-s);
+    }
   }
 
   summary {
     padding: var(--space-xs) var(--space-m);
+    cursor: pointer;
+  }
+
+  summary,
+  p {
+    margin: 0;
     font-weight: var(--weight-title);
     letter-spacing: var(--tracking-title);
-    cursor: pointer;
+  }
+
+  div {
+    display: none;
   }
 
   ol {
     display: grid;
     gap: var(--space-2xs);
     margin: 0;
-    padding: 0 var(--space-m) var(--space-s);
+    padding: 0;
     list-style: none;
-    font-size: var(--text-small);
   }
 
   .sub {
@@ -61,32 +84,14 @@ const { headings } = Astro.props;
     }
   }
 
-  /* there's room in the rail on a wide screen, so it stays open and stops being a toggle */
   @media (width >= 64rem) {
-    @supports selector(::details-content) {
-      details {
-        background: none;
-        box-shadow: none;
+    details {
+      display: none;
+    }
 
-        &::details-content {
-          content-visibility: visible;
-          display: contents;
-        }
-      }
-
-      summary {
-        padding-inline: 0;
-        list-style: none;
-        pointer-events: none;
-
-        &::-webkit-details-marker {
-          display: none;
-        }
-      }
-
-      ol {
-        padding-inline: 0;
-      }
+    div {
+      display: grid;
+      gap: var(--space-xs);
     }
   }
 </style>

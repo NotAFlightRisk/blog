@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { site } from '../site';
 import { formatDate } from './format';
+import { plainMarkdown } from './plain';
 
 export type Post = CollectionEntry<'posts'>;
 
@@ -24,14 +25,11 @@ export function byTag(posts: Post[]) {
   return [...tags].sort(([a], [b]) => a.localeCompare(b));
 }
 
-// the post as plain Markdown, with its pictures pointed at the repo so they still load
+// the post as plain Markdown, with its files pointed at the repo so they still load
 export function markdownOf(post: Post) {
   const { title, description, date, tags } = post.data;
   const files = `${site.repo.replace('github.com', 'raw.githubusercontent.com')}/main/posts/${post.id}/`;
-  const body = (post.body ?? '')
-    .replace(/^import .+\n/gm, '')
-    .replace(/(\]\(|src=")\.\//g, `$1${files}`)
-    .trim();
+  const body = plainMarkdown(post.body ?? '', files);
   const meta = `${formatDate(date)} · ${tags.map((tag) => `#${tag}`).join(' ')}`;
   return `# ${title}\n\n> ${description}\n\n${meta} · ${absolute(postUrl(post))}\n\n${body}\n`;
 }

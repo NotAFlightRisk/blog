@@ -15,7 +15,7 @@ async function html(post: Post) {
   const { Content } = await render(post);
   return (await container.renderToString(Content))
     .replace(/<script[\s\S]*?<\/script>/g, '')
-    .replace(/\s(?:srcset|sizes|data-astro-cid-\w+)(?:="[^"]*")?/g, '')
+    .replace(/\s(?:srcset|sizes|data-astro-cid-\w+|data-pagefind-ignore)(?:="[^"]*")?/g, '')
     .replace(/(href|src)="#/g, `$1="${absolute(postUrl(post))}#`)
     .replace(/(href|src)="\/(?!\/)/g, `$1="${site.url}/`);
 }

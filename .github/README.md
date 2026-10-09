@@ -11,7 +11,7 @@
 
 ## About
 
-The writing bit of [peng.ly](https://peng.ly). It's a static [Astro](https://astro.build) site with no JavaScript unless a page needs it, and every post also comes as full-text RSS, plain Markdown and an [llms.txt](https://blog.peng.ly/llms.txt) entry.
+The writing bit of [peng.ly](https://peng.ly). It's a static [Astro](https://astro.build) site with hardly any JavaScript (the theme toggle, plus search and copy buttons where they're used), and every post also comes as full-text RSS, plain Markdown and an [llms.txt](https://blog.peng.ly/llms.txt) entry.
 
 ---
 

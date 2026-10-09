@@ -16,7 +16,12 @@ const thumbnail = youtube && `https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`;
 
 <figure>
   {thumbnail ? (
-    <a class="facade" href={`https://www.youtube.com/watch?v=${youtube}`} data-youtube={youtube}>
+    <a
+      class="facade"
+      href={`https://www.youtube.com/watch?v=${youtube}`}
+      data-youtube={youtube}
+      data-pagefind-ignore
+    >
       <Image src={thumbnail} alt="" inferSize />
       <span class="play">
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -103,7 +108,7 @@ const thumbnail = youtube && `https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`;
 
   @media (prefers-reduced-motion: no-preference) {
     .play {
-      transition: scale var(--quick) var(--bounce);
+      transition: scale var(--quick) var(--ease);
     }
 
     .facade:hover .play {

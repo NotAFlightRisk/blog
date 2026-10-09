@@ -1,4 +1,4 @@
-import { unified } from '@astrojs/markdown-remark';
+import { rehypeHeadingIds, unified } from '@astrojs/markdown-remark';
 import { transformerMetaHighlight } from '@shikijs/transformers';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import type { AstroUserConfig } from 'astro';
@@ -20,20 +20,29 @@ const fileName: ShikiTransformer = {
       {
         type: 'element',
         tagName: 'figure',
-        properties: { className: ['code'] },
+        properties: { className: ['code'], dataPagefindIgnore: '' },
         children: [caption, ...root.children.filter((node) => node.type === 'element')],
       },
     ];
   },
 };
 
+// code makes for unreadable search snippets, so Pagefind skips it
+const unsearched: ShikiTransformer = {
+  name: 'unsearched',
+  pre(pre) {
+    pre.properties.dataPagefindIgnore = '';
+  },
+};
+
 export const markdown: AstroUserConfig['markdown'] = {
   processor: unified({
-    rehypePlugins: [[rehypeAutolinkHeadings, { behavior: 'wrap' }]],
+    // Astro adds heading ids after our plugins, so they have to be in place before the links
+    rehypePlugins: [rehypeHeadingIds, [rehypeAutolinkHeadings, { behavior: 'wrap' }]],
   }),
   shikiConfig: {
     theme: 'css-variables',
     // ```ts {2,4-5} lights up those lines
-    transformers: [transformerMetaHighlight(), fileName],
+    transformers: [transformerMetaHighlight(), unsearched, fileName],
   },
 };

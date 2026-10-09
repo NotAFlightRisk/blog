@@ -39,6 +39,9 @@
     "prettier-plugin-astro": "^1.1.1",
     "typescript": "^6.0.3"
   },
+  "overrides": {
+    "fflate": "^0.7.5"
+  },
   "prettier": {
     "singleQuote": true,
     "printWidth": 100,

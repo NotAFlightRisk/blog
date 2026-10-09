@@ -62,6 +62,8 @@
   --gutter: clamp(1rem, 3vw, 4rem);
   --rail: 13rem;
   --page: 60rem;
+  /* how far code can spill into the right margin, so it isn't squeezed to the reading measure */
+  --breakout: clamp(0rem, (100vw - var(--page)) / 2 + var(--gutter) - var(--space-l), 14rem);
 
   --radius: 3px;
   --bar-height: 4rem;

@@ -1,56 +1,60 @@
 ---
+import type { ImageMetadata } from 'astro';
 import { Image } from 'astro:assets';
 
 interface Props {
   title: string;
   youtube?: string;
   src?: string;
-  poster?: string;
+  poster?: ImageMetadata;
 }
 
 const { title, youtube, src, poster } = Astro.props;
 if (!youtube === !src) throw new Error(`<Video title="${title}"> wants a youtube id or a src`);
-// fetched at build time and served from here, so YouTube hears nothing until you press play
-const thumbnail = youtube && `https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`;
+const href = youtube ? `https://www.youtube.com/watch?v=${youtube}` : src;
 ---
 
 <figure>
-  {thumbnail ? (
-    <a
-      class="facade"
-      href={`https://www.youtube.com/watch?v=${youtube}`}
-      data-youtube={youtube}
-      data-pagefind-ignore
-    >
-      <Image src={thumbnail} alt="" inferSize />
-      <span class="play">
-        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
-        </svg>
-        <span>
-          Play <span class="visually-hidden">{title}</span>
-        </span>
+  <a class="facade" {href} data-youtube={youtube} data-video={src} data-pagefind-ignore>
+    {youtube ? (
+      // fetched at build time and served from here, so YouTube hears nothing until you press play
+      <Image src={`https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`} alt="" inferSize />
+    ) : (
+      poster && <Image src={poster} alt="" />
+    )}
+    <span class="play">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
+      </svg>
+      <span>
+        Play <span class="visually-hidden">{title}</span>
       </span>
-    </a>
-  ) : (
-    <video {src} {poster} {title} controls preload="none" playsinline />
-  )}
+    </span>
+  </a>
   <figcaption>{title}</figcaption>
 </figure>
 
 <script>
-  // nothing from YouTube loads until you ask for it, and then it's the no-cookie player
-  for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-youtube]')) {
+  // the player only turns up once you press play, and YouTube's is the no-cookie one
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('a.facade')) {
     link.addEventListener('click', (event) => {
       event.preventDefault();
-      const frame = Object.assign(document.createElement('iframe'), {
-        src: `https://www.youtube-nocookie.com/embed/${link.dataset.youtube}?autoplay=1`,
-        title: link.closest('figure')?.querySelector('figcaption')?.textContent ?? 'Video',
-        allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
-        allowFullscreen: true,
-      });
-      link.replaceWith(frame);
-      frame.focus();
+      const { youtube, video } = link.dataset;
+      const player = youtube
+        ? Object.assign(document.createElement('iframe'), {
+            src: `https://www.youtube-nocookie.com/embed/${youtube}?autoplay=1`,
+            allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+            allowFullscreen: true,
+          })
+        : Object.assign(document.createElement('video'), {
+            src: video,
+            controls: true,
+            autoplay: true,
+            playsInline: true,
+          });
+      player.title = link.closest('figure')?.querySelector('figcaption')?.textContent ?? 'Video';
+      link.replaceWith(player);
+      player.focus();
     });
   }
 </script>
@@ -63,8 +67,7 @@ const thumbnail = youtube && `https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`;
   }
 
   .facade,
-  video,
-  figure :global(iframe) {
+  figure :global(:is(iframe, video)) {
     position: relative;
     display: grid;
     width: 100%;

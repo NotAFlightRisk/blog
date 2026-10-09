@@ -12,6 +12,8 @@ import Callout from '../../src/components/mdx/Callout.astro';
 import Figure from '../../src/components/mdx/Figure.astro';
 import Video from '../../src/components/mdx/Video.astro';
 import rail from './rail.png';
+import toggle from './toggle.webm';
+import still from './toggle.png';
 
 A post is a folder in `posts/`, named after the address you want. Inside goes `index.md`, or `index.mdx` if you want components, plus any pictures. This one lives at `posts/how-a-post-gets-written-here/index.mdx`.
 
@@ -64,6 +66,8 @@ Plain Markdown images work too, they just don't get a caption.
 Embeds load nothing from YouTube until you press play, and even then it's the no-cookie player. A video file sat next to the post works as well, with `src` instead of `youtube`.
 
 <Video youtube="jNQXAC9IVRw" title="Me at the zoo, the first video ever uploaded to YouTube" />
+
+<Video src={toggle} poster={still.src} title="The theme toggle on this blog, flipping between light and dark" />
 
 ```mdx
 <Video youtube="jNQXAC9IVRw" title="Me at the zoo" />

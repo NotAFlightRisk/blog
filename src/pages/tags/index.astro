@@ -1,0 +1,48 @@
+---
+import Intro from '../../components/Intro.astro';
+import Base from '../../layouts/Base.astro';
+import { byTag, getPosts, tagUrl } from '../../lib/posts';
+
+const tags = byTag(await getPosts());
+---
+
+<Base title="Tags" description="Every topic on the blog, and how many posts there are on each.">
+  <Intro title="Tags">Every topic so far, and how many posts there are on each.</Intro>
+  <ul>
+    {tags.map(([tag, posts]) => (
+      <li>
+        <a class="button" href={tagUrl(tag)}>
+          #{tag} <span>{posts.length}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</Base>
+
+<style>
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+
+    @media (width >= 48rem) {
+      padding-left: calc(var(--rail) + var(--gutter));
+    }
+  }
+
+  a {
+    background: var(--surface);
+    font-size: var(--text-base);
+    box-shadow: var(--panel-shadow);
+
+    &:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+  }
+
+  span {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+</style>

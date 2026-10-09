@@ -1,0 +1,109 @@
+---
+import { formatDate, isoDate, readingTime } from '../lib/format';
+import { postUrl, tagUrl, type Post } from '../lib/posts';
+
+interface Props {
+  posts: Post[];
+}
+
+const { posts } = Astro.props;
+---
+
+<ol>
+  {posts.map((post) => (
+    <li>
+      <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
+      <article>
+        <h2>
+          <a href={postUrl(post)}>{post.data.title}</a>
+          {post.data.draft && <span class="draft">Draft</span>}
+        </h2>
+        <p>{post.data.description}</p>
+        <p class="meta">
+          <span>{readingTime(post.body ?? '')} min read</span>
+          {post.data.tags.map((tag) => (
+            <a href={tagUrl(tag)}>#{tag}</a>
+          ))}
+        </p>
+      </article>
+    </li>
+  ))}
+</ol>
+
+<style>
+  ol {
+    display: grid;
+    gap: var(--space-xl);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* the date sits out in the rail, the words get the column */
+  li {
+    display: grid;
+    gap: var(--space-2xs) var(--gutter);
+
+    @media (width >= 48rem) {
+      grid-template-columns: var(--rail) minmax(0, var(--measure));
+      align-items: baseline;
+    }
+  }
+
+  time,
+  .meta {
+    color: var(--text-muted);
+    font-size: var(--text-small);
+  }
+
+  time {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: var(--text-h2);
+
+    & a {
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+      }
+    }
+  }
+
+  p {
+    margin: var(--space-xs) 0 0;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--space-s);
+
+    & a {
+      padding-block: var(--space-2xs);
+      text-decoration: none;
+
+      &:hover {
+        color: var(--text);
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+      }
+    }
+  }
+
+  .draft {
+    margin-left: var(--space-xs);
+    padding: var(--space-3xs) var(--space-xs);
+    border-radius: var(--radius);
+    background: var(--danger);
+    color: var(--on-accent);
+    font-size: var(--text-small);
+    letter-spacing: normal;
+    vertical-align: middle;
+  }
+</style>

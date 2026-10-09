@@ -1,0 +1,44 @@
+---
+import Intro from '../components/Intro.astro';
+import PostList from '../components/PostList.astro';
+import Base from '../layouts/Base.astro';
+import { getPosts } from '../lib/posts';
+import { latest, site } from '../site';
+
+const posts = await getPosts();
+const schema = [
+  {
+    '@type': 'Blog',
+    name: site.name,
+    url: site.url,
+    description: site.description,
+    inLanguage: site.lang,
+    author: { '@type': 'Person', name: site.author.name, url: site.author.url },
+    isPartOf: { '@type': 'WebSite', name: site.home.name, url: site.home.url },
+  },
+];
+---
+
+<Base {schema}>
+  <Intro title="Blog">
+    {site.description}. Follow along with <a href="/rss.xml">RSS</a>.
+  </Intro>
+  {posts.length ? <PostList posts={posts.slice(0, latest)} /> : <p>Nothing here yet. Noot.</p>}
+  {posts.length > latest && (
+    <p class="more">
+      <a class="button" href="/archive/">
+        All {posts.length} posts
+      </a>
+    </p>
+  )}
+</Base>
+
+<style>
+  .more {
+    margin: var(--space-2xl) 0 0;
+
+    @media (width >= 48rem) {
+      padding-left: calc(var(--rail) + var(--gutter));
+    }
+  }
+</style>

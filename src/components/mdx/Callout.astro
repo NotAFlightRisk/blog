@@ -1,0 +1,97 @@
+---
+interface Props {
+  type?: keyof typeof kinds;
+  title?: string;
+}
+
+const kinds = {
+  note: { label: 'Note', icon: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>' },
+  tip: {
+    label: 'Tip',
+    icon: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  },
+  warning: {
+    label: 'Heads up',
+    icon: '<path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>',
+  },
+  danger: {
+    label: 'Careful',
+    icon: '<path d="M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7z"/><path d="M12 8v5M12 16h.01"/>',
+  },
+};
+
+const { type = 'note', title } = Astro.props;
+const { label, icon } = kinds[type];
+---
+
+<div class:list={['callout', type]} role="note">
+  <p class="title">
+    <svg
+      class="icon"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      set:html={icon}
+    />
+    {title ?? label}
+  </p>
+  <div class="body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .callout {
+    --strip: var(--note);
+    margin-block: var(--space-l);
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+  }
+
+  .tip {
+    --strip: var(--tip);
+  }
+
+  .warning {
+    --strip: var(--warning);
+  }
+
+  .danger {
+    --strip: var(--danger);
+  }
+
+  .title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin: 0;
+    padding: var(--space-xs) var(--space-m);
+    background: var(--strip);
+    color: var(--on-accent);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--tracking-title);
+  }
+
+  .icon {
+    width: var(--icon-small);
+    height: var(--icon-small);
+  }
+
+  .body {
+    padding: var(--space-m);
+
+    & > :first-child {
+      margin-top: 0;
+    }
+
+    & > :last-child {
+      margin-bottom: 0;
+    }
+  }
+</style>

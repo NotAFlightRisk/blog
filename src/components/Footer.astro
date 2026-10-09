@@ -1,0 +1,100 @@
+---
+import { nav, site } from '../site';
+
+// built, not served, so this is the year of the last build
+const year = new Date().getFullYear();
+const sections = [
+  ...nav,
+  { label: 'RSS', href: '/rss.xml' },
+  { label: 'llms.txt', href: '/llms.txt' },
+];
+const elsewhere = [
+  { label: site.home.name, href: site.home.url },
+  { label: 'Source', href: site.repo },
+];
+---
+
+<footer>
+  <small>
+    © <a href={site.home.url}>{site.author.handle}</a> {year}
+  </small>
+
+  <nav aria-label="Sections">
+    <ul>
+      {sections.map(({ label, href }) => (
+        <li>
+          <a {href}>{label}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <ul>
+    {elsewhere.map(({ label, href }) => (
+      <li>
+        <a {href}>{label}</a>
+      </li>
+    ))}
+  </ul>
+</footer>
+
+<style>
+  footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs) var(--gutter);
+    padding: var(--space-xs) var(--space-m);
+    background: var(--surface);
+    font-size: var(--text-small);
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-xs) var(--space-m);
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    min-height: var(--target);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  small {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    color: var(--text-muted);
+    font-size: inherit;
+  }
+
+  @media (width >= 48rem) {
+    footer {
+      justify-content: space-between;
+    }
+
+    /* matching flanks, so the middle links land dead centre */
+    small,
+    footer > ul {
+      flex: 1;
+      min-width: fit-content;
+    }
+
+    footer > ul {
+      justify-content: end;
+    }
+
+    nav li + li {
+      padding-left: var(--space-m);
+      border-left: var(--separator);
+    }
+  }
+</style>

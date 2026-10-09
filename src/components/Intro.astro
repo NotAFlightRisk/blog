@@ -1,0 +1,46 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<header>
+  <h1>{title}</h1>
+  <p>
+    <slot />
+  </p>
+</header>
+
+<style>
+  header {
+    margin-bottom: var(--space-2xl);
+
+    @media (width >= 48rem) {
+      padding-left: calc(var(--rail) + var(--gutter));
+    }
+  }
+
+  h1 {
+    margin: var(--space-m) 0 0;
+    font-size: var(--text-title);
+  }
+
+  p {
+    max-width: var(--measure);
+    margin: var(--space-m) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-large);
+
+    & :global(a) {
+      color: var(--link);
+      text-decoration-color: var(--accent);
+
+      &:hover {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
+    }
+  }
+</style>

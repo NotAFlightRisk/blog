@@ -1,0 +1,90 @@
+.prose {
+  & pre.astro-code {
+    position: relative;
+    margin-block: 0 var(--space-l);
+    padding: var(--space-m) 0;
+    border-radius: var(--radius);
+    box-shadow: var(--panel-shadow);
+    font-size: var(--text-small);
+    line-height: var(--leading);
+    tab-size: 2;
+
+    & code {
+      display: grid;
+      min-width: max-content;
+    }
+
+    & .line {
+      padding-inline: var(--space-m);
+    }
+
+    & .highlighted {
+      background: var(--code-line);
+      box-shadow: inset var(--space-2xs) 0 var(--accent);
+    }
+  }
+
+  /* a file name sat on top makes it a little panel, like the ones on peng.ly */
+  & figure.code {
+    margin-inline: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    box-shadow: var(--panel-shadow);
+
+    & figcaption {
+      padding: var(--space-2xs) var(--space-m);
+      background: var(--accent);
+      color: var(--on-accent);
+      font-family: var(--font-mono);
+      font-size: var(--text-small);
+      font-weight: var(--weight-strong);
+    }
+
+    & pre.astro-code {
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  & .code-wrap {
+    position: relative;
+    margin-block: 0 var(--space-l);
+
+    & pre.astro-code {
+      margin: 0;
+    }
+  }
+
+  & figure.code .code-wrap {
+    margin: 0;
+  }
+
+  & .copy {
+    position: absolute;
+    top: var(--space-xs);
+    right: var(--space-xs);
+    min-height: auto;
+    padding: var(--space-2xs) var(--space-xs);
+    background: var(--surface-hover);
+    color: var(--text);
+    opacity: 0;
+
+    &[data-copied] {
+      background: var(--tip);
+      color: var(--on-accent);
+    }
+  }
+
+  & :is(.code-wrap:hover, .code-wrap:focus-within) .copy,
+  & .copy[data-copied] {
+    opacity: 1;
+  }
+
+  /* no hover on a phone, so it just stays put */
+  @media (hover: none) {
+    & .copy {
+      opacity: 1;
+    }
+  }
+}

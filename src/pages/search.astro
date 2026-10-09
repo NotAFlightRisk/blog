@@ -1,0 +1,147 @@
+---
+import Intro from '../components/Intro.astro';
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Search" description="Search every post on the blog." noindex>
+  <Intro title="Search">Find a post by anything in it.</Intro>
+  <form role="search" action="/search/">
+    <label for="q" class="visually-hidden">
+      Search posts
+    </label>
+    <input id="q" name="q" type="search" placeholder="Try astro, or css" autocomplete="off" />
+    <p role="status" aria-live="polite"></p>
+    <ol></ol>
+    <noscript>
+      <p>Search runs in your browser, so it needs JavaScript switched on.</p>
+    </noscript>
+  </form>
+</Base>
+
+<script>
+  type Result = { url: string; excerpt: string; meta: { title: string } };
+  type Pagefind = {
+    init(): Promise<void>;
+    debouncedSearch(query: string): Promise<{ results: { data(): Promise<Result> }[] } | null>;
+  };
+
+  const form = document.querySelector('form')!;
+  const input = form.querySelector('input')!;
+  const status = form.querySelector('[role="status"]')!;
+  const list = form.querySelector('ol')!;
+  // a variable, so Vite leaves it for the browser to fetch
+  const index = '/pagefind/pagefind.js';
+  let pagefind: Promise<Pagefind> | undefined;
+  let latest = 0;
+
+  function item({ url, excerpt, meta }: Result) {
+    const li = document.createElement('li');
+    const link = Object.assign(document.createElement('a'), { href: url, textContent: meta.title });
+    // Pagefind escapes the post text itself, and only adds the <mark>s
+    const snippet = Object.assign(document.createElement('p'), { innerHTML: excerpt });
+    li.append(link, snippet);
+    return li;
+  }
+
+  async function search() {
+    const query = input.value.trim();
+    const run = ++latest;
+    history.replaceState(null, '', query ? `?q=${encodeURIComponent(query)}` : location.pathname);
+    if (!query) {
+      list.replaceChildren();
+      status.textContent = '';
+      return;
+    }
+    try {
+      pagefind ??= import(/* @vite-ignore */ index).then(async (module: Pagefind) => {
+        await module.init();
+        return module;
+      });
+      const found = await (await pagefind).debouncedSearch(query);
+      if (!found || run !== latest) return;
+      const results = await Promise.all(found.results.slice(0, 20).map((result) => result.data()));
+      if (run !== latest) return;
+      list.replaceChildren(...results.map(item));
+      const count = found.results.length;
+      status.textContent = count
+        ? `${count} ${count === 1 ? 'post' : 'posts'} found`
+        : 'Noot a sausage. Try another word?';
+    } catch {
+      pagefind = undefined;
+      status.textContent = "Search isn't working right now. Give it another go in a minute.";
+    }
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    search();
+  });
+  input.addEventListener('input', search);
+  input.value = new URLSearchParams(location.search).get('q') ?? '';
+  if (input.value) search();
+  input.focus();
+</script>
+
+<style>
+  form {
+    display: grid;
+    gap: var(--space-m);
+    max-width: var(--measure);
+
+    @media (width >= 48rem) {
+      margin-left: calc(var(--rail) + var(--gutter));
+    }
+  }
+
+  input {
+    width: 100%;
+    min-height: var(--target);
+    padding: var(--space-s) var(--space-m);
+    border: 2px solid var(--text-muted);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+      box-shadow: 0 0 0 var(--space-3xs) var(--accent);
+    }
+  }
+
+  [role='status'] {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-small);
+  }
+
+  ol {
+    display: grid;
+    gap: var(--space-l);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  ol :global(a) {
+    font-size: var(--text-large);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--tracking-title);
+    text-decoration-color: var(--accent);
+  }
+
+  ol :global(p) {
+    margin: var(--space-2xs) 0 0;
+    color: var(--text-muted);
+  }
+
+  ol :global(mark) {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+</style>

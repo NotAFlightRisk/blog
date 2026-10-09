@@ -1,0 +1,33 @@
+---
+import Intro from '../../components/Intro.astro';
+import PostList from '../../components/PostList.astro';
+import Base from '../../layouts/Base.astro';
+import { absolute, byTag, getPosts, tagUrl, type Post } from '../../lib/posts';
+import { site } from '../../site';
+
+export async function getStaticPaths() {
+  return byTag(await getPosts()).map(([tag, posts]) => ({ params: { tag }, props: { posts } }));
+}
+
+const { tag } = Astro.params;
+const { posts } = Astro.props as { posts: Post[] };
+const count = `${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`;
+const schema = [
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { name: site.home.name, item: site.home.url },
+      { name: 'Blog', item: absolute('/') },
+      { name: 'Tags', item: absolute('/tags/') },
+      { name: `#${tag}`, item: absolute(tagUrl(tag)) },
+    ].map((crumb, index) => ({ '@type': 'ListItem', position: index + 1, ...crumb })),
+  },
+];
+---
+
+<Base title={`#${tag}`} description={`${count} tagged ${tag}, newest first.`} {schema}>
+  <Intro title={`#${tag}`}>
+    {count} tagged {tag}. Or see <a href="/tags/">every tag</a>.
+  </Intro>
+  <PostList {posts} />
+</Base>

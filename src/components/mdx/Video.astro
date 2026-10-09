@@ -1,0 +1,116 @@
+---
+interface Props {
+  title: string;
+  youtube?: string;
+  src?: string;
+  poster?: string;
+}
+
+const { title, youtube, src, poster } = Astro.props;
+if (!youtube === !src) throw new Error(`<Video title="${title}"> wants a youtube id or a src`);
+---
+
+<figure>
+  {youtube ? (
+    <a class="facade" href={`https://www.youtube.com/watch?v=${youtube}`} data-youtube={youtube}>
+      <img
+        src={`https://i.ytimg.com/vi/${youtube}/hqdefault.jpg`}
+        alt=""
+        width="480"
+        height="360"
+        loading="lazy"
+        decoding="async"
+      />
+      <span class="play">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 5.5v13l10.5-6.5z" fill="currentColor" />
+        </svg>
+        <span>
+          Play <span class="visually-hidden">{title}</span>
+        </span>
+      </span>
+    </a>
+  ) : (
+    <video {src} {poster} {title} controls preload="none" playsinline />
+  )}
+  <figcaption>{title}</figcaption>
+</figure>
+
+<script>
+  // nothing from YouTube loads until you ask for it, and then it's the no-cookie player
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-youtube]')) {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const frame = Object.assign(document.createElement('iframe'), {
+        src: `https://www.youtube-nocookie.com/embed/${link.dataset.youtube}?autoplay=1`,
+        title: link.closest('figure')?.querySelector('figcaption')?.textContent ?? 'Video',
+        allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen',
+        allowFullscreen: true,
+      });
+      link.replaceWith(frame);
+      frame.focus();
+    });
+  }
+</script>
+
+<style>
+  figure {
+    display: grid;
+    gap: var(--space-xs);
+    margin: var(--space-l) 0;
+  }
+
+  .facade,
+  video,
+  figure :global(iframe) {
+    position: relative;
+    display: grid;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--on-accent);
+    box-shadow: var(--panel-shadow);
+  }
+
+  .facade img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .play {
+    position: absolute;
+    place-self: center;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-s) var(--space-l);
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: var(--weight-title);
+    box-shadow: var(--bar-shadow);
+  }
+
+  .facade:hover .play {
+    box-shadow: var(--bar-shadow), var(--button-shadow);
+  }
+
+  figcaption {
+    color: var(--text-muted);
+    font-size: var(--text-small);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .play {
+      transition: scale var(--quick) var(--bounce);
+    }
+
+    .facade:hover .play {
+      scale: 1.05;
+    }
+  }
+</style>

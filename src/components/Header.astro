@@ -1,0 +1,176 @@
+---
+import Penguin from './Penguin.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { nav, site } from '../site';
+
+const path = Astro.url.pathname;
+const links = [...nav, { label: 'Search', href: '/search/' }];
+---
+
+<header>
+  <p class="brand">
+    <a href={site.home.url}>{site.home.name}</a>
+    <span aria-hidden="true">/</span>
+    <a href="/" aria-current={path === '/' ? 'page' : undefined}>
+      Blog
+    </a>
+  </p>
+
+  <nav aria-label="Main">
+    <button class="button burger" type="button" popovertarget="menu" aria-label="Menu">
+      <svg
+        class="icon"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path d="M4 6h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 18h16"></path>
+      </svg>
+    </button>
+    <ul id="menu" popover>
+      {links.map(({ label, href }) => (
+        <li>
+          <a class="button" {href} aria-current={path.startsWith(href) ? 'page' : undefined}>
+            {label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <ThemeToggle />
+  <Penguin />
+</header>
+
+<style>
+  header {
+    --penguin-size: 3.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    height: var(--bar-height);
+    padding-inline: var(--space-m);
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--bar-shadow);
+
+    /* he's already yellow up here, so the highlight swaps round */
+    & ::selection {
+      background: var(--on-accent);
+      color: var(--accent);
+    }
+
+    & > :global(svg) {
+      align-self: end;
+    }
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2em;
+    margin: 0 auto 0 0;
+    font-size: var(--text-brand);
+    font-weight: var(--weight-title);
+    line-height: var(--leading-brand);
+    letter-spacing: -0.05em;
+    white-space: nowrap;
+
+    & a {
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    & span {
+      opacity: 0.4;
+    }
+  }
+
+  .burger {
+    justify-content: center;
+    width: var(--target);
+    padding: 0;
+  }
+
+  path {
+    transform-origin: center;
+  }
+
+  /* top and bottom bars meet in the middle and cross, the other one scarpers */
+  nav:has(:popover-open) {
+    & path:first-child {
+      transform: rotate(45deg) translateY(6px);
+    }
+
+    & path:nth-child(2) {
+      opacity: 0;
+    }
+
+    & path:last-child {
+      transform: rotate(-45deg) translateY(-6px);
+    }
+  }
+
+  ul {
+    gap: var(--space-xs);
+    border: 0;
+    background: var(--accent);
+    color: inherit;
+  }
+
+  @media (width < 48rem) {
+    ul {
+      inset: var(--bar-height) 0 auto;
+      width: auto;
+      padding: var(--space-m);
+      box-shadow: var(--bar-shadow);
+
+      &:popover-open {
+        display: grid;
+      }
+    }
+
+    li a {
+      justify-content: center;
+      width: 100%;
+      font-size: var(--text-base);
+    }
+  }
+
+  @media (width >= 48rem) {
+    .burger {
+      display: none;
+    }
+
+    ul {
+      position: static;
+      display: flex;
+      padding: 0;
+      overflow: visible;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    path,
+    ul {
+      transition: 0.3s var(--ease) allow-discrete;
+      transition-property: transform, opacity, translate, display, overlay;
+    }
+
+    @starting-style {
+      ul:popover-open {
+        opacity: 0;
+        translate: 0 -1rem;
+      }
+    }
+  }
+</style>

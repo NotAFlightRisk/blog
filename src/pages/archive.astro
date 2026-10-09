@@ -1,0 +1,36 @@
+---
+import Intro from '../components/Intro.astro';
+import PostList from '../components/PostList.astro';
+import Base from '../layouts/Base.astro';
+import { getPosts } from '../lib/posts';
+
+const posts = await getPosts();
+const years = Map.groupBy(posts, (post) => post.data.date.getUTCFullYear());
+const plural = posts.length === 1 ? 'post' : 'posts';
+---
+
+<Base title="Archive" description={`Every post on the blog, ${posts.length} so far, newest first.`}>
+  <Intro title="Archive">
+    Every post so far, all {posts.length} {plural} of them, newest first.
+  </Intro>
+  {[...years].map(([year, list]) => (
+    <section aria-labelledby={`y${year}`}>
+      <h2 id={`y${year}`}>{year}</h2>
+      <PostList posts={list} />
+    </section>
+  ))}
+</Base>
+
+<style>
+  section + section {
+    margin-top: var(--space-2xl);
+  }
+
+  /* the year sits in the rail, like the dates under it */
+  h2 {
+    margin: 0 0 var(--space-l);
+    color: var(--text-muted);
+    font-size: var(--text-h2);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

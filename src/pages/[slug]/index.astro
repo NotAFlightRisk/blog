@@ -1,0 +1,335 @@
+---
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import '../../styles/prose.css';
+import '../../styles/code.css';
+import Toc from '../../components/Toc.astro';
+import Base from '../../layouts/Base.astro';
+import { formatDate, isoDate, readingTime } from '../../lib/format';
+import { absolute, getPosts, ogUrl, postUrl, rawUrl, tagUrl, type Post } from '../../lib/posts';
+import { neighbours, related } from '../../lib/rank';
+import { site } from '../../site';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post, posts } }));
+}
+
+const { post, posts } = Astro.props as { post: Post; posts: Post[] };
+const { Content, headings } = await render(post);
+const { title, description, date, updated, tags, cover } = post.data;
+const minutes = readingTime(post.body ?? '');
+// short posts read fine without one
+const contents = headings.filter(({ depth }) => depth <= 3);
+const { newer, older } = neighbours(post, posts);
+const more = related(post, posts);
+const url = absolute(postUrl(post));
+const image = { src: ogUrl(post), alt: `${title}, on a yellow card with a cartoon penguin` };
+
+const schema = [
+  {
+    '@type': 'BlogPosting',
+    '@id': `${url}#post`,
+    headline: title,
+    description,
+    url,
+    mainEntityOfPage: url,
+    datePublished: date.toISOString(),
+    dateModified: (updated ?? date).toISOString(),
+    image: absolute(image.src),
+    keywords: tags,
+    wordCount: (post.body ?? '').split(/\s+/).filter(Boolean).length,
+    inLanguage: site.lang,
+    author: { '@type': 'Person', name: site.author.name, url: site.author.url },
+    publisher: { '@type': 'Person', name: site.author.name, url: site.home.url },
+    isPartOf: { '@type': 'Blog', name: site.name, url: site.url },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { name: site.home.name, item: site.home.url },
+      { name: 'Blog', item: absolute('/') },
+      { name: title, item: url },
+    ].map((crumb, index) => ({ '@type': 'ListItem', position: index + 1, ...crumb })),
+  },
+];
+---
+
+<Base {title} {description} {image} article={{ published: date, modified: updated, tags }} {schema}>
+  <link slot="head" rel="alternate" type="text/markdown" href={rawUrl(post)} />
+
+  <article>
+    <header>
+      <h1>{title}</h1>
+      <p>{description}</p>
+    </header>
+
+    <div class="rail">
+      <dl>
+        <div>
+          <dt>Published</dt>
+          <dd>
+            <time datetime={isoDate(date)}>{formatDate(date)}</time>
+          </dd>
+        </div>
+        {updated && (
+          <div>
+            <dt>Updated</dt>
+            <dd>
+              <time datetime={isoDate(updated)}>{formatDate(updated)}</time>
+            </dd>
+          </div>
+        )}
+        <div>
+          <dt>Reading time</dt>
+          <dd>{minutes} min</dd>
+        </div>
+        <div>
+          <dt>Tags</dt>
+          <dd>
+            <ul class="tags">
+              {tags.map((tag) => (
+                <li>
+                  <a href={tagUrl(tag)}>#{tag}</a>
+                </li>
+              ))}
+            </ul>
+          </dd>
+        </div>
+      </dl>
+      {contents.length >= 3 && <Toc headings={contents} />}
+      <a class="raw" href={rawUrl(post)}>
+        Read it as Markdown
+      </a>
+    </div>
+
+    <div class="prose" data-pagefind-body>
+      {cover && (
+        <Image
+          src={cover.src}
+          alt={cover.alt}
+          width={Math.min(cover.src.width, 720)}
+          loading="eager"
+          fetchpriority="high"
+          class="cover"
+        />
+      )}
+      <Content />
+    </div>
+
+    <footer>
+      {(newer || older) && (
+        <nav aria-label="Next and previous posts" class="neighbours">
+          {older && (
+            <a href={postUrl(older)} rel="prev">
+              <span>Older</span>
+              {older.data.title}
+            </a>
+          )}
+          {newer && (
+            <a href={postUrl(newer)} rel="next" class="newer">
+              <span>Newer</span>
+              {newer.data.title}
+            </a>
+          )}
+        </nav>
+      )}
+      {more.length > 0 && (
+        <section aria-labelledby="related">
+          <h2 id="related">Related posts</h2>
+          <ul>
+            {more.map((other) => (
+              <li>
+                <a href={postUrl(other)}>{other.data.title}</a>
+                <time datetime={isoDate(other.data.date)}>{formatDate(other.data.date)}</time>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </footer>
+  </article>
+  {post.body?.includes('```') && <script>
+    import '../../scripts/copy';
+  </script>}
+</Base>
+
+<style>
+  article {
+    display: grid;
+    grid-template-areas: 'header' 'rail' 'prose' 'footer';
+    gap: var(--space-xl) var(--gutter);
+
+    @media (width >= 64rem) {
+      grid-template-columns: var(--rail) minmax(0, var(--measure));
+      grid-template-areas:
+        'header header'
+        'rail prose'
+        '. footer';
+      align-items: start;
+    }
+  }
+
+  header {
+    grid-area: header;
+
+    & h1 {
+      max-width: 22ch;
+      margin: var(--space-m) 0 0;
+      font-size: var(--text-title);
+    }
+
+    & p {
+      max-width: var(--measure);
+      margin: var(--space-m) 0 0;
+      color: var(--text-muted);
+      font-size: var(--text-large);
+    }
+  }
+
+  .rail {
+    grid-area: rail;
+    display: grid;
+    gap: var(--space-l);
+    font-size: var(--text-small);
+
+    @media (width >= 64rem) {
+      position: sticky;
+      top: calc(var(--bar-height) + var(--space-l));
+      max-height: calc(100svh - var(--bar-height) - var(--space-xl));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  }
+
+  dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s) var(--space-l);
+    margin: 0;
+
+    @media (width >= 64rem) {
+      flex-direction: column;
+    }
+  }
+
+  dt {
+    color: var(--text-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: var(--weight-strong);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-s);
+
+    & a {
+      display: inline-block;
+      padding-block: var(--space-2xs);
+    }
+  }
+
+  .tags a,
+  .raw {
+    text-decoration-color: var(--accent);
+
+    &:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+  }
+
+  .raw {
+    justify-self: start;
+    color: var(--text-muted);
+  }
+
+  .prose {
+    grid-area: prose;
+    min-width: 0;
+  }
+
+  .cover {
+    width: 100%;
+    margin-bottom: var(--space-xl);
+    box-shadow: var(--panel-shadow);
+  }
+
+  footer {
+    grid-area: footer;
+    display: grid;
+    gap: var(--space-xl);
+    padding-top: var(--space-xl);
+    border-top: var(--separator);
+  }
+
+  .neighbours {
+    display: grid;
+    gap: var(--space-m);
+
+    @media (width >= 40rem) {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    & a {
+      display: grid;
+      gap: var(--space-2xs);
+      padding: var(--space-m);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--panel-shadow);
+      font-weight: var(--weight-title);
+      letter-spacing: var(--tracking-title);
+      text-decoration: none;
+
+      &:hover {
+        background: var(--surface-hover);
+      }
+    }
+
+    & span {
+      color: var(--text-muted);
+      font-size: var(--text-small);
+      font-weight: normal;
+      letter-spacing: normal;
+    }
+
+    & .newer {
+      grid-column: -2;
+      text-align: right;
+    }
+  }
+
+  section {
+    & h2 {
+      margin: 0 0 var(--space-m);
+      font-size: var(--text-large);
+    }
+
+    & ul {
+      display: grid;
+      gap: var(--space-s);
+    }
+
+    & li {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0 var(--space-m);
+    }
+
+    & a {
+      text-decoration-color: var(--accent);
+    }
+
+    & time {
+      color: var(--text-muted);
+      font-size: var(--text-small);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+</style>

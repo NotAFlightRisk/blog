@@ -1,0 +1,44 @@
+---
+import {
+  PUBLIC_CF_BEACON_TOKEN,
+  PUBLIC_PLAUSIBLE_SCRIPT,
+  PUBLIC_SENTRY_DSN,
+} from 'astro:env/client';
+
+// all three are build-time and empty by default, so forks and previews never phone home
+const beacon = PUBLIC_CF_BEACON_TOKEN && JSON.stringify({ token: PUBLIC_CF_BEACON_TOKEN });
+---
+
+{beacon && (
+  <script
+    is:inline
+    defer
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={beacon}
+  />
+)}
+
+{PUBLIC_PLAUSIBLE_SCRIPT && <script>
+  import { PUBLIC_PLAUSIBLE_SCRIPT as src } from 'astro:env/client';
+
+  declare global {
+    interface Window {
+      plausible: { init(options: { endpoint: string }): void };
+    }
+  }
+
+  const script = Object.assign(document.createElement('script'), { src, async: true });
+  script.onload = () => window.plausible.init({ endpoint: new URL('/api/event', src).href });
+  document.head.append(script);
+</script>}
+
+{PUBLIC_SENTRY_DSN && <script>
+  // the SDK only downloads once something's actually broken, so pages that work never pay
+  let sentry: Promise<(error: unknown) => void> | undefined;
+  const report = (error: unknown) => {
+    sentry ??= import('../scripts/sentry').then(({ start }) => start()).catch(() => () => {});
+    sentry.then((capture) => capture(error));
+  };
+  addEventListener('error', (event) => event.error && report(event.error));
+  addEventListener('unhandledrejection', (event) => report(event.reason));
+</script>}

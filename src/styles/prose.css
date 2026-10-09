@@ -1,0 +1,121 @@
+/* everything the Markdown turns into, which never gets Astro's scoping classes */
+.prose {
+  line-height: var(--leading-prose);
+
+  & > :first-child {
+    margin-top: 0;
+  }
+
+  & :is(p, ul, ol, blockquote, table, pre, figure.code) {
+    margin-block: 0 var(--space-l);
+  }
+
+  & :is(h2, h3, h4) {
+    margin: var(--space-2xl) 0 var(--space-s);
+    scroll-margin-top: calc(var(--bar-height) + var(--space-l));
+
+    /* the whole heading links to itself, and a hash turns up when you go looking */
+    & a {
+      text-decoration: none;
+
+      &::after {
+        content: '#';
+        content: '#' / '';
+        margin-left: 0.3em;
+        color: var(--text-muted);
+        opacity: 0;
+      }
+
+      &:is(:hover, :focus-visible)::after {
+        opacity: 1;
+      }
+    }
+  }
+
+  & h2 {
+    font-size: var(--text-h2);
+  }
+
+  & :is(h3, h4) {
+    margin-top: var(--space-xl);
+    font-size: var(--text-large);
+  }
+
+  & a:not(h2 a, h3 a, h4 a) {
+    color: var(--link);
+    text-decoration-color: var(--accent);
+
+    &:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+  }
+
+  & :is(ul, ol) {
+    padding-left: var(--space-l);
+  }
+
+  & ul {
+    list-style: disc;
+  }
+
+  & li + li {
+    margin-top: var(--space-2xs);
+  }
+
+  & li::marker {
+    color: var(--text-muted);
+  }
+
+  & blockquote {
+    margin-inline: 0;
+    padding: var(--space-2xs) 0 var(--space-2xs) var(--space-l);
+    border-left: var(--space-2xs) solid var(--text-muted);
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  & hr {
+    margin-block: var(--space-2xl);
+    border: 0;
+    border-top: var(--separator);
+  }
+
+  & :not(pre) > code {
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 0.85em;
+  }
+
+  & table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  & :is(th, td) {
+    padding: var(--space-xs) var(--space-s);
+    border-bottom: var(--separator);
+    text-align: left;
+  }
+
+  & th {
+    font-weight: var(--weight-title);
+  }
+
+  & img {
+    border-radius: var(--radius);
+  }
+
+  & kbd {
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--button-shadow);
+    font-size: 0.85em;
+  }
+}

@@ -1,0 +1,63 @@
+<button class="button toggle" type="button" aria-label="Dark mode" aria-pressed="false" hidden>
+  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"></circle>
+    <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"></path>
+  </svg>
+</button>
+
+<script>
+  import { themeKey } from '../lib/theme';
+
+  const root = document.documentElement;
+  const system = matchMedia('(prefers-color-scheme: dark)');
+  const button = document.querySelector<HTMLButtonElement>('.toggle')!;
+  const showing = () => root.dataset.theme ?? (system.matches ? 'dark' : 'light');
+  const sync = () => button.setAttribute('aria-pressed', String(showing() === 'dark'));
+
+  function remember(theme?: string) {
+    try {
+      if (theme) localStorage.setItem(themeKey, theme);
+      else localStorage.removeItem(themeKey);
+    } catch {
+      // no storage (private mode and the like), so it just lasts for this page
+    }
+  }
+
+  button.addEventListener('click', () => {
+    const next = showing() === 'dark' ? 'light' : 'dark';
+    // picking what the system would show anyway goes back to following the system
+    const pinned = next === (system.matches ? 'dark' : 'light') ? undefined : next;
+    if (pinned) root.dataset.theme = pinned;
+    else delete root.dataset.theme;
+    remember(pinned);
+    sync();
+  });
+  system.addEventListener('change', sync);
+  sync();
+  button.hidden = false;
+</script>
+
+<style>
+  .toggle {
+    justify-content: center;
+    width: var(--target);
+    padding: 0;
+
+    /* keeps its spot until the script's ready, so nothing shuffles along when it turns up */
+    &[hidden] {
+      visibility: hidden;
+    }
+  }
+
+  /* the dark half swaps sides when it's dark, so it always shows where you'd end up */
+  [aria-pressed='true'] path {
+    rotate: 180deg;
+    transform-origin: center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    path {
+      transition: rotate 0.4s var(--bounce);
+    }
+  }
+</style>

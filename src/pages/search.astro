@@ -106,12 +106,6 @@ import Base from '../layouts/Base.astro';
     &::placeholder {
       color: var(--text-muted);
     }
-
-    &:focus-visible {
-      border-color: var(--accent);
-      outline: none;
-      box-shadow: 0 0 0 var(--space-3xs) var(--accent);
-    }
   }
 
   [role='status'] {
@@ -133,6 +127,11 @@ import Base from '../layouts/Base.astro';
     font-weight: var(--weight-title);
     letter-spacing: var(--tracking-title);
     text-decoration-color: var(--accent);
+
+    &:hover {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
   }
 
   ol :global(p) {

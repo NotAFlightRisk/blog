@@ -26,7 +26,7 @@ const schema = [
   {posts.length ? <PostList posts={posts.slice(0, latest)} /> : <p>Nothing here yet. Noot.</p>}
   {posts.length > latest && (
     <p class="more">
-      <a class="button" href="/archive/">
+      <a class="button raised" href="/archive/">
         All {posts.length} posts
       </a>
     </p>

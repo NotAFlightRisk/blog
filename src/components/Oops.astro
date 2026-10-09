@@ -37,17 +37,17 @@ const [first, , last] = String(status);
     <p>{description}</p>
     <ul>
       <li>
-        <a class="button" href="/">
+        <a class="button raised" href="/">
           Latest posts
         </a>
       </li>
       <li>
-        <a class="button" href="/archive/">
+        <a class="button raised" href="/archive/">
           Archive
         </a>
       </li>
       <li>
-        <a class="button" href="/search/">
+        <a class="button raised" href="/search/">
           Search
         </a>
       </li>
@@ -110,15 +110,5 @@ const [first, , last] = String(status);
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-xs);
-  }
-
-  .button {
-    background: var(--surface);
-    box-shadow: var(--panel-shadow);
-
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
-    }
   }
 </style>

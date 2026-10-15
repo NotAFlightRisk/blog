@@ -58,8 +58,8 @@
   --leading-brand: 0.8;
   --tracking-title: -0.04em;
   --tracking-brand: -0.05em;
-  /* about 80 characters of body text a line, as wide as it stays comfy to read */
-  --measure: 42rem;
+  /* about 85 characters of body text a line, as wide as it stays comfy to read */
+  --measure: 46rem;
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;

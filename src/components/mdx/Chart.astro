@@ -26,11 +26,11 @@ const format = (value: number) =>
   `${value.toLocaleString('en-GB', { maximumFractionDigits: 2 })}${unit}`;
 const max = Math.max(...values) || 1;
 
-// a round number to top the y axis at, and the gridlines on the way up to it
+// about four gridlines up the y axis, a round 1, 2 or 5 apart, topping out just above the data
 const step = (() => {
   const rough = max / 4;
   const power = 10 ** Math.floor(Math.log10(rough));
-  return [1, 2, 2.5, 5, 10].map((nice) => nice * power).find((nice) => nice >= rough) ?? rough;
+  return power * ([10, 5, 2].find((nice) => rough / power >= nice / Math.SQRT2) ?? 1);
 })();
 const top = Math.ceil(max / step) * step;
 const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, index) => index * step);
@@ -80,26 +80,24 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
         aria-hidden="true"
         data-pagefind-ignore
       >
-        <div class="plot">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" height="200">
-            {ticks.map((tick) => (
-              <line class="grid" x1="0" x2="100" y1={y(tick)} y2={y(tick)} />
-            ))}
-            {series.map((name, index) => (
-              <polyline
-                fill="none"
-                stroke="currentColor"
-                points={data.map((row, at) => `${x(at)},${y(Number(row[name]))}`).join(' ')}
-                style={`--colour: var(--series-${index + 1})`}
-              />
-            ))}
-          </svg>
+        <div class="y">
           {ticks.map((tick) => (
-            <span class="tick" style={`--y: ${y(tick)}%`}>
-              {format(tick)}
-            </span>
+            <span style={`--y: ${y(tick)}%`}>{format(tick)}</span>
           ))}
         </div>
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" height="200">
+          {ticks.map((tick) => (
+            <line class="grid" x1="0" x2="100" y1={y(tick)} y2={y(tick)} />
+          ))}
+          {series.map((name, index) => (
+            <polyline
+              fill="none"
+              stroke="currentColor"
+              points={data.map((row, at) => `${x(at)},${y(Number(row[name]))}`).join(' ')}
+              style={`--colour: var(--series-${index + 1})`}
+            />
+          ))}
+        </svg>
         {series.length > 1 && (
           <div class="names">
             {ends.map(({ name, index, at }) => (
@@ -199,22 +197,18 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
 
   .line {
     display: grid;
+    grid-template-columns: max-content 1fr;
     column-gap: var(--space-s);
-    padding-top: 1.5em;
+    padding-top: 0.75em;
     color: var(--text-muted);
 
     &.named {
-      grid-template-columns: 1fr max-content;
+      grid-template-columns: max-content 1fr max-content;
     }
-  }
-
-  .plot {
-    position: relative;
-    height: 14rem;
 
     & svg {
       width: 100%;
-      height: 100%;
+      height: 14rem;
       overflow: visible;
     }
   }
@@ -233,17 +227,12 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
     vector-effect: non-scaling-stroke;
   }
 
-  .tick {
-    position: absolute;
-    top: var(--y);
-    left: 0;
-    translate: 0 -100%;
-    line-height: 1.4;
-  }
-
+  /* the axis numbers and line names each share one cell, slid down to their own height */
+  .y,
   .names {
     display: grid;
     grid-template-rows: 100%;
+    line-height: 1.4;
 
     & span {
       grid-area: 1 / 1;
@@ -251,13 +240,20 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
       position: relative;
       top: var(--y);
       translate: 0 -50%;
-      color: var(--colour);
-      font-weight: var(--weight-strong);
     }
   }
 
+  .y span {
+    justify-self: end;
+  }
+
+  .names span {
+    color: var(--colour);
+    font-weight: var(--weight-strong);
+  }
+
   .x {
-    grid-column: 1;
+    grid-column: 2;
     position: relative;
     height: 1.5em;
     margin-top: var(--space-2xs);

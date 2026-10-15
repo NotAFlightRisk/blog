@@ -9,7 +9,9 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
 
 <header>
   <p class="brand">
-    <a href={site.home.url}>{site.home.name}</a>
+    <a href={site.home.url} target="_blank">
+      {site.home.name}
+    </a>
     <span aria-hidden="true">/</span>
     <a href="/" aria-current={path === '/' ? 'page' : undefined}>
       Blog

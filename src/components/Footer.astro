@@ -3,11 +3,7 @@ import { nav, site } from '../site';
 
 // built, not served, so this is the year of the last build
 const year = new Date().getFullYear();
-const sections = [
-  ...nav,
-  { label: 'RSS', href: '/rss.xml' },
-  { label: 'llms.txt', href: '/llms.txt' },
-];
+const sections = [...nav, { label: 'RSS', href: '/rss.xml' }];
 const elsewhere = [
   { label: site.home.name, href: site.home.url },
   { label: 'Source', href: site.repo },
@@ -16,7 +12,11 @@ const elsewhere = [
 
 <footer>
   <small>
-    © <a href={site.home.url}>{site.author.handle}</a> {year}
+    ©
+    <a href={site.home.url} target="_blank">
+      {site.author.handle}
+    </a>
+    {year}
   </small>
 
   <nav aria-label="Sections">
@@ -32,7 +32,9 @@ const elsewhere = [
   <ul>
     {elsewhere.map(({ label, href }) => (
       <li>
-        <a {href}>{label}</a>
+        <a {href} target="_blank">
+          {label}
+        </a>
       </li>
     ))}
   </ul>
@@ -58,9 +60,6 @@ const elsewhere = [
   }
 
   a {
-    display: flex;
-    align-items: center;
-    min-height: var(--target);
     text-decoration: none;
 
     &:hover {

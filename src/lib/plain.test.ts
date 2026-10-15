@@ -43,6 +43,26 @@ test('videos become links, to YouTube or to the file next to the post', () => {
   );
 });
 
+test('charts become their title, a link to the data and the caption', () => {
+  const body = [
+    "import fixes from './fixes.json';",
+    '<Chart type="line" title="Fixes that needed fixing" data={fixes} unit="%">',
+    '  Reviewed advisories, each autumn',
+    '</Chart>',
+    '<Chart title="Inline data" data={[{ year: 2026, share: 10 }]} />',
+  ].join('\n');
+  assert.equal(
+    plainMarkdown(body, files),
+    `**Fixes that needed fixing** ([the data](${files}fixes.json))\n\n_Reviewed advisories, each autumn_\n**Inline data**`,
+  );
+});
+
+test('components it has never heard of go, but keep the words inside them', () => {
+  const body =
+    "import Thing from './Thing.astro';\n<Thing size={2} />\n<Thing>Still **here**</Thing>";
+  assert.equal(plainMarkdown(body, files), 'Still **here**');
+});
+
 test('examples inside code fences are left exactly as written', () => {
   const body = '```mdx\n<Callout type="tip">Use it.</Callout>\nimport x from \'./x.png\';\n```';
   assert.equal(plainMarkdown(body, files), body);

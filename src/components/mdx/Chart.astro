@@ -1,0 +1,275 @@
+---
+interface Props {
+  title: string;
+  // rows of a table: the first column labels each row, the rest are numbers
+  data: Record<string, string | number>[];
+  type?: 'bars' | 'line';
+  unit?: string;
+}
+
+const { title, data, type = 'bars', unit = '' } = Astro.props;
+const [label, ...series] = Object.keys(data[0] ?? {});
+const values = data.flatMap((row) => series.map((name) => Number(row[name])));
+if (!title || !series.length || values.some(Number.isNaN)) {
+  throw new Error(`Chart "${title}" wants a title, and rows with a label and some numbers`);
+}
+if (series.length > (type === 'bars' ? 1 : 4)) {
+  throw new Error(`Chart "${title}" has too many columns, bars take one and lines up to four`);
+}
+
+const format = (value: number) =>
+  `${value.toLocaleString('en-GB', { maximumFractionDigits: 1 })}${unit}`;
+const max = Math.max(...values) || 1;
+
+// a round number to top the y axis at, and the gridlines on the way up to it
+const step = (() => {
+  const rough = max / 4;
+  const power = 10 ** Math.floor(Math.log10(rough));
+  return [1, 2, 2.5, 5, 10].map((nice) => nice * power).find((nice) => nice >= rough) ?? rough;
+})();
+const top = Math.ceil(max / step) * step;
+const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, index) => index * step);
+
+const last = data.length - 1;
+const x = (index: number) => (last ? (index / last) * 100 : 50);
+const y = (value: number) => 100 - (value / top) * 100;
+// every label along the bottom while they fit, then every nth
+const every = data.length > 7 ? Math.ceil(data.length / 6) : 1;
+const shown = data.map((_, index) => index).filter((index) => index % every === 0);
+
+// names sit at the end of their line, nudged apart so they never overlap
+const ends = series
+  .map((name, index) => ({ name, index, at: y(Number(data[last][name])) }))
+  .sort((a, b) => a.at - b.at);
+ends.forEach((end, index) => {
+  if (index) end.at = Math.max(end.at, ends[index - 1].at + 10);
+});
+const overflow = Math.max(0, (ends.at(-1)?.at ?? 0) - 100);
+ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
+---
+
+<figure class="chart">
+  <figcaption>
+    <span class="title">{title}</span>
+    <slot />
+  </figcaption>
+
+  {type === 'bars' ? (
+    <ul class="bars" role="list" data-pagefind-ignore>
+      {data.map((row) => (
+        <li>
+          <span>{row[label]}</span>
+          <span class="track">
+            <span class="fill" style={`--size: ${(Number(row[series[0]]) / max) * 100}%`} />
+          </span>
+          <span class="value">{format(Number(row[series[0]]))}</span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <>
+      <div class="line" aria-hidden="true" data-pagefind-ignore>
+        <div class="plot">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" height="200">
+            {ticks.map((tick) => (
+              <line class="grid" x1="0" x2="100" y1={y(tick)} y2={y(tick)} />
+            ))}
+            {series.map((name, index) => (
+              <polyline
+                fill="none"
+                stroke="currentColor"
+                points={data.map((row, at) => `${x(at)},${y(Number(row[name]))}`).join(' ')}
+                style={`--colour: var(--series-${index + 1})`}
+              />
+            ))}
+          </svg>
+          {ticks.map((tick) => (
+            <span class="tick" style={`--y: ${y(tick)}%`}>
+              {format(tick)}
+            </span>
+          ))}
+        </div>
+        {series.length > 1 && (
+          <div class="names">
+            {ends.map(({ name, index, at }) => (
+              <span style={`--y: ${at}%; --colour: var(--series-${index + 1})`}>{name}</span>
+            ))}
+          </div>
+        )}
+        <div class="x">
+          {shown.map((index) => (
+            <span style={`--x: ${x(index)}%`}>{data[index][label]}</span>
+          ))}
+        </div>
+      </div>
+      <details data-pagefind-ignore>
+        <summary>The numbers</summary>
+        <table>
+          <thead>
+            <tr>
+              <th>{label}</th>
+              {series.map((name) => (
+                <th class="number">{name}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row) => (
+              <tr>
+                <td>{row[label]}</td>
+                {series.map((name) => (
+                  <td class="number">{format(Number(row[name]))}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
+    </>
+  )}
+</figure>
+
+<style>
+  .chart {
+    display: grid;
+    gap: var(--space-m);
+    margin: var(--space-xl) 0;
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  figcaption {
+    color: var(--text-muted);
+    text-wrap: balance;
+
+    & :global(p) {
+      margin: 0;
+    }
+  }
+
+  .title {
+    display: block;
+    color: var(--text);
+    font-size: var(--text-base);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--tracking-title);
+  }
+
+  .bars {
+    display: grid;
+    grid-template-columns: fit-content(40%) 1fr auto;
+    gap: var(--space-xs) var(--space-s);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    & li {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      align-items: center;
+      margin: 0;
+    }
+  }
+
+  /* the number's printed alongside, so the bar can be the brand yellow on either theme */
+  .fill {
+    display: block;
+    width: var(--size);
+    height: 1.25em;
+    border-radius: var(--radius);
+    background: var(--accent);
+    box-shadow: var(--button-shadow);
+  }
+
+  .value {
+    text-align: right;
+  }
+
+  .line {
+    display: grid;
+    column-gap: var(--space-s);
+    padding-top: 1.5em;
+    color: var(--text-muted);
+
+    &:has(.names) {
+      grid-template-columns: 1fr max-content;
+    }
+  }
+
+  .plot {
+    position: relative;
+    height: 14rem;
+
+    & svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+  }
+
+  .grid {
+    stroke: var(--border);
+    vector-effect: non-scaling-stroke;
+  }
+
+  polyline {
+    fill: none;
+    stroke: var(--colour);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .tick {
+    position: absolute;
+    top: var(--y);
+    left: 0;
+    translate: 0 -100%;
+    line-height: 1.4;
+  }
+
+  .names {
+    display: grid;
+    grid-template-rows: 100%;
+
+    & span {
+      grid-area: 1 / 1;
+      align-self: start;
+      position: relative;
+      top: var(--y);
+      translate: 0 -50%;
+      color: var(--colour);
+      font-weight: var(--weight-strong);
+    }
+  }
+
+  .x {
+    grid-column: 1;
+    position: relative;
+    height: 1.5em;
+    margin-top: var(--space-2xs);
+
+    /* slides back by as much of itself as it is across, so the ends stay inside */
+    & span {
+      position: absolute;
+      left: var(--x);
+      translate: calc(var(--x) * -1);
+      white-space: nowrap;
+    }
+  }
+
+  summary {
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  details table {
+    margin-top: var(--space-s);
+  }
+
+  .number {
+    text-align: right;
+  }
+</style>

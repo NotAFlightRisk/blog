@@ -1,0 +1,9 @@
+[
+  { "day": "Mon", "Tea": 5, "Coffee": 2 },
+  { "day": "Tue", "Tea": 4, "Coffee": 2 },
+  { "day": "Wed", "Tea": 4, "Coffee": 3 },
+  { "day": "Thu", "Tea": 3, "Coffee": 4 },
+  { "day": "Fri", "Tea": 6, "Coffee": 1 },
+  { "day": "Sat", "Tea": 2, "Coffee": 1 },
+  { "day": "Sun", "Tea": 3, "Coffee": 0 }
+]

@@ -52,7 +52,15 @@ export function plainMarkdown(body: string, files: string) {
                 ? `https://www.youtube.com/watch?v=${youtube}`
                 : link(props, 'src');
               return `[Video: ${prop(props, 'title')}](${url})`;
-            }),
+            })
+            .replace(/<Chart([^>]*?)(?:\/>|>([\s\S]*?)<\/Chart>)/g, (_, props, caption = '') => {
+              const data = imported.get(prop(props, 'data') ?? '');
+              const title = `**${prop(props, 'title')}**${data ? ` ([the data](${data}))` : ''}`;
+              return caption.trim() ? `${title}\n\n_${caption.trim()}_` : title;
+            })
+            // anything else gets out of the way, and keeps whatever words it was wrapping
+            .replace(/<([A-Z]\w*)[^>]*?\/>/g, '')
+            .replace(/<([A-Z]\w*)[^>]*>([\s\S]*?)<\/\1>/g, '$2'),
     )
     .join('')
     .trim();

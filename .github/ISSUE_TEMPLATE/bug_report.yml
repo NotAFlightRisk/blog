@@ -34,7 +34,7 @@ body:
     attributes:
       label: Page
       description: The address where it happens, if it's on blog.peng.ly.
-      placeholder: https://blog.peng.ly/hello-noot/
+      placeholder: https://blog.peng.ly/github-cron-two-lanes/
     validations:
       required: false
 

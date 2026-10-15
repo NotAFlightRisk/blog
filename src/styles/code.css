@@ -87,10 +87,4 @@
       opacity: 1;
     }
   }
-
-  @media (width >= 64rem) {
-    & > :is(figure.code, .code-wrap, pre.astro-code) {
-      margin-right: calc(var(--breakout) * -1);
-    }
-  }
 }

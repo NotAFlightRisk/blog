@@ -2,7 +2,12 @@ export const site = {
   name: 'Peng.ly Blog',
   url: 'https://blog.peng.ly',
   home: { name: 'Peng.ly', url: 'https://peng.ly' },
-  author: { name: 'Iain', handle: 'NotAFlightRisk', url: 'https://peng.ly/about' },
+  author: {
+    name: 'Iain',
+    handle: 'NotAFlightRisk',
+    url: 'https://peng.ly/about',
+    github: 'https://github.com/NotAFlightRisk',
+  },
   repo: 'https://github.com/NotAFlightRisk/blog',
   description: "Occasional posts about code, security, and whatever else I've been poking at",
   lang: 'en-GB',

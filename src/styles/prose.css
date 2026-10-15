@@ -2,6 +2,11 @@
 .prose {
   line-height: var(--leading-prose);
 
+  /* words keep a readable line length, code and tables get the whole column */
+  & > :not(pre, figure.code, .code-wrap, table) {
+    max-width: var(--measure);
+  }
+
   & > :first-child {
     margin-top: 0;
   }

@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <img src="../posts/hello-noot/light-and-dark.png" alt="The front page of the blog, in the light and dark themes" width="800" />
+  <img src="screenshot.png" alt="A post on the blog, in the light and dark themes" width="800" />
 </p>
 
 ## About
@@ -28,7 +28,7 @@ tags: [meta, astro]
 ---
 ```
 
-`updated`, `draft` and `cover` are optional, and [this post](https://blog.peng.ly/how-a-post-gets-written-here/) shows off the rest - callouts, figures, charts, videos and code. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong.
+`updated`, `draft` and `cover` are optional, and an `.mdx` post can use the callouts, figures, charts and videos in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong.
 
 ---
 

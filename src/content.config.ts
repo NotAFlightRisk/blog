@@ -16,11 +16,18 @@ function slugOf({ entry }: { entry: string }) {
 }
 
 const posts = defineCollection({
-  loader: glob({ pattern: '*/index.{md,mdx}', base: './posts', generateId: slugOf }),
+  // rendered on import like MDX, so a post that won't render stops the build
+  loader: glob({
+    pattern: '*/index.{md,mdx}',
+    base: './posts',
+    generateId: slugOf,
+    deferRender: true,
+  }),
   schema: ({ image }) =>
     z
       .strictObject({
-        title: z.string().min(1).max(90),
+        // search results start trimming around 60, with the site's name on the end
+        title: z.string().min(1).max(65),
         // long enough to say something, short enough that Google doesn't chop it
         description: z.string().min(50).max(160),
         date: z.coerce.date(),

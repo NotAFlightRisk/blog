@@ -8,6 +8,7 @@ interface Props {
 }
 
 const { src, alt } = Astro.props;
+if (!alt?.trim()) throw new Error(`The Figure for ${src.src} needs alt text`);
 // as wide as the reading column gets, and the srcset takes care of sharp screens
 const width = Math.min(src.width, 720);
 ---

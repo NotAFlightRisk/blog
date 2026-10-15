@@ -35,8 +35,22 @@ const unsearched: ShikiTransformer = {
   },
 };
 
+type Node = { type: string; url?: string; alt?: string | null; children?: Node[] };
+
+// a picture with no words is a blank to anyone on a screen reader, so the build won't have it
+const altText = () => (tree: Node, file: { path?: string }) => {
+  const check = (node: Node) => {
+    if (node.type === 'image' && !node.alt?.trim()) {
+      throw new Error(`${file.path}: ${node.url} needs alt text, like ![what's in it](...)`);
+    }
+    node.children?.forEach(check);
+  };
+  check(tree);
+};
+
 export const markdown: AstroUserConfig['markdown'] = {
   processor: unified({
+    remarkPlugins: [altText],
     // Astro adds heading ids after our plugins, so they have to be in place before the links
     rehypePlugins: [rehypeHeadingIds, [rehypeAutolinkHeadings, { behavior: 'wrap' }]],
   }),

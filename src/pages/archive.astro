@@ -6,13 +6,14 @@ import { getPosts } from '../lib/posts';
 
 const posts = await getPosts();
 const years = Map.groupBy(posts, (post) => post.data.date.getUTCFullYear());
-const plural = posts.length === 1 ? 'post' : 'posts';
+const intro =
+  posts.length === 1
+    ? 'Just the one post so far.'
+    : `Every post so far, all ${posts.length} of them, newest first.`;
 ---
 
 <Base title="Archive" description={`Every post on the blog, ${posts.length} so far, newest first.`}>
-  <Intro title="Archive">
-    Every post so far, all {`${posts.length} ${plural}`} of them, newest first.
-  </Intro>
+  <Intro title="Archive">{intro}</Intro>
   {[...years].map(([year, list]) => (
     <section aria-labelledby={`y${year}`}>
       <h2 id={`y${year}`}>{year}</h2>
@@ -26,7 +27,6 @@ const plural = posts.length === 1 ? 'post' : 'posts';
     margin-top: var(--space-2xl);
   }
 
-  /* the year sits in the rail, the posts get the column */
   h2 {
     margin: 0 0 var(--space-l);
     color: var(--text-muted);

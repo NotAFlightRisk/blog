@@ -6,6 +6,7 @@
 
 html {
   scroll-padding-top: calc(var(--bar-height) + var(--space-m));
+  scroll-behavior: smooth;
   scrollbar-color: var(--text-muted) var(--bg);
   accent-color: var(--accent);
   caret-color: var(--link);

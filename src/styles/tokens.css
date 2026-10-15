@@ -58,8 +58,8 @@
   --leading-brand: 0.8;
   --tracking-title: -0.04em;
   --tracking-brand: -0.05em;
-  /* about 70 characters, since Bricolage's nought is wider than most of its letters */
-  --measure: 34em;
+  /* about 80 characters of body text a line, as wide as it stays comfy to read */
+  --measure: 42rem;
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;
@@ -71,9 +71,7 @@
   --space-2xl: 4rem;
   --gutter: clamp(1rem, 3vw, 4rem);
   --rail: 13rem;
-  --page: 60rem;
-  /* how far code can spill into the right margin, so it isn't squeezed to the reading measure */
-  --breakout: clamp(0rem, (100vw - var(--page)) / 2 + var(--gutter) - var(--space-l), 14rem);
+  --page: 80rem;
 
   --radius: 3px;
   --bar-height: 4rem;

@@ -24,10 +24,6 @@ const tags = byTag(await getPosts());
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-s);
-
-    @media (width >= 48rem) {
-      padding-left: calc(var(--rail) + var(--gutter));
-    }
   }
 
   a {

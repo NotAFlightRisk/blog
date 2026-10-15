@@ -44,9 +44,10 @@
   --series-4: var(--astro-code-token-function);
 
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  --text-base: 1.125rem;
-  --text-small: 0.875rem;
-  --text-large: 1.25rem;
+  /* a touch bigger on big screens, with the rest of the scale in step */
+  --text-base: clamp(1.125rem, 0.875rem + 0.3125vw, 1.25rem);
+  --text-small: calc(var(--text-base) * 7 / 9);
+  --text-large: calc(var(--text-base) * 10 / 9);
   --text-h2: clamp(1.5rem, 4vw, 1.75rem);
   --text-title: clamp(2.5rem, 8vw, 4.5rem);
   --text-brand: clamp(1.5rem, 5vw, 2rem);
@@ -59,7 +60,7 @@
   --tracking-title: -0.04em;
   --tracking-brand: -0.05em;
   /* about 85 characters of body text a line, as wide as it stays comfy to read */
-  --measure: 46rem;
+  --measure: calc(var(--text-base) * 41);
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;

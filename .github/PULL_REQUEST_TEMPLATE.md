@@ -1,5 +1,9 @@
 ### Category
-<!-- Bugfix / Feature / Docs / Refactor / Dependencies -->
+<!--
+Posts: New post / Post update
+Site: Feature / UI / Fix / Docs / Maintenance
+Or: Security / Dependencies
+-->
 
 ### Overview
 <!-- What changed, and why. A couple of sentences is plenty -->

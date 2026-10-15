@@ -12,23 +12,31 @@ changelog:
     - title: 💥 Breaking Changes
       labels:
         - breaking-change
-    - title: ✨ New Features
-      labels:
-        - enhancement
-        - feature
-    - title: 🐛 Bug Fixes
-      labels:
-        - bug
-        - fix
     - title: 🔒 Security
       labels:
         - security
-    - title: 📖 Documentation
+    - title: 📝 New Posts
+      labels:
+        - new-post
+    - title: ✏️ Post Updates
+      labels:
+        - post-update
+    - title: ✨ Features
+      labels:
+        - feature
+    - title: 🎨 Look and Feel
+      labels:
+        - ui
+    - title: 🐛 Fixes
+      labels:
+        - fix
+    - title: 🧹 Maintenance
       labels:
         - documentation
+        - maintenance
     - title: 📦 Dependencies
       labels:
         - dependencies
-    - title: 🧹 Other Changes
+    - title: 🧩 Other Changes
       labels:
         - "*"

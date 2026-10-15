@@ -35,7 +35,7 @@ There's a bit more detail in the [Development](./README.md#development) section 
 3. **Keep it focused.** One logical change per PR, please.
 4. **Add tests** for any new logic. A new post doesn't need any, the build checks it.
 5. **Run `npm run check`, `npm run format:check` and `npm test`** before you push.
-6. **Open the PR**, fill in the template, and link the issue it closes.
+6. **Open the PR**, fill in the template, and link the issue it closes. The Category you pick is where it goes in the release notes.
 
 Dont worry about getting it perfect first time, we're happy to help get it over the line.
 
@@ -43,15 +43,15 @@ Dont worry about getting it perfect first time, we're happy to help get it over 
 
 ### Commit messages
 
-We use [Conventional Commits](https://www.conventionalcommits.org/), and the release notes are generated from them, so it does matter:
+We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-feat: add support for custom timeouts
-fix: handle empty response from upstream
-docs: clarify the deployment steps
+post: Your GitHub cron is 20 minutes late, or six hours
+feat: charts drawn at build time
+fix: keep the share card's title and date on the card
 ```
 
-Types are `feat`, `fix`, `docs`, `refactor`, `test`, `perf`, `build`, `ci` and `chore`. Breaking changes get a `!` (like `feat!:`) plus a `BREAKING CHANGE:` footer.
+Types are `post`, `feat`, `fix`, `docs`, `refactor`, `test`, `perf`, `build`, `ci` and `chore`. A new post is `post:` followed by its title. Breaking changes get a `!` (like `feat!:`) plus a `BREAKING CHANGE:` footer.
 
 ---
 

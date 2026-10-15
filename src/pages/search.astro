@@ -106,6 +106,17 @@ import Base from '../layouts/Base.astro';
     &::placeholder {
       color: var(--text-muted);
     }
+
+    &:focus-visible {
+      outline-color: transparent;
+      border-color: var(--focus);
+      box-shadow: 0 0 0 var(--space-2xs) var(--focus-glow);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: var(--quick) var(--ease);
+      transition-property: border-color, box-shadow;
+    }
   }
 
   [role='status'] {

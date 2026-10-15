@@ -99,6 +99,10 @@
   & :is(th, td) {
     padding: var(--space-xs) var(--space-s);
     border-bottom: var(--separator);
+  }
+
+  /* left by default, unless the Markdown lined a column up with :--- or ---: */
+  & :where(th, td):where(:not([align])) {
     text-align: left;
   }
 

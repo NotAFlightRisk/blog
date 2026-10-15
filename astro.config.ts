@@ -1,10 +1,12 @@
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, envField, fontProviders } from 'astro/config';
+import { postDates } from './src/lib/lastmod';
 import { markdown } from './src/lib/markdown';
 import { site } from './src/site';
 
 const optional = { context: 'client', access: 'public', optional: true } as const;
+const dates = postDates();
 
 export default defineConfig({
   site: site.url,
@@ -12,7 +14,16 @@ export default defineConfig({
   markdown,
   build: { inlineStylesheets: 'always' },
   image: { layout: 'constrained', domains: ['i.ytimg.com'] },
-  integrations: [mdx(), sitemap({ filter: (page) => !/\/(404|500|search)\/$/.test(page) })],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !/\/(404|500|search)\/$/.test(page),
+      serialize: (item) => ({
+        ...item,
+        lastmod: dates.get(new URL(item.url).pathname.slice(1, -1)),
+      }),
+    }),
+  ],
   fonts: [
     {
       provider: fontProviders.local(),

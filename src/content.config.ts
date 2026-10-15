@@ -20,7 +20,8 @@ const posts = defineCollection({
   schema: ({ image }) =>
     z
       .strictObject({
-        title: z.string().min(1).max(90),
+        // search results start trimming around 60, with the site's name on the end
+        title: z.string().min(1).max(65),
         // long enough to say something, short enough that Google doesn't chop it
         description: z.string().min(50).max(160),
         date: z.coerce.date(),

@@ -2,8 +2,8 @@
 .prose {
   line-height: var(--leading-prose);
 
-  /* words keep a readable line length, code and tables get the whole column */
-  & > :not(pre, figure.code, .code-wrap, table) {
+  /* everything lines up at a readable width, long code scrolls */
+  & > * {
     max-width: var(--measure);
   }
 

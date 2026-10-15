@@ -1,0 +1,317 @@
+[
+  {
+    "day": "13 Aug",
+    "Slow now": 1.7,
+    "Fast now": 0.5
+  },
+  {
+    "day": "14 Aug",
+    "Slow now": 1.6,
+    "Fast now": 0.5
+  },
+  {
+    "day": "15 Aug",
+    "Slow now": 0.7,
+    "Fast now": 0.2
+  },
+  {
+    "day": "16 Aug",
+    "Slow now": 0.7,
+    "Fast now": 0.2
+  },
+  {
+    "day": "17 Aug",
+    "Slow now": 0.8,
+    "Fast now": 0.2
+  },
+  {
+    "day": "18 Aug",
+    "Slow now": 0.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "19 Aug",
+    "Slow now": 0.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "20 Aug",
+    "Slow now": 0.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "21 Aug",
+    "Slow now": 0.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "22 Aug",
+    "Slow now": 0.7,
+    "Fast now": 0.2
+  },
+  {
+    "day": "23 Aug",
+    "Slow now": 0.8,
+    "Fast now": 0.2
+  },
+  {
+    "day": "24 Aug",
+    "Slow now": 0.9,
+    "Fast now": 0.3
+  },
+  {
+    "day": "25 Aug",
+    "Slow now": 0.8,
+    "Fast now": 0.2
+  },
+  {
+    "day": "26 Aug",
+    "Slow now": 0.9,
+    "Fast now": 0.3
+  },
+  {
+    "day": "27 Aug",
+    "Slow now": 10.2,
+    "Fast now": 2.0
+  },
+  {
+    "day": "28 Aug",
+    "Slow now": 11.5,
+    "Fast now": 3.0
+  },
+  {
+    "day": "29 Aug",
+    "Slow now": 6.3,
+    "Fast now": 0.2
+  },
+  {
+    "day": "30 Aug",
+    "Slow now": 5.1,
+    "Fast now": 0.2
+  },
+  {
+    "day": "31 Aug",
+    "Slow now": 6.0,
+    "Fast now": 0.3
+  },
+  {
+    "day": "1 Sep",
+    "Slow now": 4.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "2 Sep",
+    "Slow now": 4.3,
+    "Fast now": 0.3
+  },
+  {
+    "day": "3 Sep",
+    "Slow now": 4.3,
+    "Fast now": 0.3
+  },
+  {
+    "day": "4 Sep",
+    "Slow now": 4.3,
+    "Fast now": 0.2
+  },
+  {
+    "day": "5 Sep",
+    "Slow now": 3.8,
+    "Fast now": 0.2
+  },
+  {
+    "day": "6 Sep",
+    "Slow now": 4.0,
+    "Fast now": 0.2
+  },
+  {
+    "day": "7 Sep",
+    "Slow now": 4.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "8 Sep",
+    "Slow now": 4.4,
+    "Fast now": 0.2
+  },
+  {
+    "day": "9 Sep",
+    "Slow now": 4.5,
+    "Fast now": 0.2
+  },
+  {
+    "day": "10 Sep",
+    "Slow now": 4.4,
+    "Fast now": 0.2
+  },
+  {
+    "day": "11 Sep",
+    "Slow now": 4.4,
+    "Fast now": 0.2
+  },
+  {
+    "day": "12 Sep",
+    "Slow now": 4.0,
+    "Fast now": 0.2
+  },
+  {
+    "day": "13 Sep",
+    "Slow now": 4.7,
+    "Fast now": 0.2
+  },
+  {
+    "day": "14 Sep",
+    "Slow now": 5.3,
+    "Fast now": 0.3
+  },
+  {
+    "day": "15 Sep",
+    "Slow now": 4.8,
+    "Fast now": 0.2
+  },
+  {
+    "day": "16 Sep",
+    "Slow now": 4.6,
+    "Fast now": 0.2
+  },
+  {
+    "day": "17 Sep",
+    "Slow now": 4.7,
+    "Fast now": 0.2
+  },
+  {
+    "day": "18 Sep",
+    "Slow now": 4.4,
+    "Fast now": 0.2
+  },
+  {
+    "day": "19 Sep",
+    "Slow now": 4.1,
+    "Fast now": 0.2
+  },
+  {
+    "day": "20 Sep",
+    "Slow now": 4.5,
+    "Fast now": 0.2
+  },
+  {
+    "day": "21 Sep",
+    "Slow now": 5.3,
+    "Fast now": 0.3
+  },
+  {
+    "day": "22 Sep",
+    "Slow now": 4.7,
+    "Fast now": 0.2
+  },
+  {
+    "day": "23 Sep",
+    "Slow now": 4.6,
+    "Fast now": 0.2
+  },
+  {
+    "day": "24 Sep",
+    "Slow now": 4.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "25 Sep",
+    "Slow now": 4.8,
+    "Fast now": 0.2
+  },
+  {
+    "day": "26 Sep",
+    "Slow now": 4.6,
+    "Fast now": 0.2
+  },
+  {
+    "day": "27 Sep",
+    "Slow now": 5.1,
+    "Fast now": 0.3
+  },
+  {
+    "day": "28 Sep",
+    "Slow now": 6.2,
+    "Fast now": 0.3
+  },
+  {
+    "day": "29 Sep",
+    "Slow now": 5.7,
+    "Fast now": 0.3
+  },
+  {
+    "day": "30 Sep",
+    "Slow now": 5.7,
+    "Fast now": 0.3
+  },
+  {
+    "day": "1 Oct",
+    "Slow now": 6.1,
+    "Fast now": 0.3
+  },
+  {
+    "day": "2 Oct",
+    "Slow now": 5.7,
+    "Fast now": 0.3
+  },
+  {
+    "day": "3 Oct",
+    "Slow now": 5.0,
+    "Fast now": 0.3
+  },
+  {
+    "day": "4 Oct",
+    "Slow now": 5.6,
+    "Fast now": 1.3
+  },
+  {
+    "day": "5 Oct",
+    "Slow now": 6.8,
+    "Fast now": 0.4
+  },
+  {
+    "day": "6 Oct",
+    "Slow now": 6.3,
+    "Fast now": 0.3
+  },
+  {
+    "day": "7 Oct",
+    "Slow now": 6.1,
+    "Fast now": 0.3
+  },
+  {
+    "day": "8 Oct",
+    "Slow now": 6.4,
+    "Fast now": 0.3
+  },
+  {
+    "day": "9 Oct",
+    "Slow now": 6.2,
+    "Fast now": 0.3
+  },
+  {
+    "day": "10 Oct",
+    "Slow now": 5.8,
+    "Fast now": 0.3
+  },
+  {
+    "day": "11 Oct",
+    "Slow now": 6.0,
+    "Fast now": 0.3
+  },
+  {
+    "day": "12 Oct",
+    "Slow now": 7.0,
+    "Fast now": 0.5
+  },
+  {
+    "day": "13 Oct",
+    "Slow now": 6.7,
+    "Fast now": 0.4
+  },
+  {
+    "day": "14 Oct",
+    "Slow now": 4.9,
+    "Fast now": 0.2
+  }
+]

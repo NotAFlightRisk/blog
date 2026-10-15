@@ -12,7 +12,6 @@ const { posts } = Astro.props;
 <ol>
   {posts.map((post) => (
     <li>
-      <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
       <article>
         <h2>
           <a href={postUrl(post)}>{post.data.title}</a>
@@ -20,6 +19,7 @@ const { posts } = Astro.props;
         </h2>
         <p>{post.data.description}</p>
         <p class="meta">
+          <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
           <span>{readingTime(post.body ?? '')} min read</span>
           {post.data.tags.map((tag) => (
             <a href={tagUrl(tag)}>#{tag}</a>
@@ -37,27 +37,14 @@ const { posts } = Astro.props;
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-
-  /* the date sits out in the rail, the words get the column */
-  li {
-    display: grid;
-    gap: var(--space-2xs) var(--gutter);
 
     @media (width >= 48rem) {
-      grid-template-columns: var(--rail) minmax(0, var(--measure));
-      align-items: baseline;
+      padding-left: calc(var(--rail) + var(--gutter));
     }
   }
 
-  time,
-  .meta {
-    color: var(--text-muted);
-    font-size: var(--text-small);
-  }
-
-  time {
-    font-variant-numeric: tabular-nums;
+  article {
+    max-width: var(--measure);
   }
 
   h2 {
@@ -83,6 +70,8 @@ const { posts } = Astro.props;
     flex-wrap: wrap;
     align-items: center;
     gap: 0 var(--space-s);
+    color: var(--text-muted);
+    font-size: var(--text-small);
 
     & a {
       padding-block: var(--space-2xs);

@@ -10,6 +10,8 @@
   --text: light-dark(#151b23, #dbe0e9);
   --text-muted: light-dark(#4f5b6b, #9aa4b2);
   --link: light-dark(var(--text), var(--accent));
+  --focus: light-dark(var(--text), var(--accent));
+  --focus-glow: light-dark(#febc2066, #febc2040);
   --border: light-dark(#151b2324, #ffffff1f);
   --shadow: light-dark(#151b2338, #000000c7);
   --shadow-soft: light-dark(#151b232e, #000000a3);

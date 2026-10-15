@@ -1,7 +1,8 @@
 ---
 title: How a post gets written here
-description: Folders, frontmatter, and the three MDX components worth the faff - callouts, figures with captions, and videos that only load when you ask.
+description: Folders, frontmatter, and the MDX components worth the faff - callouts, figures with captions, charts, and videos that only load when you ask.
 date: 2026-10-08
+updated: 2026-10-15
 tags: [astro, mdx, writing]
 cover:
   src: ./cover.png
@@ -9,11 +10,13 @@ cover:
 ---
 
 import Callout from '../../src/components/mdx/Callout.astro';
+import Chart from '../../src/components/mdx/Chart.astro';
 import Figure from '../../src/components/mdx/Figure.astro';
 import Video from '../../src/components/mdx/Video.astro';
 import rail from './rail.png';
 import toggle from './toggle.webm';
 import still from './toggle.png';
+import week from './week.json';
 
 A post is a folder in `posts/`, named after the address you want. Inside goes `index.md`, or `index.mdx` if you want components, plus any pictures. This one lives at `posts/how-a-post-gets-written-here/index.mdx`.
 
@@ -60,6 +63,26 @@ Pictures get turned into AVIF and WebP at a few sizes, so a phone never download
 </Figure>
 
 Plain Markdown images work too, they just don't get a caption.
+
+## Charts
+
+These get drawn at build time as well, so a chart is just some HTML and an SVG, with no JavaScript and nothing to load. Hand it rows like a table: the first column labels each row, the rest are numbers.
+
+<Chart title="Cups of tea per post" data={[{ post: 'Noot noot', cups: 2 }, { post: 'This one', cups: 5 }, { post: 'The inline script', cups: 3 }]} />
+
+Bars are the default and take one column of numbers. A line takes up to four, each named at its end, and the numbers sit underneath for anyone who'd rather read them. Bigger data's tidier in a file next to the post.
+
+<Chart type="line" title="Tea and coffee, in an average week" data={week}>
+  Made up, but not by much
+</Chart>
+
+```mdx
+import week from './week.json';
+
+<Chart type="line" title="Tea and coffee, in an average week" data={week}>
+  Made up, but not by much
+</Chart>
+```
 
 ## Video
 

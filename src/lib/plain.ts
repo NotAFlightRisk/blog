@@ -7,6 +7,14 @@ const prop = (props: string, name: string) =>
     ?.slice(1)
     .find(Boolean);
 
+// anything else gets out of the way, keeping the words it wraps, from the inside out
+const unwrap = (text: string): string => {
+  const next = text
+    .replace(/<([A-Z][\w.]*)[^>]*?\/>/g, '')
+    .replace(/<([A-Z][\w.]*)[^>]*>((?:(?!<\1[\s>])[\s\S])*?)<\/\1>/g, '$2');
+  return next === text ? text : unwrap(next);
+};
+
 const quote = (text: string) =>
   text
     .trim()
@@ -52,8 +60,14 @@ export function plainMarkdown(body: string, files: string) {
                 ? `https://www.youtube.com/watch?v=${youtube}`
                 : link(props, 'src');
               return `[Video: ${prop(props, 'title')}](${url})`;
+            })
+            .replace(/<Chart([^>]*?)(?:\/>|>([\s\S]*?)<\/Chart>)/g, (_, props, caption = '') => {
+              const data = imported.get(prop(props, 'data') ?? '');
+              const title = `**${prop(props, 'title')}**${data ? ` ([the data](${data}))` : ''}`;
+              return caption.trim() ? `${title}\n\n_${caption.trim()}_` : title;
             }),
     )
+    .map((part, index) => (index % 2 ? part : unwrap(part)))
     .join('')
     .trim();
 }

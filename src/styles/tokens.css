@@ -35,6 +35,12 @@
   --astro-code-token-punctuation: var(--text-muted);
   --astro-code-token-link: var(--link);
 
+  /* chart colours, borrowed from the code ones since they read well on both themes */
+  --series-1: var(--astro-code-token-keyword);
+  --series-2: var(--astro-code-token-constant);
+  --series-3: var(--astro-code-token-string);
+  --series-4: var(--astro-code-token-function);
+
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --text-base: 1.125rem;
   --text-small: 0.875rem;

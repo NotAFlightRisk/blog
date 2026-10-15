@@ -10,7 +10,7 @@ import medians from './medians.json';
 import byStars from './slow-by-stars.json';
 import byDay from './lanes-by-day.json';
 
-My [android-rom-compat](https://github.com/NotAFlightRisk/android-rom-compat) repo pulls in new device data every Monday at `17 6 * * 1`. Minute 17, because everyone knows not to use `:00`. The top of the hour is when GitHub's busiest, and the docs say so.
+My [android-rom-compat](https://github.com/NotAFlightRisk/android-rom-compat) repo pulls in new device data every Monday at `17 6 * * 1`. I chose minute 17 since everyone knows not to use `:00`, becuase top of the hour is when GitHub's busiest (according to their [workflow schedule](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule) docs).
 
 Here's when it actually ran:
 
@@ -24,27 +24,27 @@ $ gh run list --event schedule \
 2026-09-21T12:54:11Z
 ```
 
-That's newest first, in UTC. Against the 06:17 it asked for, reading up from the bottom, it was six and a half hours late, then seven and three quarters, eight and a half, and over nine. It gets later every week.
+Do you see the issue? Yeah, against the 06:17 it asked for, it was six and a half hours late, then seven and three quarters, eight and a half, and over nine. Actually, seems it gets later every week.
 
 Another of my repos has the same cron, and on the 12th it started at 15:33:46 too, to the second. Both were stuck in the same queue, and the queue was nine hours long.
 
-So I went and checked a few hundred other people's.
+So this got me curious, and I went and checked a few hundred other people's results...
 
 ## Two lanes
 
-Scheduled runs on public repos are all visible through the Actions API. I took a random mix of active repos, from tiny to very popular, and measured every daily cron in them over the first two weeks of October. Here's how late each one typically ran:
+Scheduled runs on public repos are all visible through the Actions API. So I took a random mix of active repos, from tiny to very popular, and measured every daily cron in them over the first two weeks of October. Here's how late each one typically ran:
 
 <Chart title="How late each daily schedule typically runs" data={medians}>
   Number of workflows, by their median lateness from 1 to 14 October
 </Chart>
 
-Nearly half run within the hour, usually about 20 minutes late. The rest are almost three hours late or worse, usually six. Between one and two hours there's nobody at all, so it's two lanes with nothing in the middle.
+Nearly half run within the hour, usually about 20 minutes late. The rest are almost three hours late or worse, usually six. Interestingly, between one and two hours there's nobody at all, so it's basically two lanes with nothing in the middle.
 
 It's not a bad day here and there, either. A workflow that's six hours late on Monday is six hours late on Tuesday, and on Wednesday. They almost never swap lanes.
 
 ## Who gets the slow lane
 
-Anything under a few thousand stars is more likely to be slow than not. Only the really big repos get away with it.
+Anything under a few thousand stars is more likely to be slow than not. Only the really big repos get prioritized
 
 <Chart title="Repos in the slow lane, by stars" data={byStars} unit="%">
   Share of repos in my sample whose schedules run hours late

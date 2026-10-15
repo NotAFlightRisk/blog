@@ -61,6 +61,10 @@ test('components it has never heard of go, but keep the words inside them', () =
   const body =
     "import Thing from './Thing.astro';\n<Thing size={2} />\n<Thing>Still **here**</Thing>";
   assert.equal(plainMarkdown(body, files), 'Still **here**');
+  assert.equal(
+    plainMarkdown('<Box>one <Box>two</Box> <Row><Cell>three</Cell></Row></Box>', files),
+    'one two three',
+  );
 });
 
 test('examples inside code fences are left exactly as written', () => {

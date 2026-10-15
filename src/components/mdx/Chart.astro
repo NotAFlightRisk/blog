@@ -9,16 +9,21 @@ interface Props {
 
 const { title, data, type = 'bars', unit = '' } = Astro.props;
 const [label, ...series] = Object.keys(data[0] ?? {});
-const values = data.flatMap((row) => series.map((name) => Number(row[name])));
-if (!title || !series.length || values.some(Number.isNaN)) {
-  throw new Error(`Chart "${title}" wants a title, and rows with a label and some numbers`);
+const values = data.flatMap((row) => series.map((name) => row[name]));
+const counts = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value >= 0;
+if (!title || !series.length || !values.every(counts)) {
+  throw new Error(`Chart "${title}" wants a title, and rows with a label then numbers from 0 up`);
 }
 if (series.length > (type === 'bars' ? 1 : 4)) {
   throw new Error(`Chart "${title}" has too many columns, bars take one and lines up to four`);
 }
+if (type === 'line' && data.length < 2) {
+  throw new Error(`Chart "${title}" needs two rows or more to draw a line`);
+}
 
 const format = (value: number) =>
-  `${value.toLocaleString('en-GB', { maximumFractionDigits: 1 })}${unit}`;
+  `${value.toLocaleString('en-GB', { maximumFractionDigits: 2 })}${unit}`;
 const max = Math.max(...values) || 1;
 
 // a round number to top the y axis at, and the gridlines on the way up to it
@@ -33,9 +38,11 @@ const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, index) => i
 const last = data.length - 1;
 const x = (index: number) => (last ? (index / last) * 100 : 50);
 const y = (value: number) => 100 - (value / top) * 100;
-// every label along the bottom while they fit, then every nth
-const every = data.length > 7 ? Math.ceil(data.length / 6) : 1;
-const shown = data.map((_, index) => index).filter((index) => index % every === 0);
+// every label along the bottom while they fit, then every nth, always ending on the last
+const every = data.length > 7 ? Math.ceil(last / 5) : 1;
+const shown = data
+  .map((_, index) => index)
+  .filter((index) => index === last || (index % every === 0 && last - index >= every / 2));
 
 // names sit at the end of their line, nudged apart so they never overlap
 const ends = series
@@ -68,7 +75,11 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
     </ul>
   ) : (
     <>
-      <div class="line" aria-hidden="true" data-pagefind-ignore>
+      <div
+        class:list={['line', { named: series.length > 1 }]}
+        aria-hidden="true"
+        data-pagefind-ignore
+      >
         <div class="plot">
           <svg viewBox="0 0 100 100" preserveAspectRatio="none" height="200">
             {ticks.map((tick) => (
@@ -192,7 +203,7 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
     padding-top: 1.5em;
     color: var(--text-muted);
 
-    &:has(.names) {
+    &.named {
       grid-template-columns: 1fr max-content;
     }
   }
@@ -257,6 +268,13 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
       left: var(--x);
       translate: calc(var(--x) * -1);
       white-space: nowrap;
+    }
+
+    /* half as many on a phone, still ending on the last */
+    @media (width < 36rem) {
+      & span:nth-last-child(even) {
+        display: none;
+      }
     }
   }
 

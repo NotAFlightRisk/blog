@@ -7,6 +7,14 @@ const prop = (props: string, name: string) =>
     ?.slice(1)
     .find(Boolean);
 
+// anything else gets out of the way, keeping the words it wraps, from the inside out
+const unwrap = (text: string): string => {
+  const next = text
+    .replace(/<([A-Z][\w.]*)[^>]*?\/>/g, '')
+    .replace(/<([A-Z][\w.]*)[^>]*>((?:(?!<\1[\s>])[\s\S])*?)<\/\1>/g, '$2');
+  return next === text ? text : unwrap(next);
+};
+
 const quote = (text: string) =>
   text
     .trim()
@@ -57,11 +65,9 @@ export function plainMarkdown(body: string, files: string) {
               const data = imported.get(prop(props, 'data') ?? '');
               const title = `**${prop(props, 'title')}**${data ? ` ([the data](${data}))` : ''}`;
               return caption.trim() ? `${title}\n\n_${caption.trim()}_` : title;
-            })
-            // anything else gets out of the way, and keeps whatever words it was wrapping
-            .replace(/<([A-Z]\w*)[^>]*?\/>/g, '')
-            .replace(/<([A-Z]\w*)[^>]*>([\s\S]*?)<\/\1>/g, '$2'),
+            }),
     )
+    .map((part, index) => (index % 2 ? part : unwrap(part)))
     .join('')
     .trim();
 }

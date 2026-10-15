@@ -1,0 +1,8 @@
+[
+  { "stars": "Under 10", "slow": 94 },
+  { "stars": "10-99", "slow": 68 },
+  { "stars": "100-999", "slow": 61 },
+  { "stars": "1k-3k", "slow": 63 },
+  { "stars": "3k-10k", "slow": 36 },
+  { "stars": "10k+", "slow": 3 }
+]

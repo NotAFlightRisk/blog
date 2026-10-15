@@ -1,0 +1,85 @@
+---
+title: Your GitHub cron is 20 minutes late, or six hours
+description: Since a GitHub incident in late August, scheduled Actions runs have split into two lanes, and small repos mostly get the slow one. Here's how to dodge it.
+date: 2026-10-15
+tags: [github-actions, cron, open-source]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import medians from './medians.json';
+import byStars from './slow-by-stars.json';
+import byDay from './lanes-by-day.json';
+
+My [android-rom-compat](https://github.com/NotAFlightRisk/android-rom-compat) repo pulls in new device data every Monday at `17 6 * * 1`. I chose minute 17 since everyone knows not to use `:00`, becuase top of the hour is when GitHub's busiest (according to their [workflow schedule](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule) docs).
+
+Here's when it actually ran:
+
+```sh
+$ gh run list --event schedule \
+    -R NotAFlightRisk/android-rom-compat \
+    --json createdAt --jq '.[].createdAt'
+2026-10-12T15:33:46Z
+2026-10-05T14:47:28Z
+2026-09-28T14:02:11Z
+2026-09-21T12:54:11Z
+```
+
+Do you see the issue? Yeah, against the 06:17 it asked for, it was six and a half hours late, then seven and three quarters, eight and a half, and over nine. Actually, seems it gets later every week.
+
+Another of my repos has the same cron, and on the 12th it started at 15:33:46 too, to the second. Both were stuck in the same queue, and the queue was nine hours long.
+
+So this got me curious, and I went and checked a few hundred other people's results...
+
+## Two lanes
+
+Scheduled runs on public repos are all visible through the Actions API. So I took a random mix of active repos, from tiny to very popular, and measured every daily cron in them over the first two weeks of October. Here's how late each one typically ran:
+
+<Chart title="How late each daily schedule typically runs" data={medians}>
+  Number of workflows, by their median lateness from 1 to 14 October
+</Chart>
+
+Nearly half run within the hour, usually about 20 minutes late. The rest are almost three hours late or worse, usually six. Interestingly, between one and two hours there's nobody at all, so it's basically two lanes with nothing in the middle.
+
+It's not a bad day here and there, either. A workflow that's six hours late on Monday is six hours late on Tuesday, and on Wednesday. They almost never swap lanes.
+
+## Who gets the slow lane
+
+Anything under a few thousand stars is more likely to be slow than not. Only the really big repos get prioritized
+
+<Chart title="Repos in the slow lane, by stars" data={byStars} unit="%">
+  Share of repos in my sample whose schedules run hours late
+</Chart>
+
+Personal repos mostly get it worse than org ones. I doubt stars are what GitHub actually looks at. More likely it's how busy the repo is, or something else that comes with being popular, and you can't see that from outside, so tbh I dont know. It's not down to the plan you're on though - nextcloud has a 17-star repo in the slow lane and a 10k-star one in the fast lane, under the same org.
+
+And schedules on `:00` were no more likely to be slow than the rest.
+
+## It started on 27 August
+
+<Chart type="line" title="Daily median lateness, in hours" data={byDay} unit=" h">
+  The same workflows, grouped by the lane they're in now
+</Chart>
+
+Before the 27th, the repos that are slow now were often behind, but they were spread out, with no gap between them and the rest.
+
+On 26 August GitHub had an [Actions incident](https://stspg.io/pg14nv9m3095). The database behind the service that triggers workflows got overloaded, and the write-up says this:
+
+> Several changes to improve the general scalability of this part of Actions were already complete and deploying to production. Rollout of those changes will be complete within the next 24 hours.
+
+27 and 28 August were a mess for everyone, with nothing about it on the status page. Then from the 29th, one group went back to about 15 minutes late. The other hasnt had a day under three and a half hours since, and it's getting worse - about four and a half hours in early September, six by October.
+
+I can't tell you if the rollout caused it. The timing matches, and that's all I've got. Someone else [noticed schedules going missing](https://github.com/orgs/community/discussions/207370) on those same dates, and five weeks on the only reply is from GitHub's bot. It's not totally new either - back in July [this thread](https://github.com/orgs/community/discussions/201738) had a brand new repo running 8-14 hours late almost every day.
+
+## What to do about it
+
+Run the `gh run list` above on your own repo and compare it with your cron. Under an hour late, you're fine. Hours late every day and you're in the slow lane, and moving the minute won't get you out of it.
+
+If the time actually matters, stop asking `schedule:` for it. Add `workflow_dispatch:` to the workflow and kick it off from something that keeps time, like a cron on a box you already run:
+
+```sh
+gh workflow run import.yml -R you/your-repo
+```
+
+In [the August thread](https://github.com/orgs/community/discussions/207370), dispatched runs started in the same minute 209 times out of 209.
+
+My own Monday import is still on `17 6 * * 1`, mind. It's device data, and nobody's waiting on it at quarter past six on a Monday.

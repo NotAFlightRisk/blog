@@ -1,14 +1,66 @@
 [
-  { "month": "Sep 25", "reviewed": 73 },
-  { "month": "Oct", "reviewed": 87 },
-  { "month": "Nov", "reviewed": 91 },
-  { "month": "Dec", "reviewed": 84 },
-  { "month": "Jan 26", "reviewed": 87 },
-  { "month": "Feb", "reviewed": 88 },
-  { "month": "Mar", "reviewed": 87 },
-  { "month": "Apr", "reviewed": 94 },
-  { "month": "May", "reviewed": 57 },
-  { "month": "Jun", "reviewed": 9 },
-  { "month": "Jul", "reviewed": 7 },
-  { "month": "Aug", "reviewed": 24 }
+  {
+    "month": "May '25",
+    "reviewed": 86
+  },
+  {
+    "month": "Jun '25",
+    "reviewed": 82
+  },
+  {
+    "month": "Jul '25",
+    "reviewed": 81
+  },
+  {
+    "month": "Aug '25",
+    "reviewed": 100
+  },
+  {
+    "month": "Sep '25",
+    "reviewed": 73
+  },
+  {
+    "month": "Oct '25",
+    "reviewed": 87
+  },
+  {
+    "month": "Nov '25",
+    "reviewed": 91
+  },
+  {
+    "month": "Dec '25",
+    "reviewed": 84
+  },
+  {
+    "month": "Jan '26",
+    "reviewed": 87
+  },
+  {
+    "month": "Feb '26",
+    "reviewed": 88
+  },
+  {
+    "month": "Mar '26",
+    "reviewed": 87
+  },
+  {
+    "month": "Apr '26",
+    "reviewed": 94
+  },
+  {
+    "month": "May '26",
+    "reviewed": 57
+  },
+  {
+    "month": "Jun '26",
+    "reviewed": 9
+  },
+  {
+    "month": "Jul '26",
+    "reviewed": 7
+  },
+  {
+    "month": "Aug '26",
+    "reviewed": 24
+  }
 ]

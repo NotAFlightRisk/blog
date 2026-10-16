@@ -2,15 +2,17 @@
 import Intro from '../components/Intro.astro';
 import PostList from '../components/PostList.astro';
 import Base from '../layouts/Base.astro';
-import { getPosts } from '../lib/posts';
+import { absolute, getPosts } from '../lib/posts';
 import { latest, site } from '../site';
 
 const posts = await getPosts();
+const url = absolute('/');
 const schema = [
+  { '@type': 'WebSite', name: site.name, url, inLanguage: site.lang },
   {
     '@type': 'Blog',
     name: site.name,
-    url: site.url,
+    url,
     description: site.description,
     inLanguage: site.lang,
     author: { '@type': 'Person', name: site.author.name, url: site.author.url },

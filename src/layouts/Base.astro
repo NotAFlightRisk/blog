@@ -21,7 +21,7 @@ interface Props {
 const {
   title,
   description = site.description,
-  image = { src: '/og.png', alt: `${site.name}, in big letters next to a cartoon penguin` },
+  image = { src: '/og.png', alt: `${site.tagline}, on a yellow card with a cartoon penguin` },
   article,
   schema = [],
   noindex = false,
@@ -40,7 +40,8 @@ const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': schem
     <Font cssVariable="--font-sans" preload />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <meta name="robots" content={noindex ? 'noindex' : 'max-image-preview:large'} />
+    {!noindex && <link rel="canonical" href={canonical} />}
     <meta name="author" content={site.author.name} />
     <meta name="theme-color" content={site.color} />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
@@ -74,6 +75,7 @@ const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': schem
     <meta name="twitter:title" content={title ?? site.name} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={absolute(image.src)} />
+    <meta name="twitter:image:alt" content={image.alt} />
     {schema.length > 0 && <script type="application/ld+json" set:html={graph} />}
     <slot name="head" />
     <Telemetry />

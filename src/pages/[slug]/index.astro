@@ -42,7 +42,7 @@ const schema = [
     inLanguage: site.lang,
     author: { '@type': 'Person', name: site.author.name, url: site.author.url },
     publisher: { '@type': 'Person', name: site.author.name, url: site.home.url },
-    isPartOf: { '@type': 'Blog', name: site.name, url: site.url },
+    isPartOf: { '@type': 'Blog', name: site.name, url: absolute('/') },
   },
   {
     '@type': 'BreadcrumbList',

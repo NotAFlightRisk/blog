@@ -10,6 +10,7 @@ export const site = {
   },
   repo: 'https://github.com/NotAFlightRisk/blog',
   description: "Occasional posts about code, security, and whatever else I've been poking at",
+  tagline: 'Writing about code, security and the odd penguin',
   lang: 'en-GB',
   locale: 'en_GB',
   // matches the yellow bar, so the browser's toolbar joins in

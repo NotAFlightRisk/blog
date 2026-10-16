@@ -32,14 +32,20 @@ I wanted to know how much longer, and whether criticals really do go first.
 
 There are two usual ways into GitHub's Advisory Database. A maintainer can publish an advisory on their own repo, and GitHub reviews that. Or someone else publishes the CVE (Apache, the Django team, the Go team, VulnCheck, a bug bounty platform), NVD lists it, and GitHub [imports it automatically](https://docs.github.com/en/code-security/security-advisories/working-with-global-security-advisories-from-the-github-advisory-database/about-the-github-advisory-database) as "unreviewed". An unreviewed advisory doesn't say which package or versions it's about, and Dependabot [only alerts on reviewed ones](https://docs.github.com/en/code-security/dependabot/dependabot-alerts/about-dependabot-alerts), so nothing happens until a curator fills that in.
 
-Django's went the second way, and that's the route this post is about.
+Django's went the second way, and that's the route most of this post is about.
 
 ## May fell off a cliff
 
 Here's the share of PyPI and Go CVEs on that route that GitHub reviewed within 30 days of NVD listing them:
 
-<Chart title="NVD-route CVEs reviewed within 30 days, PyPI and Go" data={within} unit="%">
-  By the month NVD listed them, up to August
+<Chart
+  type="columns"
+  title="NVD-route CVEs reviewed within 30 days, PyPI and Go"
+  data={within}
+  unit="%"
+>
+  By the month NVD listed them. No September yet - by 15 October only 3 from its first fortnight had
+  turned up in PyPA's and Go's databases
 </Chart>
 
 Every month from May 2025 to April 2026 was somewhere between 73 and 100%. Then May dropped to 57%, and June and July didn't make it to one in ten. Across May to mid-September it's 31%, against 88% for the same months last year. August's a bit better at 24%, but that's only 37 CVEs and nearly all of them Python, so I wouldn't call it a recovery yet.
@@ -76,11 +82,21 @@ The 2026 column is May to mid-September again. Airflow there includes its provid
 
 They do get there in the end. 99% of June's CVEs have been reviewed by now, 83% of July's and 73% of August's. 36 from May to mid-September still haven't, and when I checked them all again on 16 October, none had moved.
 
+## Repo advisories wait too
+
+The other route isn't any quicker. Once a maintainer publishes an advisory, GitHub's [docs](https://docs.github.com/en/code-security/concepts/vulnerability-reporting-and-management/repository-security-advisories#dependabot-alerts-for-published-security-advisories) say reviewing it and sending Dependabot alerts "can take up to 72 hours". In September someone from GitHub's community team [replied](https://github.com/orgs/community/discussions/207039#discussioncomment-18358374) to a thread about slow CVE requests:
+
+> we're currently processing records in the order they're received, with a turnaround of approximately five weeks.
+
+And personally, since mid-August maintainers have published 58 of the [advisories I've reported](https://peng.ly/security-reports), 51 of them for packages Dependabot covers. GitHubs reviewed 9 so far, which took anywhere from 6 to 38 days, and the oldest one still missing from its database went public on 14 August.
+
 ## NIST changed something the same fortnight
 
 Why now? Tbh I don't know. GitHub says that "since mid-April" it hasn't consistently met its own goals for publishing. On 15 April, NIST [changed how NVD works](https://www.nist.gov/news-events/news/2026/04/nist-updates-nvd-operations-address-record-cve-growth): it now only adds its own details, like severity scores and product lists, to CVEs that meet certain criteria (actively exploited, used by the US government and so on), and the rest wait.
 
-So maybe GitHub's curators leaned on NVD's details and lost them when NIST stopped. Or maybe they're just burried under everything else coming in. From the outside I can't tell those apart.
+So maybe GitHub's curators leaned on NVD's details and lost them when NIST stopped. Or maybe they're just burried under everything else coming in - GitHub's June post says its CNA got almost 4,000 CVE requests in May alone, nearly ten times the year before. My repo advisories come with the package and versions already filled in by the maintainer, so they don't need anything from NVD, and they're slow too. That makes me lean towards the queue, but I can't prove it from out here.
+
+Quite honestly, this isn't good enough. GitHub - you need to do better. Millions of downstream apps trust you with their security, and you're taking weeks or months to send out Dependabot alerts for known critical bugs.
 
 ## Trivy and Grype don't see them either
 

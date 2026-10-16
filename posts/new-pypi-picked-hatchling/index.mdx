@@ -1,0 +1,81 @@
+---
+title: New Python packages picked hatchling, not uv_build
+description: Gentoo asked people to stop using uv_build. Hardly anyone does. New PyPI projects doubled, the extra mostly picked hatchling, and so did every model I asked.
+date: 2026-10-16
+tags: [python, pypi, uv, ai]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import share from './share.json';
+
+On Monday, Michał Górny from Gentoo posted [a plea not to use uv-build](https://blogs.gentoo.org/mgorny/2026/10/12/a-plea-not-to-use-uv-build/). It's a Rust backend with 1.2-1.5 MiB wheels and a dozen releases a month, and Gentoo users have to build every one of them from source, all so it can zip up some pure Python files. Fair enough really.
+
+But it made me wonder how many people acutally use it. uv is everywhere now, and since [uv 0.8](https://github.com/astral-sh/uv/releases/tag/0.8.0) in July 2025, `uv init --package` hands you uv_build out of the box. So surely that's what new packages are built with?
+
+Nope. About one in twenty. Here's what new PyPI projects have been using each month:
+
+<Chart type="line" title="Build backend of new PyPI projects" data={share} unit="%">
+  Share of each month's sample of new projects, read from the first source release they uploaded
+</Chart>
+
+The one that moved is hatchling. It sat at about 20% from June to November last year, jumped to over a third by January, and since March it's been somewhere around 40%. Setuptools barely moved, and Poetry's backend went from about one in ten to almost nothing.
+
+To get these I took 400 new projects at random from a day or three of PyPI's [changelog](https://github.com/pypi/warehouse/blob/main/docs/dev/api-reference/xml-rpc.md) each month, and read the build backend out of the first source release each one uploaded. Anyone with five or more in a sample got dropped, so one person pushing out 90 near-identical packages doesn't count 90 times.
+
+## Twice as many packages
+
+The chart hides the bigger change, though. Around the same time, PyPI started getting about twice as many new projects. [Answer.AI noticed too](https://answer.ai/posts/2026-03-12-so-where-are-all-the-ai-apps.html), with over 25,000 in March, which is about 800 a day. So here's each backend in new projects a day, before and after:
+
+| New projects a day   | Jun-Nov 2025 | Mar-Oct 2026 |
+| -------------------- | -----------: | -----------: |
+| setuptools           |          165 |          335 |
+| hatchling            |           80 |          310 |
+| uv_build             |           15 |           35 |
+| poetry-core          |           35 |           15 |
+| setup.py, no backend |           90 |           40 |
+| something else       |           15 |           35 |
+| All of them          |          390 |          765 |
+
+Setuptools doubled, which is about what you'd expect from the thing that's been the default forever. Hatchling nearly quadrupled. Of the 375 or so extra projects a day, about 230 are on hatchling, and uv_build got about 20.
+
+And hatchling went first. In the January window PyPI was still only getting 445 new projects a day, about normal, but hatchling's share had already gone from 21% to 36%. The flood didn't show up untill February.
+
+## What changed over the winter
+
+So what happened between November and January? Not uv. Its two big changes were 0.8 in July 2025 (uv_build as the default) and [0.12](https://github.com/astral-sh/uv/releases/tag/0.12.0) in July 2026 (every new project packaged by default), and hatchling's line is flat after both. Not the [PyPA packaging tutorial](https://packaging.python.org/en/latest/tutorials/packaging-projects/) either, which "uses Hatchling by default" and has done since 2022.
+
+What did happen in the second half of November 2025 was [Gemini 3](https://blog.google/products/gemini/gemini-3/), GPT-5.1-Codex-Max and [Claude Opus 4.5](https://www.anthropic.com/news/claude-opus-4-5), all within about a week. Thats only timing. But think about what those models learned from. Years of the PyPA tutorial saying hatchling, plus `uv init --package` saying it too, right up until 0.8 switched it.
+
+So what do they actually write today?
+
+## So I asked them
+
+I gave the current Claude models and Codex the same prompt this week, in an empty folder: "Reply with only the full pyproject.toml you would write for a brand-new pure-Python library called tidy-dates (a small date-parsing helper) that I want to publish on PyPI." Three runs each, then three more with "I manage everything with uv" added.
+
+| Model       | Plain         | Told I use uv           |
+| ----------- | ------------- | ----------------------- |
+| Opus 5.5    | all hatchling | 2 uv_build, 1 hatchling |
+| Sonnet 5.5  | all hatchling | all uv_build            |
+| Haiku 5.5   | all hatchling | all hatchling           |
+| Fable 5.1   | all hatchling | 2 uv_build, 1 hatchling |
+| gpt-5.6-sol | all hatchling | 1 uv_build, 2 hatchling |
+
+Fifteen out of fifteen picked hatchling when I didn't mention uv. Even telling them I use uv only got uv_build about half the time.
+
+Then have a look at the versions. When Fable went for uv_build, it pinned it like this:
+
+```toml title="pyproject.toml"
+[build-system]
+requires = ["uv_build>=0.8,<0.9"]
+build-backend = "uv_build"
+```
+
+That 0.8 is from July 2025, and uv's on 0.13.1 now. The other Claude models capped it somewhere between 0.10 and 0.12, so none of them would take the current one. Their hatchling pins ran from 1.21 to 1.27, the newest of which came out in December 2024, with hatchling on 1.32 today. The only recent pin was Codex's `uv_build>=0.12.12,<0.13`, and that was on the one run where it went and searched uv's docs first.
+
+## Who wrote them, though?
+
+That I can't tell you. A source tarball doesn't say whether a person or an agent made it. I did try: repos that have an agent file like `AGENTS.md` or `CLAUDE.md` in them today use hatchling more (55% against 37% without, for projects from this September). But hatchling went up nearly as much in repos without those files, and an agent doesnt have to leave a file behind, so files only get you so far.
+
+What I can say is the new hatchling projects look less like uv projects, not more. In mid-2025, 35-50% of hatchling source releases had a `uv.lock` inside. Now it's under a quarter.
+
+uv_build might be creeping up. It was 9% in the October window, and 8% in a fresh one I pulled for 12-14 October, its best apart from an odd 12% in February. That's a few hundred projects each, so it could just be noise, and for Gentoo's sake I hope it is.

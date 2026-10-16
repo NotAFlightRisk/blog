@@ -1,0 +1,92 @@
+---
+title: Python and Go CVEs from NVD reach Dependabot a month late
+description: Since May, PyPI and Go CVEs that GitHub picks up from NVD have waited a median 36 days for review, criticals included. Dependabot stays quiet until then.
+date: 2026-10-17
+tags: [security, dependabot, github, python, go]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import within from './within-30-days.json';
+
+Back in June, GitHub [wrote up its advisory backlog](https://github.blog/security/supply-chain-security/inside-the-advisory-database-and-what-happens-when-vulnerability-volume-breaks-records/), and had this to say to anyone relying on Dependabot:
+
+> New advisories may take longer to trigger, with critical issues prioritized.
+
+That's two promises in one sentence, so I went and checked both. The first one is true, and a lot more true than I expected for one kind of CVE. The second I couldn't find any sign of.
+
+## Two ways in
+
+A CVE gets into GitHub's Advisory Database one of two ways. A maintainer can publish an advisory on their own repo, and GitHub reviews that. Or a CVE is published by someone else (Apache, the Django team, the Go team, VulnCheck, a bug bounty platform), NVD lists it, and GitHub [imports it automatically](https://docs.github.com/en/code-security/security-advisories/working-with-global-security-advisories-from-the-github-advisory-database/about-the-github-advisory-database) as "unreviewed". An unreviewed advisory doesn't say which package or versions it's about, and Dependabot [only alerts on reviewed ones](https://docs.github.com/en/code-security/dependabot/dependabot-alerts/about-dependabot-alerts), so nothing happens until a curator at GitHub fills that in.
+
+This post is about the second lot. Here's Django's August security release going through it:
+
+| Date   | What happened                                                                                                                                                                                                                           |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4 Aug  | Django [releases 6.0.8 and 5.2.17](https://www.djangoproject.com/weblog/2026/aug/04/security-releases/). CVE-2026-15307 lets a staff user write files to disk through GeoDjango lookups, "in some cases enabling remote code execution" |
+| 4 Aug  | NVD lists it, and GitHub imports it as unreviewed about an hour later                                                                                                                                                                   |
+| 30 Sep | GitHub reviews it as [high severity](https://github.com/advisories/GHSA-wvqv-fj8w-qmhm), and Dependabot finally knows it exists                                                                                                         |
+
+That's 57 days with a clean Dependabot run on a vulnerable Django. Its June release went the same way, 40 to 65 days. In 2024 and 2025, all 26 of Django's NVD CVEs were reviewed inside a month, most of them the same day.
+
+## It fell off a cliff in May
+
+You can't see GitHub's queue from the API, as the unreviewed advisories don't name a package. So I came at it from the other side. PyPA and the Go team keep their own vulnerability databases, both on [OSV](https://osv.dev), so I took every CVE from 2024 on in those, kept the ones that came in through NVD and not through a repo advisory, and looked up when GitHub reviewed each. I left out Go's standard library, which GitHub doesn't review in any year (1 of 81), and one small Python package that got 50 CVEs in a single August batch. That's about 2,000 CVEs, 450 of them from May to mid-September this year.
+
+Here's the share of them GitHub reviewed within 30 days of NVD listing them:
+
+<Chart title="NVD-path CVEs reviewed within 30 days, PyPI and Go" data={within} unit="%">
+  By the month NVD listed them. August is the last full month with a whole 30 days behind it
+</Chart>
+
+It sat between 73 and 94% for a year, then May dropped to 57%, and June and July didn't make it to one in ten. Across May to mid-September it's 31%, against 88% for the same months in 2025. PyPI went from 81% to 34% and Go from 96% to 27%, so it's not one ecosytem dragging the other down. Thats both of them falling over in the same month.
+
+The typical wait went from same-day to 36 days.
+
+## Criticals too
+
+So what about "critical issues prioritized"?
+
+| Reviewed within 30 days | May-Sep 2025     | May-Sep 2026    |
+| ----------------------- | ---------------- | --------------- |
+| Critical or high        | 83% (50 of 60)   | 33% (66 of 200) |
+| Medium or low           | 90% (126 of 140) | 30% (77 of 254) |
+
+There's three points between them, which is nothing at these numbers. Two critical `golang.org/x/crypto` CVEs NVD listed on 22 May (one is SSH agent key constraints [not being enforced](https://github.com/advisories/GHSA-jppx-rxg9-jmrx)) got reviewed on 25 June. Maybe criticals do jump the queue for other kinds of advisory, but for these I cant see it.
+
+## Not just tiny packages
+
+I half expected this to be a long tail of obscure stuff nobody installs. It isn't:
+
+| Package             | 2024-25    | May-Sep 2026 |
+| ------------------- | ---------- | ------------ |
+| Mattermost          | 154 of 155 | 18 of 42     |
+| Apache Airflow      | 21 of 21   | 0 of 34      |
+| Gitea               | 10 of 10   | 0 of 15      |
+| golang.org/x/crypto | 3 of 5     | 0 of 14      |
+| Django              | 26 of 26   | 3 of 13      |
+
+That's reviewed within 30 days, out of all their NVD-path CVEs.
+
+## It's a queue, not a bin
+
+They do get reviewed in the end. Of June's CVEs 99% have been by now, July's 83% and August's 73%. The other 36 from this year still have nothing - I checked every one of them again on 16 October.
+
+## Whose fault is it?
+
+Tbh I don't know. GitHub says it's been missing its publication goals "since mid-April". On 15 April, NIST [changed how NVD works](https://www.nist.gov/news-events/news/2026/04/nist-updates-nvd-operations-address-record-cve-growth): it now only adds its own details (severity scores, product lists) to CVEs that meet certain criteria, like being actively exploited or used by the US government, and the rest wait. Those two dates are the same fortnight, and May is the first bad month.
+
+So either GitHub's curators leaned on NVD's details and lost them when NIST stopped, or they're buried under everything else that's been piling in, or both. I looked at 46 of them on NVD, and 20 of the 30 late ones have NIST's product lists now, which suggests it's not only missing NVD data. But "has it now" isn't "had it on day one", so I wouldn't lean on that.
+
+One more limit: npm and Maven don't have a vulnerability database of their own outside GitHub's, so I can't run this for them. They might be fine. I've no idea.
+
+## What to do about it
+
+A green Dependabot run doesn't mean much for PyPI and Go right now, and swapping in another scanner might not help either. I pinned 16 of the still-unreviewed PyPI CVEs in a test project on 15 October and ran [Trivy](https://github.com/aquasecurity/trivy) 0.76 and [Grype](https://github.com/anchore/grype) 0.120 on defaults. Neither found a single one. [osv-scanner](https://github.com/google/osv-scanner) reads PyPA's database directly and found all 16, which is a bit of a given since that's where I got them from. That's still the point though, and it's a one-liner to try:
+
+```sh
+osv-scanner scan source -r .
+```
+
+For Go it's less clear cut. Go's own database slowed down over the same months, so `govulncheck` doesn't get you much further ahead.
+
+I'll run the lot again in November, and see if August ever catches up.

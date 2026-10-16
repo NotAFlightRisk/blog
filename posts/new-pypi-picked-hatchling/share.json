@@ -1,0 +1,104 @@
+[
+  {
+    "month": "Jun 25",
+    "hatchling": 22,
+    "setuptools": 39,
+    "uv_build": 0
+  },
+  {
+    "month": "Jul 25",
+    "hatchling": 20,
+    "setuptools": 43,
+    "uv_build": 1
+  },
+  {
+    "month": "Aug 25",
+    "hatchling": 18,
+    "setuptools": 40,
+    "uv_build": 3
+  },
+  {
+    "month": "Sep 25",
+    "hatchling": 19,
+    "setuptools": 43,
+    "uv_build": 6
+  },
+  {
+    "month": "Oct 25",
+    "hatchling": 18,
+    "setuptools": 48,
+    "uv_build": 4
+  },
+  {
+    "month": "Nov 25",
+    "hatchling": 21,
+    "setuptools": 42,
+    "uv_build": 7
+  },
+  {
+    "month": "Dec 25",
+    "hatchling": 26,
+    "setuptools": 45,
+    "uv_build": 6
+  },
+  {
+    "month": "Jan 26",
+    "hatchling": 36,
+    "setuptools": 37,
+    "uv_build": 3
+  },
+  {
+    "month": "Feb 26",
+    "hatchling": 31,
+    "setuptools": 39,
+    "uv_build": 12
+  },
+  {
+    "month": "Mar 26",
+    "hatchling": 43,
+    "setuptools": 39,
+    "uv_build": 3
+  },
+  {
+    "month": "Apr 26",
+    "hatchling": 39,
+    "setuptools": 45,
+    "uv_build": 4
+  },
+  {
+    "month": "May 26",
+    "hatchling": 45,
+    "setuptools": 41,
+    "uv_build": 3
+  },
+  {
+    "month": "Jun 26",
+    "hatchling": 45,
+    "setuptools": 41,
+    "uv_build": 2
+  },
+  {
+    "month": "Jul 26",
+    "hatchling": 39,
+    "setuptools": 48,
+    "uv_build": 5
+  },
+  {
+    "month": "Aug 26",
+    "hatchling": 36,
+    "setuptools": 48,
+    "uv_build": 4
+  },
+  {
+    "month": "Sep 26",
+    "hatchling": 40,
+    "setuptools": 42,
+    "uv_build": 6
+  },
+  {
+    "month": "Oct 26",
+    "hatchling": 36,
+    "setuptools": 44,
+    "uv_build": 9
+  }
+]

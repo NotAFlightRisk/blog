@@ -25,17 +25,17 @@
     "@astrojs/sitemap": "^3.7.4",
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource/bricolage-grotesque": "^5.3.0",
-    "@sentry/browser": "^11.6.0",
+    "@sentry/browser": "^11.7.0",
     "@shikijs/transformers": "^4.5.0",
     "astro": "^7.3.8",
     "rehype-autolink-headings": "^7.1.0",
-    "satori": "^0.47.1",
+    "satori": "^0.56.0",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "pagefind": "^1.5.2",
-    "prettier": "^3.9.9",
+    "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.1",
     "typescript": "^6.0.3"
   },

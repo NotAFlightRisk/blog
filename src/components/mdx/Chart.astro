@@ -3,7 +3,7 @@ interface Props {
   title: string;
   // rows of a table: the first column labels each row, the rest are numbers
   data: Record<string, string | number>[];
-  type?: 'bars' | 'line';
+  type?: 'bars' | 'columns' | 'line';
   unit?: string;
 }
 
@@ -15,8 +15,10 @@ const counts = (value: unknown): value is number =>
 if (!title || !series.length || !values.every(counts)) {
   throw new Error(`Chart "${title}" wants a title, and rows with a label then numbers from 0 up`);
 }
-if (series.length > (type === 'bars' ? 1 : 4)) {
-  throw new Error(`Chart "${title}" has too many columns, bars take one and lines up to four`);
+if (series.length > (type === 'line' ? 4 : 1)) {
+  throw new Error(
+    `Chart "${title}" has too many columns, bars and columns take one, lines up to four`,
+  );
 }
 if (type === 'line' && data.length < 2) {
   throw new Error(`Chart "${title}" needs two rows or more to draw a line`);
@@ -36,7 +38,9 @@ const top = Math.ceil(max / step) * step;
 const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, index) => index * step);
 
 const last = data.length - 1;
-const x = (index: number) => (last ? (index / last) * 100 : 50);
+// columns put their label under the middle of each bar, lines run edge to edge
+const x = (index: number) =>
+  type === 'columns' ? ((index + 0.5) / data.length) * 100 : last ? (index / last) * 100 : 50;
 const y = (value: number) => 100 - (value / top) * 100;
 // every label along the bottom while they fit, then every nth, always ending on the last
 const every = data.length > 7 ? Math.ceil(last / 5) : 1;
@@ -76,7 +80,7 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
   ) : (
     <>
       <div
-        class:list={['line', { named: series.length > 1 }]}
+        class:list={['plot', { named: series.length > 1 }]}
         aria-hidden="true"
         data-pagefind-ignore
       >
@@ -89,15 +93,23 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
           {ticks.map((tick) => (
             <line class="grid" x1="0" x2="100" y1={y(tick)} y2={y(tick)} />
           ))}
-          {series.map((name, index) => (
-            <polyline
-              fill="none"
-              stroke="currentColor"
-              points={data.map((row, at) => `${x(at)},${y(Number(row[name]))}`).join(' ')}
-              style={`--colour: var(--series-${index + 1})`}
-            />
-          ))}
+          {type === 'line' &&
+            series.map((name, index) => (
+              <polyline
+                fill="none"
+                stroke="currentColor"
+                points={data.map((row, at) => `${x(at)},${y(Number(row[name]))}`).join(' ')}
+                style={`--colour: var(--series-${index + 1})`}
+              />
+            ))}
         </svg>
+        {type === 'columns' && (
+          <div class="columns">
+            {data.map((row) => (
+              <span class="fill" style={`--size: ${100 - y(Number(row[series[0]]))}%`} />
+            ))}
+          </div>
+        )}
         {series.length > 1 && (
           <div class="names">
             {ends.map(({ name, index, at }) => (
@@ -195,7 +207,7 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
     text-align: right;
   }
 
-  .line {
+  .plot {
     display: grid;
     grid-template-columns: max-content 1fr;
     column-gap: var(--space-s);
@@ -206,10 +218,30 @@ ends.forEach((end) => (end.at = Math.max(0, end.at - overflow)));
       grid-template-columns: max-content 1fr max-content;
     }
 
-    & svg {
+    /* the columns stand on the svg's gridlines */
+    & svg,
+    & .columns {
+      grid-area: 1 / 2;
       width: 100%;
       height: 14rem;
+    }
+
+    & svg {
       overflow: visible;
+    }
+  }
+
+  .columns {
+    display: grid;
+    grid-auto-columns: 1fr;
+    grid-auto-flow: column;
+    grid-template-rows: 100%;
+    align-items: end;
+    column-gap: var(--space-2xs);
+
+    & .fill {
+      width: auto;
+      height: var(--size);
     }
   }
 

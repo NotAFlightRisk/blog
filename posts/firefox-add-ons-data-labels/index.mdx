@@ -1,7 +1,7 @@
 ---
 title: Most big Firefox add-ons still don't say what they collect
 description: Mozilla said every Firefox add-on would declare its data collection by mid-2026. Most popular ones still don't, and one that did got buried in one-star reviews.
-date: 2026-10-17
+date: 2026-10-18
 tags: [firefox, privacy, browser-extensions, mozilla]
 ---
 
@@ -32,9 +32,9 @@ Here's what Firefox showed me this morning when I went to install two password m
 
 Which one's telling you more? LastPass, obviously. It's got a whole "Required data collection" section, and a pre-ticked box for sending the developer technical data. Bitwarden's just stops after the permissions, and it'd be easy to read that as "collects nothing".
 
-It doesn't mean that. An add-on that collects nothing gets to say so in the prompt - Proton Pass's says "The developer says this extension doesn't require data collection." Bitwarden's has no data section at all because nobody's made Bitwarden fill it in.
+But, that's not what this actually means.. An add-on that really collects nothing will say so in the prompt - Proton Pass's says "The developer says this extension doesn't require data collection." Bitwarden's has no data section at all, since nobody's made Bitwarden fill it in.
 
-Since [3 November 2025](https://blog.mozilla.org/addons/2025/10/23/data-collection-consent-changes-for-new-firefox-extensions/), every new add-on on addons.mozilla.org (AMO) has had to put a `data_collection_permissions` key in its manifest, even if it's only to say "none", and Firefox 140 and up shows it in that prompt. Add-ons that already existed were let off, and Mozilla said that wouldn't last:
+Since [3 November 2025](https://blog.mozilla.org/addons/2025/10/23/data-collection-consent-changes-for-new-firefox-extensions/), every new add-on on addons.mozilla.org (AMO) has had to put a `data_collection_permissions` key in its manifest, even if it's only to say "none", and Firefox 140+ shows it in that prompt. Add-ons that already existed were let off, but Mozilla said that wouldn't last:
 
 > In the first half of 2026, Mozilla will require all extensions to adopt this framework. But don't worry, we'll give plenty of notice via the add-ons blog.
 
@@ -56,7 +56,7 @@ That's Mozilla's deadline, not theirs. Nobody told them to add it (more on that 
 
 ## Nothing makes them
 
-Why haven't they? Mostly beacuse they don't have to. AMO's [upload check](https://github.com/mozilla/addons-server/blob/2571f276a22ea251e34e71c82ba3f5ae3f40449d/src/olympia/devhub/tasks.py#L402-L429) only turns a missing key into an error when it's a brand new add-on uploaded through the developer hub. An update gets a warning, and that [warning](https://github.com/mozilla/addons-linter/blob/1850fb845eccd80df0e16c6bc068c347d13f3c66/src/messages/manifestjson.js#L902-L913) still says the key "will be required for new versions of existing extensions in the future". Mozilla's [docs](https://extensionworkshop.com/documentation/develop/firefox-builtin-data-consent/) say older add-ons "will have to at a later date", with no date.
+Why haven't they? Mostly beacuse they don't have to. AMO's upload check [upload check](https://github.com/mozilla/addons-server/blob/2571f276a22ea251e34e71c82ba3f5ae3f40449d/src/olympia/devhub/tasks.py#L402-L429) only turns a missing key into an error when it's a brand new add-on uploaded through the developer hub. An update gets a warning, and that [warning](https://github.com/mozilla/addons-linter/blob/1850fb845eccd80df0e16c6bc068c347d13f3c66/src/messages/manifestjson.js#L902-L913) still says the key "will be required for new versions of existing extensions in the future". Mozilla's [docs](https://extensionworkshop.com/documentation/develop/firefox-builtin-data-consent/) say older add-ons "will have to at a later date", with no date.
 
 The nearest thing to news is [a reply](https://discourse.mozilla.org/t/the-new-data-transmission-permissions-seem-to-be-misleading-to-users/149410/6) from Mozilla's add-ons team on thier forum, on 10 September:
 
@@ -64,7 +64,7 @@ The nearest thing to news is [a reply](https://discourse.mozilla.org/t/the-new-d
 
 From the code, I think "asking" there is that warning. The same reply says "I can't promise anything specific right now".
 
-## Saying so costs you
+## Being honest costs you
 
 When an older add-on adds the key for the first time and says it collects something, every existing user gets asked to agree, and if they say no the update doesn't install. Saying "none" doesn't do that. Firefox has a way round it: a `has_previous_consent` flag that says users already agreed to whatever the add-on did before, so the update [goes through without a prompt](https://github.com/mozilla-firefox/firefox/blob/6210f73af7ef7df6878d8f2d78599bf73e39c5ca/toolkit/mozapps/extensions/AddonManager.sys.mjs#L1311-L1326). But AMO's linter has rejected that flag since October 2025, in a change titled ["Prevent the use of has_previous_consent for now"](https://github.com/mozilla/addons-linter/pull/5807).
 

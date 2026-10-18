@@ -9,7 +9,7 @@ Pick something you self-host. Could the people behind it put the next release ou
 
 I went through the 50 most-starred apps on [awesome-selfhosted](https://awesome-selfhosted.net), its non-free list included, to find out. For 37 of them the answer is yes, or they already have. The AGPL badge on the repo doesn't tell you which group yours is in.
 
-| Licence | Apps |
+| Group | Apps |
 | --- | --- |
 | Already ship some non-open code (11) | Dify, Open WebUI, Stirling-PDF, LobeHub, NocoDB, Meilisearch, Twenty, Metabase, Rocket.Chat, Outline, Novu |
 | Permissive (18) | Ollama, Hoppscotch, code-server, AnythingLLM, Caddy, Traefik, Memos, PocketBase, Gitea, Appwrite, LocalAI, LibreChat, Hyperswitch, Reactive Resume, Kong, Appsmith, MindsDB, Umami |
@@ -17,15 +17,17 @@ I went through the 50 most-starred apps on [awesome-selfhosted](https://awesome-
 | Copyleft, no CLA (11) | Immich, Syncthing, Vaultwarden, Pi-hole, Penpot, Jellyfin, SiYuan, paperless-ngx, RSSHub, Sunshine, ERPNext |
 | Permissive, owned by a foundation (2) | Home Assistant, Apache Airflow |
 
-The first three rows are the 37. That's counting what's in each public repo as of 17 October, read by hand, and plenty of apps in the other rows sell a closed enterprise edition from somewhere else already. Odoo and Kong for a start. I ran the next 50 as well and it drops to 31, as further down there are more volunteer projects like SearXNG and Invidious with no company to do it. That's 68 of the top 100.
+The first three groups are the 37, and the 11 at the top are a mix. NocoDB, Outline, Dify, LobeHub and Open WebUI put the whole app under their own terms, while Metabase, Rocket.Chat, Twenty, Meilisearch, Novu and Stirling-PDF fence off the paid bits in a folder or marked files. Anyone could make a closed fork of Home Assistant or Airflow, but the official ones belong to foundations that exist to keep them open.
+
+I only counted what's in each public repo as of 17 October, so Odoo and Kong, which already sell closed enterprise editions from elsewhere, aren't in the first group. I ran the next 50 as well and it drops to 31, beacuse there are more volunteer projects like SearXNG and Invidious with no company to do it. That's 68 of the top 100.
 
 ## NocoDB did it in one commit
 
-NocoDB is a self-hosted Airtable with 65,000 stars, and untill this year it was AGPL. On 8 January a commit called [`chore: change to sustainable use license`](https://github.com/nocodb/nocodb/commit/d98ad39c9b147be0fbd4e1e6ffbf354283b0b4e1) deleted the 661-line AGPL and put 61 lines of the Sustainable Use License in it's place, the same licence n8n uses. The last AGPL release, 0.265.1, came out in October. Everything since 13 January says this instead:
+NocoDB is a self-hosted Airtable with 65,000 stars, and untill this year it was AGPL. On 8 January a commit called ["chore: change to sustainable use license"](https://github.com/nocodb/nocodb/commit/d98ad39c9b147be0fbd4e1e6ffbf354283b0b4e1) deleted the 661-line AGPL and put 61 lines of the Sustainable Use License in it's place, the same licence n8n uses. The last AGPL release, 0.265.1, came out last October. Every release since says this instead:
 
 > You may use or modify the software only for your own internal business purposes or for non-commercial or personal use.
 
-GitHub lists 336 contributors to that repo. None of them had to be asked, and a week or so later a user [said as much](https://github.com/nocodb/nocodb/discussions/12891):
+GitHub lists 336 contributors to that repo. None of them had to be asked, and a week after the release a user [said as much](https://github.com/nocodb/nocodb/discussions/12891):
 
 > For the record, this project uses a CLA, so there isn't a legal issue with changing the license of external contributions.
 
@@ -39,46 +41,39 @@ AppFlowy, Plane, Puter, ToolJet and PhotoPrism are all AGPL today, and all have 
 
 > this includes the right to apply any license to the Contributions that PhotoPrism considers fit for the respective purpose as decided by PhotoPrism in its sole discretion, including other open-source, copyleft, and proprietary licenses
 
-None of that is hidden, and people have been asking about it for ages. Discourse's own forum has a [thread from 2013](https://meta.discourse.org/t/1399) titled "Does Discourse's contributor agreement provide an exit door from Open Source?". Discourse is still GPL 13 years later, so having the door doesn't mean they'll use it.
+None of that is hidden, and people have been asking about it for ages. Discourse's own forum has a [thread from 2013](https://meta.discourse.org/t/1399) titled "Does Discourse's contributor agreement provide an exit door from Open Source?". Discourse is still GPL 13 years on.
 
-Not every CLA is a door, either. Postiz, 61st by stars, uses the FSFE's [Fiduciary License Agreement](https://github.com/gitroomhq/postiz-app/blob/main/ICLA.md), which only lets them license your code under terms that are both free software and open source. So it's worth reading what a CLA actually says.
+Companies add the CLA early, though. The copyleft apps that did change all had theirs well before they used it. Metabase's came more than four years ahead of its `enterprise/` folder, and NocoDB's nearly four years ahead of January.
 
-Companies do put the door in early though. Every copyleft app in the top 50 that moved with a CLA had it in place long before. Metabase's was more than four years ahead of its `enterprise/` folder, and NocoDB's nearly four years ahead of January.
+Not every CLA lets them do it, mind. Postiz, 61st by stars, uses the FSFE's [Fiduciary License Agreement](https://github.com/gitroomhq/postiz-app/blob/main/ICLA.md), which says any closed version of your code has to come with an open one too.
 
-It's on my own box too. My analytics run on [Plausible](https://github.com/plausible/analytics), which is AGPL with a CLA bot on every PR, and has an `extra/` folder whose licence grants "no rights to use, distribute or otherwise exploit this software". The community edition I run doesn't compile it in. My error tracker, [Bugsink](https://github.com/bugsink/bugsink), was never open source to begin with, and I picked it anyway.
+My own box isn't any better. My analytics run on [Plausible](https://github.com/plausible/analytics), which is AGPL with a CLA bot on every PR, and has an `extra/` folder whose licence grants "no rights to use, distribute or otherwise exploit this software". The community edition I run doesn't compile it in. My error tracker, [Bugsink](https://github.com/bugsink/bugsink), was never open source to begin with, and I picked it anyway.
 
 ## MIT never needed one
 
-The permissive row is the biggest, and it's the one people worry abut least. MIT and Apache let anyone take the code and ship a closed version, as long as they keep the licence and notices, and that includes the people who wrote it. Contributors' code comes in under the same terms, so there's nothing to sign.
+The latest app to switch isn't even in the top 50. ThingsBoard, 100th by stars, swapped Apache 2.0 for the Business Source License in [4.4](https://github.com/thingsboard/thingsboard/releases/tag/v4.4), out on 29 September. You can still use it for free with a licence key from them, but only up to 1,000 devices, or 100 on a single server if you're a business. The release notes don't mention it, and awesome-selfhosted still lists it as Apache.
 
-That's how most of the first row got there, and the newest one isn't in the top 50 at all. ThingsBoard, 100th by stars, swapped Apache 2.0 for the Business Source License in [4.4](https://github.com/thingsboard/thingsboard/releases/tag/v4.4), out on 29 September. Free use is now capped at 1,000 devices, or 100 on one server if it's for business, and needs a free licence key from them. The release notes don't mention it, and awesome-selfhosted still lists it as Apache.
-
-The first row's a mix, mind. NocoDB, Outline, Dify, LobeHub and Open WebUI put the whole app under their own terms. Metabase, Rocket.Chat, Twenty, Meilisearch, Novu and Stirling-PDF keep most of it open and fence off the paid bits in a folder or in marked files.
-
-Home Assistant and Airflow are permissive too. Anyone could make a closed fork of either, but the official ones belong to the Open Home Foundation and the Apache Software Foundation, which exist to keep them open.
+It didn't have to ask anyone. MIT and Apache let anyone take the code and ship a closed version, as long as they keep the licence and notices, and that includes the people who wrote it. Contributors' code comes in under the same terms, so there's nothing to sign. That's how most of the 11 got there. The 18 permissive apps are the biggest group in the table, and the one people worry abut least.
 
 ## Stirling-PDF didn't need a CLA either
 
-Copyleft with no CLA should be the safe row. Contributors licensed their code as GPL or AGPL and nothing else, so the owners can't take it closed without every one of them agreeing. A DCO doesn't change that, it's only a sign-off saying you've the right to submit the code, and it hands over nothing else.
+Copyleft with no CLA should be the safe group. Contributors licensed their code as GPL or AGPL and nothing else, so the owners can't take it closed without evey one of them agreeing. Some projects ask for a `Signed-off-by` line on each commit (a DCO), but that hands over nothing.
 
-Stirling-PDF was in that row until September 2024, when [a single commit](https://github.com/Stirling-Tools/Stirling-PDF/commit/da6b66e1) swapped its GPL-3.0 for MIT, taking out 674 lines and putting in 21. An `app/proprietary/` folder came the next year. I couldn't find a PR or anything asking past contributors, which doesn't mean nobody did.
+Stirling-PDF was in that group until September 2024, when [a single commit](https://github.com/Stirling-Tools/Stirling-PDF/commit/da6b66e1) swapped its GPL-3.0 for MIT. An `app/proprietary/` folder came the next year. I couldn't find a PR or anything asking past contributors, which doesn't mean nobody did.
 
-The rest of the row isn't quite as locked as it looks either. Immich went from MIT to AGPL in February 2024 and RSSHub only last December, so anyone can still take their MIT-era code closed. Sunshine's owner had contributors assign it their copyright from 2022 untill it dropped its CLA in 2024. And Syncthing and Penpot are MPL 2.0, which works file by file, so a brand new file can be proprietary.
+The rest aren't quite as locked as they look. Immich went from MIT to AGPL in February 2024 and RSSHub only last December, so anyone can still take their MIT-era code closed. Sunshine's owner had contributors assign it their copyright from 2022 until it dropped its CLA in 2024, so it owns what people sent in during that time outright. And Syncthing and Penpot are MPL 2.0, which works file by file, so a brand new file can be proprietary.
 
-## What changes for you
+## If you run one of these
 
 Whatever's allready been released stays under the licence it shipped with. NocoDB's 0.265.1 is AGPL forever and anyone can fork it, though I couldn't find anyone keeping up an AGPL fork.
 
-If you just run these at home, the licences that came in still let you. What changes is where the new stuff goes. Twenty's SSO arrived in 2024 as commercial-only files, and an [issue from August](https://github.com/nocodb/nocodb/issues/14357) points out NocoDB's new documents API needs an Enterprise licence on self-hosted.
+If you run one at home, the new licences still let you. New features just go in the paid bit. Twenty's SSO arrived in 2024 as commercial-only files, and an [issue from August](https://github.com/nocodb/nocodb/issues/14357) points out NocoDB's new documents API needs an Enterprise licence on self-hosted.
 
-To check an app that isn't on the list, look for "CLA" in its contributing guide, then at the checks on a few merged PRs:
+To check an app that isn't in the table, look for "CLA" in its contributing guide, then at the checks on a merged PR from an outside contributor:
 
 ```sh
-$ gh pr list -R makeplane/plane --state merged -L 20 \
-    --json statusCheckRollup \
-    --jq '[.[].statusCheckRollup[] | .context // .name]
-          | unique | map(select(test("cla"; "i")))'
-["license/cla"]
+$ gh pr checks 10037 -R makeplane/plane | grep -i cla
+license/cla  pass  0  https://cla-assistant.io/makeplane/plane?pullRequest=10037  Contributor License Agreement is signed.
 ```
 
-That won't catch a CLA that's only a file in the repo, like Open WebUI's, and either way it's the agreement itself you want to read.
+That won't catch a CLA that's only a file in the repo, like Open WebUI's.

@@ -1,0 +1,87 @@
+---
+import { formatter, type Rows } from '../lib/rows';
+
+interface Props {
+  title: string;
+  // the same rows again as a table, for anything that can't be read straight off the drawing
+  table?: Rows;
+  unit?: string;
+}
+
+const { title, table, unit } = Astro.props;
+const format = formatter(unit);
+const keys = Object.keys(table?.[0] ?? {});
+---
+
+<figure class="chart">
+  <figcaption>
+    <span class="title">{title}</span>
+    <slot name="caption" />
+  </figcaption>
+  <slot />
+  {table && (
+    <details data-pagefind-ignore>
+      <summary>The numbers</summary>
+      <table>
+        <thead>
+          <tr>
+            {keys.map((key, index) => (
+              <th class:list={{ number: index }}>{key}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.map((row) => (
+            <tr>
+              {keys.map((key, index) => (
+                <td class:list={{ number: index }}>
+                  {typeof row[key] === 'number' && index ? format(row[key]) : row[key]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  )}
+</figure>
+
+<style>
+  .chart {
+    display: grid;
+    gap: var(--space-m);
+    margin: var(--space-xl) 0;
+    font-size: var(--text-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  figcaption {
+    color: var(--text-muted);
+    text-wrap: balance;
+
+    & :global(p) {
+      margin: 0;
+    }
+  }
+
+  .title {
+    display: block;
+    color: var(--text);
+    font-size: var(--text-base);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--tracking-title);
+  }
+
+  summary {
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  details table {
+    margin-top: var(--space-s);
+  }
+
+  .number {
+    text-align: right;
+  }
+</style>

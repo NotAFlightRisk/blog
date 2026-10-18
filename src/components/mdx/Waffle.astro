@@ -1,0 +1,71 @@
+---
+import ChartFrame from '../ChartFrame.astro';
+import Legend from '../Legend.astro';
+import { columns, formatter, shares, type Rows } from '../../lib/rows';
+
+interface Props {
+  title: string;
+  // one row per group: a label, then how many
+  data: Rows;
+  // how many there are in all, if the groups don't cover everything
+  of?: number;
+  unit?: string;
+}
+
+const { title, data, of, unit } = Astro.props;
+const { label, series, values } = columns('Waffle', title, data);
+const total = values.reduce((sum, value) => sum + value, 0);
+if (series.length > 1 || data.length > 5 || (of ?? total) < total) {
+  throw new Error(`Waffle "${title}" wants up to five groups of one number, adding up to its of`);
+}
+
+const format = formatter(unit);
+const rest = (of ?? total) - total;
+// one square each up to a hundred, then each one's a percent
+const squares = Math.round(Math.min(of ?? total, 100));
+const filled = shares([...values, rest], squares).slice(0, -1);
+const cells = filled.flatMap((count, index) => Array(count).fill(index + 1));
+---
+
+<ChartFrame {title}>
+  <slot slot="caption" />
+  <div
+    class="waffle"
+    style={`--columns: ${squares > 50 ? 20 : 10}`}
+    aria-hidden="true"
+    data-pagefind-ignore
+  >
+    {cells.map((group) => (
+      <span style={`--colour: var(--series-${group})`} />
+    ))}
+    {Array.from({ length: squares - cells.length }, () => (
+      <span class="rest" />
+    ))}
+  </div>
+  <Legend
+    items={data.map((row, index) => ({
+      name: String(row[label]),
+      value: format(values[index]) + (of ? ` of ${format(of)}` : ''),
+    }))}
+  />
+</ChartFrame>
+
+<style>
+  .waffle {
+    display: grid;
+    grid-template-columns: repeat(var(--columns), 1fr);
+    gap: var(--space-3xs);
+    width: min(100%, calc(var(--columns) * 1.75rem));
+
+    & span {
+      aspect-ratio: 1;
+      border-radius: var(--radius);
+      background: var(--colour);
+    }
+
+    & .rest {
+      background: none;
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+  }
+</style>

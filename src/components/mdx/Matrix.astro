@@ -1,0 +1,105 @@
+---
+import ChartFrame from '../ChartFrame.astro';
+import type { Rows } from '../../lib/rows';
+
+interface Props {
+  title: string;
+  // a label then true or false a column, any text in a cell is printed as it is
+  data: Rows;
+}
+
+const { title, data } = Astro.props;
+const [label, ...columns] = Object.keys(data[0] ?? {});
+if (!title || !columns.length) {
+  throw new Error(`Matrix "${title}" wants a title, and rows with a label then a column or more`);
+}
+
+const marks = {
+  yes: { text: 'Yes', path: 'M5 12.5l4.5 4.5L19 7.5' },
+  no: { text: 'No', path: 'M7 7l10 10M17 7 7 17' },
+};
+---
+
+<ChartFrame {title}>
+  <slot slot="caption" />
+  <div class="scroll">
+    <table class="matrix">
+      <thead>
+        <tr>
+          <th scope="col">{label}</th>
+          {columns.map((name) => (
+            <th scope="col">{name}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row) => (
+          <tr>
+            <th scope="row">{row[label]}</th>
+            {columns.map((name) => {
+              const value = row[name];
+              const mark = typeof value === 'boolean' && marks[value ? 'yes' : 'no'];
+              return (
+                <td class:list={{ yes: value === true }}>
+                  {mark ? (
+                    <>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d={mark.path} />
+                      </svg>
+                      <span class="visually-hidden">{mark.text}</span>
+                    </>
+                  ) : (
+                    value
+                  )}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</ChartFrame>
+
+<style>
+  .scroll {
+    overflow-x: auto;
+  }
+
+  table.matrix {
+    display: table;
+    width: 100%;
+    margin: 0;
+
+    & :is(th, td):not(:first-child) {
+      text-align: center;
+    }
+
+    & th[scope='row'] {
+      font-weight: var(--weight-strong);
+    }
+
+    & tbody tr:hover {
+      background: var(--surface);
+    }
+
+    & td {
+      color: var(--text-muted);
+    }
+  }
+
+  svg {
+    width: var(--icon-small);
+    height: var(--icon-small);
+    vertical-align: middle;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  td.yes {
+    color: var(--good);
+  }
+</style>

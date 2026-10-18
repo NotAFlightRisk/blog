@@ -1,0 +1,51 @@
+<!-- a numbered list, each step getting a big number and a thread down to the next -->
+<div class="steps">
+  <slot />
+</div>
+
+<style>
+  .steps {
+    --dot: 2rem;
+    margin-block: var(--space-xl);
+
+    & :global(ol) {
+      display: grid;
+      gap: var(--space-l);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: step;
+    }
+
+    & :global(li) {
+      position: relative;
+      margin: 0;
+      padding-left: calc(var(--dot) + var(--space-m));
+      counter-increment: step;
+
+      &::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        display: grid;
+        place-items: center;
+        width: var(--dot);
+        height: var(--dot);
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--on-accent);
+        font-weight: var(--weight-title);
+        line-height: 1;
+      }
+
+      &:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: calc(var(--dot) + var(--space-2xs));
+        bottom: calc(var(--space-l) * -1 + var(--space-2xs));
+        left: calc(var(--dot) / 2);
+        border-left: var(--separator);
+      }
+    }
+  }
+</style>

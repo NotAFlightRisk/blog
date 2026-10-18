@@ -28,7 +28,7 @@ tags: [meta, astro]
 ---
 ```
 
-`updated`, `draft` and `cover` are optional, and an `.mdx` post can use the callouts, figures, charts and videos in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong.
+`updated`, `draft` and `cover` are optional, and an `.mdx` post can use the callouts, figures, videos, charts, stats, timelines and the rest in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong.
 
 ---
 

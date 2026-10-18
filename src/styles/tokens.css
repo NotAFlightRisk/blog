@@ -42,6 +42,8 @@
   --series-2: var(--astro-code-token-constant);
   --series-3: var(--astro-code-token-string);
   --series-4: var(--astro-code-token-function);
+  --series-5: light-dark(#b3261e, #ef5350);
+  --good: var(--astro-code-token-string);
 
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   /* a touch bigger on big screens, with the rest of the scale in step */

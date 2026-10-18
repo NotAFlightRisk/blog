@@ -17,7 +17,7 @@ I went through the 50 most-starred apps on [awesome-selfhosted](https://awesome-
 | Copyleft, no CLA (11) | Immich, Syncthing, Vaultwarden, Pi-hole, Penpot, Jellyfin, SiYuan, paperless-ngx, RSSHub, Sunshine, ERPNext |
 | Permissive, owned by a foundation (2) | Home Assistant, Apache Airflow |
 
-The first three rows are the 37. That's counting what's in each public repo as of 17 October, read by hand, and plenty of apps lower down sell a closed enterprise edition from somewhere else already. Odoo and Kong for a start.
+The first three rows are the 37. That's counting what's in each public repo as of 17 October, read by hand, and plenty of apps in the other rows sell a closed enterprise edition from somewhere else already. Odoo and Kong for a start. I ran the next 50 as well and it drops to 31, as further down there are more volunteer projects like SearXNG and Invidious with no company to do it. That's 68 of the top 100.
 
 ## NocoDB did it in one commit
 
@@ -41,7 +41,9 @@ AppFlowy, Plane, Puter, ToolJet and PhotoPrism are all AGPL today, and all have 
 
 None of that is hidden, and people have been asking about it for ages. Discourse's own forum has a [thread from 2013](https://meta.discourse.org/t/1399) titled "Does Discourse's contributor agreement provide an exit door from Open Source?". Discourse is still GPL 13 years later, so having the door doesn't mean they'll use it.
 
-Companies do put the door in early though. Every copyleft app on the list that moved with a CLA had it in place long before. Metabase's was more than four years ahead of its `enterprise/` folder, and NocoDB's nearly four years ahead of January.
+Not every CLA is a door, either. Postiz, 61st by stars, uses the FSFE's [Fiduciary License Agreement](https://github.com/gitroomhq/postiz-app/blob/main/ICLA.md), which only lets them license your code under terms that are both free software and open source. So it's worth reading what a CLA actually says.
+
+Companies do put the door in early though. Every copyleft app in the top 50 that moved with a CLA had it in place long before. Metabase's was more than four years ahead of its `enterprise/` folder, and NocoDB's nearly four years ahead of January.
 
 It's on my own box too. My analytics run on [Plausible](https://github.com/plausible/analytics), which is AGPL with a CLA bot on every PR, and has an `extra/` folder whose licence grants "no rights to use, distribute or otherwise exploit this software". The community edition I run doesn't compile it in. My error tracker, [Bugsink](https://github.com/bugsink/bugsink), was never open source to begin with, and I picked it anyway.
 
@@ -49,9 +51,7 @@ It's on my own box too. My analytics run on [Plausible](https://github.com/plaus
 
 The permissive row is the biggest, and it's the one people worry abut least. MIT and Apache let anyone take the code and ship a closed version, as long as they keep the licence and notices, and that includes the people who wrote it. Contributors' code comes in under the same terms, so there's nothing to sign.
 
-That's how most of the first row got there. Meilisearch put its enterprise features under the Business Source License in July 2025 and kept the rest MIT, with no CLA. Dify's been Apache 2.0 with its own conditions since its first commit, the main one being that you can't run a multi-tenant service off it without their written OK. Another says contributors agree "the producer can adjust the open-source agreement", so it's a CLA tucked inside the licence.
-
-MindsDB, now in the permissive row, has been every way round. It was GPL-3.0 with a CLA, moved its core to the Elastic License in 2023, and went back to MIT in June.
+That's how most of the first row got there, and the newest one isn't in the top 50 at all. ThingsBoard, 100th by stars, swapped Apache 2.0 for the Business Source License in [4.4](https://github.com/thingsboard/thingsboard/releases/tag/v4.4), out on 29 September. Free use is now capped at 1,000 devices, or 100 on one server if it's for business, and needs a free licence key from them. The release notes don't mention it, and awesome-selfhosted still lists it as Apache.
 
 The first row's a mix, mind. NocoDB, Outline, Dify, LobeHub and Open WebUI put the whole app under their own terms. Metabase, Rocket.Chat, Twenty, Meilisearch, Novu and Stirling-PDF keep most of it open and fence off the paid bits in a folder or in marked files.
 
@@ -81,4 +81,4 @@ $ gh pr list -R makeplane/plane --state merged -L 20 \
 ["license/cla"]
 ```
 
-That won't catch a CLA that's only a file in the repo, like Open WebUI's, so the contributing guide's worth reading either way.
+That won't catch a CLA that's only a file in the repo, like Open WebUI's, and either way it's the agreement itself you want to read.

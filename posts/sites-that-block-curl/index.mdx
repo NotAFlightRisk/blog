@@ -1,0 +1,86 @@
+---
+title: Most sites that block curl only check its name
+description: I sent curl to the top 10,000 sites under a dozen names. Two in three that 403 curl let it in as something else, and Chrome isn't the best disguise.
+date: 2026-10-18
+tags: [curl, scraping, security, web]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import names from './names.json';
+
+Here's chess.com this morning, with the same curl asking five times under different names:
+
+```sh
+$ for ua in curl/8.18.0 Curl/8.18.0 python-requests/2.32.5 Mozilla/5.0 \
+    'myfetcher/1.0 (+https://example.org/bot)'; do
+    curl -sL -o /dev/null -w "%{http_code}  $ua\n" -A "$ua" https://chess.com/
+  done
+403  curl/8.18.0
+200  Curl/8.18.0
+403  python-requests/2.32.5
+200  Mozilla/5.0
+200  myfetcher/1.0 (+https://example.org/bot)
+```
+
+A capital C gets you in. That one's chess.com being a bit lazy, and most sites aren't that easy, but the handshake is identical evey time, so the only thing it can be looking at is the name.
+
+That's not what you'll usually hear. Ask why curl gets a 403 and the answer is TLS fingerprinting: big sites look at how your client shakes hands, curl looks nothing like Chrome, so changing the User-Agent won't get you far and you want [curl-impersonate](https://github.com/lexiforest/curl-impersonate) or a headless browser. Even [Daniel Stenberg](https://daniel.haxx.se/blog/2022/09/02/curls-tls-fingerprint/), who started curl, calls the User-Agent check "the original and much simpler way" of spotting bots.
+
+That's true for some sites. I wanted to know how many, so I went through the [Tranco](https://tranco-list.eu/) top 10,000.
+
+## Two in three
+
+I sent four clients at every homepage on 18 October, from my server: stock curl 8.18, the same curl with a Chrome 141 User-Agent and Chrome's Accept headers, the same curl calling itself `myfetcher/1.0`, and [curl_cffi](https://github.com/lexiforest/curl_cffi) pretending to be Chrome right down to the TLS handshake.
+
+The fake Chrome got a proper page from 5,874 of the 10,000. Of the rest, 1,508 blocked even that, which I'd guess is mostly about my server being in a datacentre, and most of the others just didn't answer. So read everything below as "sites that'll talk to a datacentre at all". The strictest ones aren't in it.
+
+Stock curl got blocked at 703 of those 5,874, nearly all with a 403, and about two in five of those a Cloudflare challenge page. Give it Chrome's User-Agent and 451 of the 703 hand over the full page, which is 64%. The made-up `myfetcher` gets into 421, so 60%. stanford.edu, un.org, cnbc.com, zendesk.com and flightradar24.com are all in there.
+
+It's not a fluke of the day either. Of 453 sites that only blocked the name in runs on 17 October, 441 still did today. A sample of inner pages and page titles from those runs matched what Chrome got, so these aren't stripped-down pages being waved through.
+
+The closest count I could find is [a paper on headless Chrome](https://arxiv.org/html/2606.14525), where swapping `HeadlessChrome` for `Chrome` cleared 75% of the blocks that only hit headless Chrome. That's a real browser already, though, and I couldnt find anyone who'd tried it with curl.
+
+## So which names get in?
+
+I took the 451 sites that let the Chrome User-Agent through and tried ten User-Agents on each, going by the status code this time:
+
+<Chart title="Sites that let each User-Agent in" data={names} unit="%">
+  Share of the 451 sites that block curl but let a Chrome User-Agent in, 18 October
+</Chart>
+
+python-requests, Wget and Go's default client get turned away almost as often as curl, and so does sending no User-Agent at all. 96 of the sites seem to block "curl" anywhere in the string, as `myfetcher/1.0 (curl)` gets turned away where the honest one doesn't. Only 55 are like chess.com and miss `Curl` with a capital. The 2% for plain curl is seven sites that had started letting it in by then.
+
+I didn't expect `Mozilla/5.0` on its own to do so badly. It's what [alot of advice](https://www.scivision.dev/curl-user-agent/) tells you to use, and it only gets into a third of them. Something that reads like a polite bot gets into 85% of these 451, and Miniflux's feed reader string 88%. Feed readers seem fine generally, for what it's worth: of 153 feeds advertised on the top 2,000 homepages, 7 turned Miniflux away.
+
+So if your script gets a 403, give it a name first. Anything that isn't a tool's default will do, and a URL in it is polite:
+
+```sh
+curl -A 'myfetcher/1.0 (+https://example.org/bot)' https://example.com/
+```
+
+## Does it matter who's in front?
+
+Quite a lot. I read the headers on each block to see whose edge sent it. That tells you who's in front of the site, not who wrote the rule, since a Cloudflare customer can block curl in thier own firewall rules without Cloudflare having any say. Here's the share of curl blocks that the Chrome User-Agent and `myfetcher` each got past (AWS is CloudFront and friends):
+
+| In front   | Blocks | Chrome | myfetcher |
+| ---------- | -----: | -----: | --------: |
+| Cloudflare |    392 |    77% |       78% |
+| Akamai     |    130 |    23% |       28% |
+| AWS        |     57 |    82% |       32% |
+| Others     |    124 |    60% |       51% |
+
+Behind Cloudflare it's mostly a name check, and any other name will do. Behind Akamai it's mostly the fingerprinting people warn you about, and three in four still won't give curl a page with a Chrome User-Agent on. Behind AWS it wants something that looks like a browser: Mercado Libre's sites, realtor.com and osha.gov let Chrome's string in and turn `myfetcher` away.
+
+Akamai's also why the middle of the list does worse. Of the sites ranked 2,001 to 5,000 that block curl, only 46% let the Chrome string in, because Akamai's in front of 50 of those 169. Further down, from 5,001 to 10,000, it's in front of 55 of 401, and the Chrome string gets into 71%.
+
+## What about from somewhere else?
+
+All of that is from one server in a datacentre. Last night I ran the 157 sites that blocked anything in the top 2,000 again through Cloudflare's WARP VPN, and through Tor. The Chrome User-Agent did a bit better on WARP (81% of curl blocks) and the same on Tor (72%) as from my server. About half the Akamai sites that blocked even the Chrome string from my server only checked the name on WARP, so the address counts as well as the name. I haven't tried it from home broadband, so that's the bit I can't tell you.
+
+## Don't fake Chrome by halves
+
+There's a catch with the Chrome string. 79 sites served stock curl fine, then blocked the same curl as soon as it said it was Chrome. adobe.com, slack.com, cisco.com, intel.com, cdc.gov and opensource.org are on that list, and so is w3.org, so the W3C, who write a good chunk of the web's standards, will serve curl all day, just not curl claiming to be Chrome. 32 of the 79 are behind Akamai. My guess is the rule there is "says Chrome, doesn't shake hands like Chrome", which is exactly what curl with a Chrome User-Agent is.
+
+61 of them still let `myfetcher` in. And it's partly the address again. 12 sites in the top 2,000 did this to my server. Over Tor, all seven I could reach still did, but over WARP only 3 of the 12 did.
+
+So try the honest name first, and save the Chrome string for when that fails, or for anything behind AWS.

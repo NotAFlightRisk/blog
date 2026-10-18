@@ -1,0 +1,106 @@
+---
+import Axis from '../Axis.astro';
+import ChartFrame from '../ChartFrame.astro';
+import Legend from '../Legend.astro';
+import { columns, formatter, scale, type Rows } from '../../lib/rows';
+
+interface Props {
+  title: string;
+  // a label then one number a row, or two for a before and after joined by a line
+  data: Rows;
+  unit?: string;
+}
+
+const { title, data, unit } = Astro.props;
+const { label, series, max } = columns('Dots', title, data);
+if (series.length > 2) throw new Error(`Dots "${title}" takes one or two columns of numbers`);
+
+const format = formatter(unit);
+const { top, ticks } = scale(max);
+const at = (value: unknown) => (Number(value) / top) * 100;
+---
+
+<ChartFrame {title} {unit} table={data}>
+  <slot slot="caption" />
+  {series.length > 1 && <Legend items={series.map((name) => ({ name }))} />}
+  <div class="dots" aria-hidden="true" data-pagefind-ignore>
+    <ul role="list">
+      {data.map((row) => {
+        const [from, to = from] = series.map((name) => at(row[name]));
+        return (
+          <li>
+            <span>{row[label]}</span>
+            <span
+              class="track"
+              style={`--from: ${Math.min(from, to)}%; --to: ${Math.max(from, to)}%`}
+            >
+              {series.length > 1 && <span class="span" />}
+              {series.map((name, index) => (
+                <span
+                  class="dot"
+                  style={`--at: ${at(row[name])}%; --colour: var(--series-${index + 1})`}
+                  title={`${name}: ${format(Number(row[name]))}`}
+                />
+              ))}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+    <Axis side="x" ticks={ticks.map((tick) => ({ at: at(tick), text: format(tick) }))} />
+  </div>
+</ChartFrame>
+
+<style>
+  .dots {
+    display: grid;
+    grid-template-columns: fit-content(40%) 1fr;
+    column-gap: var(--space-s);
+
+    & ul {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      gap: var(--space-xs);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    & li {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      align-items: center;
+      margin: 0;
+    }
+  }
+
+  /* a faint rule along each row so the eye can track across to its dots */
+  .track {
+    position: relative;
+    height: 1.25em;
+    background: linear-gradient(var(--border), var(--border)) 0 50% / 100% 1px no-repeat;
+  }
+
+  .span {
+    position: absolute;
+    inset: calc(50% - 0.125rem) auto auto var(--from);
+    width: calc(var(--to) - var(--from));
+    height: 0.25rem;
+    border-radius: var(--radius);
+    background: var(--text-muted);
+  }
+
+  .dot {
+    position: absolute;
+    top: 50%;
+    left: var(--at);
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 50%;
+    background: var(--colour);
+    box-shadow: 0 0 0 2px var(--bg);
+    translate: -50% -50%;
+  }
+</style>

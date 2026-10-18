@@ -57,6 +57,29 @@ test('charts become their title, a link to the data and the caption', () => {
   );
 });
 
+test('the other charts read the same way as Chart does', () => {
+  const body = [
+    "import groups from './groups.json';",
+    '<Waffle title="Who can go closed" data={groups} of={50} />',
+    '<Matrix title="Who has a CLA" data={[{ app: "Plane", cla: true }]}>Read in October</Matrix>',
+  ].join('\n');
+  assert.equal(
+    plainMarkdown(body, files),
+    `**Who can go closed** ([the data](${files}groups.json))\n**Who has a CLA**\n\n_Read in October_`,
+  );
+});
+
+test('quotes keep who said it, linked when there is a source', () => {
+  assert.equal(
+    plainMarkdown(
+      '<Quote by="A user" href="https://example.com/a">\n  Not a legal issue.\n</Quote>',
+      files,
+    ),
+    '> Not a legal issue.\n>\n> - [A user](https://example.com/a)',
+  );
+  assert.equal(plainMarkdown('<Quote by="Someone">Hi.</Quote>', files), '> Hi.\n>\n> - Someone');
+});
+
 test('components it has never heard of go, but keep the words inside them', () => {
   const body =
     "import Thing from './Thing.astro';\n<Thing size={2} />\n<Thing>Still **here**</Thing>";

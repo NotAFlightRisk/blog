@@ -5,9 +5,16 @@ date: 2026-10-18
 tags: [self-hosting, open-source, licensing]
 ---
 
+import Waffle from '../../src/components/mdx/Waffle.astro';
+import groups from './groups.json';
+
 Pick something you self-host. Could the people behind it put the next release out under terms that aren't open source, without asking anyone?
 
 I went through the 50 most-starred apps on [awesome-selfhosted](https://awesome-selfhosted.net), its non-free list included, to find out. For 37 of them the answer is yes, or they already have. The AGPL badge on the repo doesn't tell you which group yours is in.
+
+<Waffle title="The 50 most-starred self-hosted apps" data={groups}>
+  A square for each app
+</Waffle>
 
 | Group | Apps |
 | --- | --- |

@@ -1,0 +1,32 @@
+[
+  {
+    "backend": "setuptools",
+    "Jun-Nov 2025": 165,
+    "Mar-Oct 2026": 335
+  },
+  {
+    "backend": "hatchling",
+    "Jun-Nov 2025": 80,
+    "Mar-Oct 2026": 310
+  },
+  {
+    "backend": "uv_build",
+    "Jun-Nov 2025": 15,
+    "Mar-Oct 2026": 35
+  },
+  {
+    "backend": "poetry-core",
+    "Jun-Nov 2025": 35,
+    "Mar-Oct 2026": 15
+  },
+  {
+    "backend": "setup.py, no backend",
+    "Jun-Nov 2025": 90,
+    "Mar-Oct 2026": 40
+  },
+  {
+    "backend": "something else",
+    "Jun-Nov 2025": 15,
+    "Mar-Oct 2026": 35
+  }
+]

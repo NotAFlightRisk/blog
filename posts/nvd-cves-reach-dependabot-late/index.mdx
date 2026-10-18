@@ -6,7 +6,9 @@ tags: [security, dependabot, github, python, go]
 ---
 
 import Chart from '../../src/components/mdx/Chart.astro';
+import Dots from '../../src/components/mdx/Dots.astro';
 import within from './within-30-days.json';
+import bySeverity from './by-severity.json';
 
 Django put out [a security release](https://www.djangoproject.com/weblog/2026/aug/04/security-releases/) on 4 August. One of the fixes, CVE-2026-15307, stops staff users writing files to disk through GeoDjango lookups, which Django says could be "in some cases enabling remote code execution". Here's what GitHub's advisory API says about it:
 
@@ -58,11 +60,10 @@ You can't see GitHub's queue from its API, as unreviewed advisories don't name a
 
 So, "critical issues prioritized":
 
-| Reviewed within 30 days | May-Sep 2025  | May-Sep 2026 |
-| ----------------------- | ------------- | ------------ |
-| Critical                | 75% (15/20)   | 31% (22/70)  |
-| High                    | 88% (35/40)   | 34% (44/130) |
-| Medium or low           | 90% (126/140) | 30% (77/254) |
+<Dots title="Reviewed within 30 days, by severity" data={bySeverity} unit="%">
+  15 of 20 critical, 35 of 40 high and 126 of 140 medium or low CVEs last year,
+  then 22 of 70, 44 of 130 and 77 of 254 this year
+</Dots>
 
 Criticals were the slowest group last year too, so I doubt it's new. Seven critical `golang.org/x/crypto` CVEs NVD listed on 22 May (one is the SSH agent [not enforcing](https://github.com/advisories/GHSA-jppx-rxg9-jmrx) a key's confirm-before-use constraint) were all reviewed on 25 June, 34 days later. Maybe criticals do jump the queue for other kinds of advisory, but for these I cant see it.
 

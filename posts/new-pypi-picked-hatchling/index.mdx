@@ -6,7 +6,9 @@ tags: [python, pypi, uv, ai]
 ---
 
 import Chart from '../../src/components/mdx/Chart.astro';
+import Dots from '../../src/components/mdx/Dots.astro';
 import share from './share.json';
+import aDay from './a-day.json';
 
 On Monday, Michał Górny from Gentoo posted [a plea not to use uv-build](https://blogs.gentoo.org/mgorny/2026/10/12/a-plea-not-to-use-uv-build/). It's a Rust backend with 1.2-1.5 MiB wheels and a dozen releases a month, and Gentoo users have to build every one of them from source, all so it can zip up some pure Python files. Fair enough really.
 
@@ -26,15 +28,9 @@ To get these I took 400 new projects at random from a day or three of PyPI's [ch
 
 The chart hides the bigger change, though. Around the same time, PyPI started getting about twice as many new projects. [Answer.AI noticed too](https://answer.ai/posts/2026-03-12-so-where-are-all-the-ai-apps.html), with over 25,000 in March, which is about 800 a day. So here's each backend in new projects a day, before and after:
 
-| New projects a day   | Jun-Nov 2025 | Mar-Oct 2026 |
-| -------------------- | -----------: | -----------: |
-| setuptools           |          165 |          335 |
-| hatchling            |           80 |          310 |
-| uv_build             |           15 |           35 |
-| poetry-core          |           35 |           15 |
-| setup.py, no backend |           90 |           40 |
-| something else       |           15 |           35 |
-| All of them          |          390 |          765 |
+<Dots title="New projects a day, by build backend" data={aDay}>
+  All of them together went from 390 a day to 765
+</Dots>
 
 Setuptools doubled, which is about what you'd expect from the thing that's been the default forever. Hatchling nearly quadrupled. Of the 375 or so extra projects a day, about 230 are on hatchling, and uv_build got about 20.
 

@@ -1,0 +1,102 @@
+---
+title: Your money input probably thinks 5,04 is 504
+description: Type a European 5,04 into Chrome's number box or most popular JavaScript money libraries on an English page and you get 504, with no error.
+date: 2026-10-18
+tags: [javascript, i18n, forms, chrome]
+---
+
+import TryIt from './TryIt.astro';
+
+Type 5,04 in here, the way most of Europe writes five euros and four cents:
+
+<TryIt label="Amount" />
+
+In Chrome with its menus in English, the comma never goes in. You're left with 504, and nothing anywhere says anything went wrong. Firefox tells you it's not a number, which is at least honest.
+
+## Chrome bins the comma as you type
+
+Blink [checks each keystroke](https://github.com/chromium/chromium/blob/151.0.7922.34/third_party/blink/renderer/core/html/forms/number_input_type.cc#L244-L247) against `0123456789.Ee-+` plus the locale's own number characters, and the code that [builds that list](https://github.com/chromium/chromium/blob/151.0.7922.34/third_party/blink/renderer/platform/text/platform_locale.cc#L280-L290) leaves one out on purpose:
+
+```cpp title="platform_locale.cc"
+// We don't accept group separators.
+if (i != kGroupSeparatorIndex)
+  builder.Append(decimal_symbols_[i]);
+```
+
+In English the comma is the group separator, so it's gone before your page ever sees it. `input.value` is "504" and `validity.badInput` is false, so there's nothing to catch.
+
+The locale is Chrome's own menu language, not your page's. An `<input lang="de-DE">` in an English Chromium still gave me 504, and starting Chromium in German gave 5.04. Firefox goes by the page's `lang` instead, so it's bad input on an English page and 5.04 on a German one.
+
+## The libraries do it too
+
+Last week someone in Costa Rica [posted on Hacker News](https://news.ycombinator.com/item?id=50121562) about being charged $504 for $5.04 of API credit. Another commenter, in Germany with their Linux set to English, said they've ended up selling things on Amazon and eBay "for 599,00 instead of 5.99".
+
+How many of the libraries people put on money fields would do the same? I took the 20 most downloaded npm packages that turn a typed amount into a number (parsers, masks and input components), set no locale or separator options, and ran them in an English browser on an English page. Inputs and masks got typed into a key at a time (all but ngx-mask in Chromium and Firefox), and the plain parsers I just called.
+
+| Package                             | 5,04 | 1.234,56 |
+| ----------------------------------- | ---- | -------- |
+| @internationalized/number           | 504  | 1.23456  |
+| react-number-format                 | 504  | 1.23456  |
+| rc-input-number                     | 504  | 1.23456  |
+| @rc-component/input-number          | 504  | 1.23456  |
+| numeral                             | 504  | 1.23456  |
+| currency.js                         | 504  | 1.23     |
+| react-currency-input-field          | 504  | 1.23     |
+| numbro                              | 504  | 1.23456  |
+| accounting                          | 504  | 1.23456  |
+| cleave.js                           | 504  | 1.23     |
+| text-mask-addons (with decimals on) | 504  | 1.23     |
+| currency-formatter                  | 504  | 1.23456  |
+| autonumeric                         | 504  | 1.23     |
+| imask                               | 5.04 | 1.23     |
+| react-imask                         | 5.04 | 1.23     |
+| ngx-mask                            | 5.04 | 1.23     |
+| vue-currency-input                  | 5.04 | 1.23     |
+| inputmask                           | 5.04 | 1.56     |
+| globalize                           | NaN  | NaN      |
+| parse-decimal-number                | NaN  | NaN      |
+
+13 of the 20 make 504 of it, and they're not obscure ones. [@internationalized/number](https://www.npmjs.com/package/@internationalized/number) is Adobe's, and it's what React Aria's NumberField parses with. rc-input-number and its renamed successor are what Ant Design's InputNumber is built on.
+
+The German amount is worse. 18 of the 20 turn a thousand-odd euros into one and a bit, and I've no idea where inputmask's 1.56 comes from. Only globalize and parse-decimal-number say no to both.
+
+## Why 504
+
+In US English a comma groups thousands, so the quick way to read "$1,234" is to delete the commas, and that's what most of these do. rc-input-number's whole default parser is [one line](https://github.com/react-component/input-number/blob/v9.5.0/src/InputNumber.tsx#L217-L218), with a comment on what it's for:
+
+```ts title="src/InputNumber.tsx"
+// [Legacy] We still support auto convert `$ 123,456` to `123456`
+return parsedStr.replace(/[^\w.-]+/g, '');
+```
+
+But nobody in the US writes 5,04. Groups come in threes, so a comma with two digits after it can't be grouping anything. It's someone typing a decimal the other way round. globalize and parse-decimal-number check for that, and nothing else does:
+
+```text title="node"
+> currency('5,04').value
+504
+> numeral('5,04').value()
+504
+> new NumberParser('en-US').parse('5,04')
+504
+> parseDecimalNumber('5,04')
+NaN
+```
+
+## A German browser just flips it
+
+Two of the 13 only made 504 because my browser was in English. react-currency-input-field and React Aria's NumberField (the field on top of @internationalized/number) take their separators from the browser's language when you don't give them any. In a German browser they read 5,04 fine, and turn 5.04 into 504 instead. The Costa Rica poster says that's their case, with settings that use a comma and 5.04 typed in (the company's reply in the thread says 5,04, so I'm not sure which).
+
+Every library's locale option works, for what it's worth. Give react-number-format or rc-input-number `decimalSeparator=","`, or react-currency-input-field a German `intlConfig`, and a typed 5,04 comes out as 5.04. That just moves the problem to whoever types a dot.
+
+## Catching it
+
+First you need what they actually typed, so it's a text input rather than `type="number"`, since Chrome's binned the comma by the time you look. [`inputmode="decimal"`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inputmode) gets phones a number pad. Then check it:
+
+```js
+// commas only ever group threes
+const looksWrong = (typed) => /,(?!\d{3}(\D|$))/.test(typed);
+```
+
+That catches 5,04, 599,00 and 1.234,56 and lets 1,234.56 through. Swap the comma for a dot on a German page. When it fires, ask what they meant rather than charging them for it.
+
+It won't catch 5,040, which comes out as five thousand and forty here and in globalize and parse-decimal-number too. Nothing can tell that one from the string.

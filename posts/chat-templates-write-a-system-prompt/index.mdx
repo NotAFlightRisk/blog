@@ -1,0 +1,128 @@
+---
+title: Skip the system prompt and the template writes one
+description: A quarter of the chat templates on Hugging Face's top models tell the model who it is or what day it is, and Llama 3.1's still says July 2024 on vLLM.
+date: 2026-10-19
+tags: [llm, ai, self-hosting, open-source]
+---
+
+import Breakdown from '../../src/components/mdx/Breakdown.astro';
+import adds from './adds.json';
+
+I'd always assumed that if I leave the system prompt out, the model gets my message plus a few role markers round it, and that's it. That's what a [chat template](https://huggingface.co/docs/transformers/chat_templating) is for: the bit of Jinja that ships with a model and turns your list of messages into the one long string it actually reads.
+
+So I sent Llama 3.1 8B Instruct a lone "Who made you?" through transformers, and printed the string:
+
+```text
+<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+Cutting Knowledge Date: December 2023
+Today Date: 26 Jul 2024
+
+<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Who made you?<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+```
+
+That's a system block that I didn't write, telling the model that it's July 2024. I checkec my watch - todays the 19th of October 2026.
+
+## Over a quarter of them add something
+
+I took the 300 most downloaded text generation models on Hugging Face today and rendered a single user message through each one's template, using transformers' own renderer. 189 have a template in the repo (most of the rest are GGUF files, which keep theirs inside, or base models). Then I stripped out the role markers, the special tokens and my message, and looked at what was left.
+
+<Breakdown title="What 189 popular chat templates add to a lone user message" data={adds}>
+  The top 300 text generation models on Hugging Face by downloads, 19 October 2026.
+</Breakdown>
+
+114 add nothing, which is what I'd expected from all of them. 23 add something bland, mostly "You are a helpful assistant" or a line setting how hard to think. But the other 52 tell the model who it is, who made it, when its training stopped, what today's date is, or what it's allowed to talk about.
+
+28 of those 52 are one line, Qwen2.5's, repeated across its sizes and everybody's quantised copies of it (Qwen3 dropped it). Lots of the rest are copies too, and if you count each of the 96 different templates once, it's 20 of them that add a name, a date or a scope. So more like a fifth, but those are some of the biggest names on there:
+
+| Model                  | What it adds when you don't                                                                                                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Qwen2.5 7B Instruct    | You are Qwen, created by Alibaba Cloud. You are a helpful assistant.                                                                                 |
+| gpt-oss 20B            | You are ChatGPT, a large language model trained by OpenAI. Knowledge cutoff: 2024-06 Current date: 2026-10-19                                        |
+| Granite 3.3 2B         | Knowledge Cutoff Date: April 2024. Today's Date: October 19, 2026. You are Granite, developed by IBM.                                                |
+| Kimi K2 Instruct       | You are Kimi, an AI assistant created by Moonshot AI.                                                                                                |
+| DeepSeek Coder 7B v1.5 | You only answer questions related to computer science. For politically sensitive questions, security and privacy issues... you will refuse to answer |
+
+So OpenAI's open model calls itself ChatGPT, and a coding model is told not to talk about security. None of it's hidden, it's all in the repo, but you'd only know if you went and read the template.
+
+## July 2024 is written into Llama's
+
+Most templates that mention a date ask for today's with `strftime_now`, a function whatever's running the model is meant to supply. [Meta's Llama 3.1](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct) and 3.3 templates do this instead:
+
+```jinja
+{%- if not date_string is defined %}
+    {%- set date_string = "26 Jul 2024" %}
+{%- endif %}
+```
+
+That's three days after 3.1 came out. If the runner passes a date the model gets that, and if it passes nothing it's 26 July 2024 forever. That's the official Llama 3.1 8B Instruct, downloaded 5.5 million times in the last month, and the quantised copies I checked carry the same file. Llama 3.2 switched to `strftime_now`, so it gets today.
+
+So does anything pass a date? Same bare message, Meta's 3.1 template, today:
+
+| Run with                            | Told the date is                |
+| ----------------------------------- | ------------------------------- |
+| transformers                        | 26 Jul 2024                     |
+| vLLM 0.32                           | 26 Jul 2024                     |
+| llama.cpp's llama-server            | 19 Oct 2026                     |
+| Ollama 0.40, `ollama pull llama3.1` | Nothing, no system block at all |
+| Ollama 0.40, a GGUF you imported    | 19 Oct 2026                     |
+
+(No GPU here, so each runner got a tiny test model wearing the real template, and for vLLM that's its template renderer called directly.) llama.cpp [sets date_string to today](https://github.com/ggml-org/llama.cpp/blob/f174553e1621c6a22a64e7bfcbb58d3a5c49e6fb/common/chat.cpp#L1065-L1072) on every render, and vLLM doesn't set it anywhere. Ollama's own llama3.1 isn't Meta's template at all but a Go one, which only opens a system block when you send a system prompt or tools. Import a GGUF that carries Meta's Jinja, though, and Ollama hands it to its bundled llama-server, which puts today in.
+
+Qwen2.5's line came through transformers and llama-server the same, and [Ollama's qwen2.5](https://ollama.com/library/qwen2.5) ships it as the model's default system prompt.
+
+## Your own system prompt only fixes half of it
+
+For Qwen2.5, passing any system message switches the default off, even an empty one:
+
+```text
+<|im_start|>system
+<|im_end|>
+```
+
+Llama 3.1 is different. Send "Be brief." as the system prompt and the template keeps the stale date and puts yours underneath it:
+
+```text
+Cutting Knowledge Date: December 2023
+Today Date: 26 Jul 2024
+
+Be brief.
+```
+
+Unless your runner fills it in like llama-server does, you have to pass `date_string` yourself. In transformers it's another argument to `apply_chat_template`. vLLM takes it in `chat_template_kwargs` on the request, which it [hands to the template](https://github.com/vllm-project/vllm/blob/v0.32.0/vllm/entrypoints/openai/chat_completion/protocol.py#L366-L372):
+
+```json
+{ "chat_template_kwargs": { "date_string": "19 Oct 2026" } }
+```
+
+## The model mostly knew already
+
+I wanted to see the DeepSeek Coder refusal for real, so I ran the 1.3B version (same line in its template) with the default and with an empty system message. It happily answered questions on storing passwords in Flask, SQL injection and setting up ufw either way, in nearly the same words. It turned down "What is the capital of France?" and a question about Tiananmen Square either way too, and without its line it said "as an AI focused on history, I don't have the ability to provide information on historical events". Qwen2.5 0.5B says it was made by Alibaba Cloud with or without its line.
+
+So the names and the scopes are mostly belt and braces. The model learned them in training, and the template just repeats them again.
+
+The date's different though, since no model can know what day it is. I gave Llama 3.2 3B six questions that hang on the date, under the block Meta's 3.1 template writes, the same block with today's date, and no block. Most answers ignored the date whichever way, and it worked out someone's age "as of 2023" all three times. The one that moved was a one-line email greeting mentioning the season. July 2024 got "the warm and sunny summer season", today got "the crisp autumn season", and no date got a helpful "[current season]".
+
+That's a small model and one answer in six, but it's the one line in these templates that's news to the model, and it's the one the runners can't agree on.
+
+## See what yours sends
+
+In transformers, print the template's output before it's tokenised:
+
+```python
+from transformers import AutoTokenizer
+
+tok = AutoTokenizer.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct")
+print(tok.apply_chat_template([{"role": "user", "content": "hi"}], tokenize=False))
+```
+
+And llama-server will show you what it's about to send:
+
+```bash
+curl localhost:8080/apply-template \
+  -d '{"messages": [{"role": "user", "content": "hi"}]}'
+```
+
+So... if there's a date in in your response, check it's actually today's.

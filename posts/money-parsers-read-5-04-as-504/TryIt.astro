@@ -1,0 +1,72 @@
+---
+interface Props {
+  label: string;
+}
+
+const { label } = Astro.props;
+---
+
+<try-it>
+  <label>
+    {label}
+    <input type="number" step="any" autocomplete="off" />
+  </label>
+  <output aria-live="polite"></output>
+</try-it>
+
+<script>
+  // says out loud what the browser made of it, which is the bit nobody normally sees
+  class TryIt extends HTMLElement {
+    connectedCallback() {
+      const input = this.querySelector('input')!;
+      const output = this.querySelector('output')!;
+      const read = () => {
+        if (input.validity.badInput) output.textContent = "Your browser says that's not a number";
+        else if (input.value) output.textContent = `Your browser reads that as ${input.value}`;
+        else output.textContent = 'Nothing typed yet';
+      };
+      input.addEventListener('input', read);
+      read();
+    }
+  }
+  customElements.define('try-it', TryIt);
+</script>
+
+<style>
+  try-it {
+    display: grid;
+    gap: var(--space-xs);
+    margin-block: var(--space-l);
+    padding: var(--space-m);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+
+    label {
+      display: grid;
+      gap: var(--space-2xs);
+      font-weight: var(--weight-strong);
+    }
+
+    input {
+      max-width: 12rem;
+      padding: var(--space-xs) var(--space-s);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      font-family: var(--font-mono);
+
+      &:focus-visible {
+        outline: 2px solid var(--focus);
+        box-shadow: 0 0 0 4px var(--focus-glow);
+      }
+    }
+
+    output {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+  }
+</style>

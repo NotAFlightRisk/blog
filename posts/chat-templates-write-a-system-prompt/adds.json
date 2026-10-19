@@ -1,0 +1,6 @@
+[
+  { "adds": "Nothing", "templates": 114 },
+  { "adds": "\"You are a helpful assistant\", a thinking setting or similar", "templates": 23 },
+  { "adds": "\"You are Qwen, created by Alibaba Cloud\"", "templates": 28 },
+  { "adds": "Another name, maker, date or scope", "templates": 24 }
+]

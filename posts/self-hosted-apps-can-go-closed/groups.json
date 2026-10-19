@@ -1,0 +1,22 @@
+[
+  {
+    "group": "Already ship some non-open code",
+    "apps": 11
+  },
+  {
+    "group": "Permissive",
+    "apps": 18
+  },
+  {
+    "group": "Copyleft with a company CLA",
+    "apps": 8
+  },
+  {
+    "group": "Copyleft, no CLA",
+    "apps": 11
+  },
+  {
+    "group": "Permissive, owned by a foundation",
+    "apps": 2
+  }
+]

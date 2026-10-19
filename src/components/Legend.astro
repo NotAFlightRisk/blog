@@ -1,0 +1,47 @@
+---
+interface Props {
+  // one per colour, in series order, with an optional number after the name
+  items: { name: string; value?: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<ul class="legend" role="list">
+  {items.map(({ name, value }, index) => (
+    <li style={`--colour: var(--series-${index + 1})`}>
+      {name}
+      {value && <span class="value">{value}</span>}
+    </li>
+  ))}
+</ul>
+
+<style>
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-m);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    & li {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      margin: 0;
+
+      &::before {
+        content: '';
+        width: 0.75em;
+        height: 0.75em;
+        border-radius: var(--radius);
+        background: var(--colour);
+      }
+    }
+  }
+
+  .value {
+    color: var(--text-muted);
+  }
+</style>

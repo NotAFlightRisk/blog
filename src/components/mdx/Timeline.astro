@@ -1,0 +1,49 @@
+<!-- a list where each item starts with its date in bold, oldest first -->
+<div class="timeline">
+  <slot />
+</div>
+
+<style>
+  .timeline {
+    margin-block: var(--space-xl);
+
+    & :global(ul) {
+      display: grid;
+      gap: var(--space-l);
+      margin: 0;
+      padding: 0 0 0 var(--space-l);
+      list-style: none;
+      background: linear-gradient(var(--border), var(--border)) 0.3125rem 0.5rem / 1px
+        calc(100% - 1rem) no-repeat;
+    }
+
+    & :global(li) {
+      position: relative;
+      margin: 0;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0.45em;
+        left: calc(var(--space-l) * -1);
+        width: 0.6875rem;
+        height: 0.6875rem;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 var(--space-2xs) var(--bg);
+      }
+    }
+
+    & :global(li > p) {
+      margin: 0;
+    }
+
+    & :global(:is(li, li > p:first-child) > strong:first-child) {
+      display: block;
+      color: var(--text-muted);
+      font-size: var(--text-small);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+  }
+</style>

@@ -1,0 +1,60 @@
+---
+import ChartFrame from '../ChartFrame.astro';
+import Legend from '../Legend.astro';
+import { columns, formatter, shares, type Rows } from '../../lib/rows';
+
+interface Props {
+  title: string;
+  // one row per slice: a label, then how much
+  data: Rows;
+  unit?: string;
+}
+
+const { title, data, unit } = Astro.props;
+const { label, series, values } = columns('Breakdown', title, data);
+if (series.length > 1 || data.length > 5) {
+  throw new Error(`Breakdown "${title}" wants up to five slices of one number`);
+}
+
+const format = formatter(unit);
+const percent = formatter('%');
+// whole percents that still add up to 100
+const percents = shares(values, 100);
+---
+
+<ChartFrame {title}>
+  <slot slot="caption" />
+  <div class="breakdown" aria-hidden="true" data-pagefind-ignore>
+    {values.map((value, index) => (
+      <span style={`--share: ${value}; --colour: var(--series-${index + 1})`}>
+        {percents[index] >= 8 && percent(percents[index])}
+      </span>
+    ))}
+  </div>
+  <Legend
+    items={data.map((row, index) => ({
+      name: String(row[label]),
+      value: `${unit ? `${format(values[index])}, ` : ''}${percent(percents[index])}`,
+    }))}
+  />
+</ChartFrame>
+
+<style>
+  .breakdown {
+    display: flex;
+    gap: var(--space-3xs);
+    height: 2.25rem;
+
+    & span {
+      display: grid;
+      flex: var(--share) 1 0;
+      place-items: center;
+      min-width: var(--space-3xs);
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--colour);
+      color: var(--bg);
+      font-weight: var(--weight-strong);
+    }
+  }
+</style>

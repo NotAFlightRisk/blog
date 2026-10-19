@@ -1,0 +1,85 @@
+---
+import ChartFrame from '../ChartFrame.astro';
+import { columns, formatter, type Rows } from '../../lib/rows';
+
+interface Props {
+  title: string;
+  // each stage with how many made it that far, biggest first
+  data: Rows;
+  unit?: string;
+}
+
+const { title, data, unit } = Astro.props;
+const { label, series, values } = columns('Funnel', title, data);
+if (series.length > 1 || values.some((value, index) => index && value > values[index - 1])) {
+  throw new Error(`Funnel "${title}" wants one number a stage, never more than the stage before`);
+}
+
+const format = formatter(unit);
+const asPercent = formatter('%');
+const first = values[0] || 1;
+---
+
+<ChartFrame {title}>
+  <slot slot="caption" />
+  <ol class="funnel" role="list" data-pagefind-ignore>
+    {data.map((row, index) => (
+      <li>
+        <span>{row[label]}</span>
+        <span class="track">
+          <span class="fill" style={`--size: ${(values[index] / first) * 100}%`} />
+        </span>
+        <span class="value">
+          {format(values[index])}
+          {index > 0 && (
+            <span class="share">{asPercent(Math.round((values[index] / first) * 100))}</span>
+          )}
+        </span>
+      </li>
+    ))}
+  </ol>
+</ChartFrame>
+
+<style>
+  .funnel {
+    display: grid;
+    grid-template-columns: fit-content(35%) 1fr auto;
+    gap: var(--space-3xs) var(--space-s);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    & li {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      align-items: center;
+      margin: 0;
+    }
+  }
+
+  .track {
+    display: flex;
+    justify-content: center;
+  }
+
+  /* each stage narrows from both sides, so the drop-off reads as a shape */
+  .fill {
+    width: var(--size);
+    min-width: var(--space-3xs);
+    height: 2rem;
+    border-radius: var(--radius);
+    background: var(--accent);
+    box-shadow: var(--button-shadow);
+  }
+
+  .value {
+    display: flex;
+    gap: var(--space-xs);
+    justify-content: end;
+  }
+
+  .share {
+    color: var(--text-muted);
+  }
+</style>

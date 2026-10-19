@@ -1,0 +1,18 @@
+<!-- two figures side by side when there's room, stacked on a phone -->
+<div class="pair">
+  <slot />
+</div>
+
+<style>
+  .pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: var(--space-l) var(--space-m);
+    align-items: end;
+    margin-block: var(--space-l);
+
+    & > :global(figure) {
+      margin: 0;
+    }
+  }
+</style>

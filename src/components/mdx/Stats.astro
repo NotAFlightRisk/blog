@@ -1,0 +1,43 @@
+<!-- a list where each item starts with its number in bold, the rest says what it counts -->
+<div class="stats">
+  <slot />
+</div>
+
+<style>
+  .stats {
+    margin-block: var(--space-xl);
+
+    & :global(ul) {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+      gap: var(--space-l) var(--space-m);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    & :global(li) {
+      margin: 0;
+      padding-top: var(--space-s);
+      border-top: var(--space-2xs) solid var(--accent);
+      color: var(--text-muted);
+      font-size: var(--text-small);
+      line-height: var(--leading);
+    }
+
+    & :global(li > p) {
+      margin: 0;
+    }
+
+    & :global(:is(li, li > p:first-child) > strong:first-child) {
+      display: block;
+      margin-bottom: var(--space-2xs);
+      color: var(--text);
+      font-size: var(--text-title);
+      font-weight: var(--weight-title);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: var(--tracking-title);
+      line-height: var(--leading-title);
+    }
+  }
+</style>

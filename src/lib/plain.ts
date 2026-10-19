@@ -1,4 +1,5 @@
 const alerts = { note: 'NOTE', tip: 'TIP', warning: 'WARNING', danger: 'CAUTION' };
+const charts = ['Chart', 'Waffle', 'Breakdown', 'Dots', 'Funnel', 'Heatmap', 'Scatter', 'Matrix'];
 
 // a prop's value, whether it's a "string" or an {expression}, minus any .src on the end
 const prop = (props: string, name: string) =>
@@ -61,10 +62,18 @@ export function plainMarkdown(body: string, files: string) {
                 : link(props, 'src');
               return `[Video: ${prop(props, 'title')}](${url})`;
             })
-            .replace(/<Chart([^>]*?)(?:\/>|>([\s\S]*?)<\/Chart>)/g, (_, props, caption = '') => {
-              const data = imported.get(prop(props, 'data') ?? '');
-              const title = `**${prop(props, 'title')}**${data ? ` ([the data](${data}))` : ''}`;
-              return caption.trim() ? `${title}\n\n_${caption.trim()}_` : title;
+            .replace(
+              new RegExp(`<(${charts.join('|')})\\b([^>]*?)(?:/>|>([\\s\\S]*?)</\\1>)`, 'g'),
+              (_, _name, props, caption = '') => {
+                const data = imported.get(prop(props, 'data') ?? '');
+                const title = `**${prop(props, 'title')}**${data ? ` ([the data](${data}))` : ''}`;
+                return caption.trim() ? `${title}\n\n_${caption.trim()}_` : title;
+              },
+            )
+            .replace(/<Quote([^>]*)>([\s\S]*?)<\/Quote>/g, (_, props, text) => {
+              const by = prop(props, 'by');
+              const href = prop(props, 'href');
+              return quote(`${text.trim()}\n\n- ${href ? `[${by}](${href})` : by}`);
             }),
     )
     .map((part, index) => (index % 2 ? part : unwrap(part)))

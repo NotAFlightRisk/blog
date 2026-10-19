@@ -1,0 +1,94 @@
+---
+import ChartFrame from '../ChartFrame.astro';
+import { columns, formatter, type Rows } from '../../lib/rows';
+
+interface Props {
+  title: string;
+  // a table, the first column labels each row and every other cell's shaded by its number
+  data: Rows;
+  unit?: string;
+}
+
+const { title, data, unit } = Astro.props;
+const { label, series, max } = columns('Heatmap', title, data);
+const format = formatter(unit);
+// on dark, skips the murky middle where neither light nor dark text would be readable
+const dark = (level: number) => (level < 0.5 ? level * 0.76 : 0.62 + (level - 0.5) * 0.76);
+---
+
+<ChartFrame {title}>
+  <slot slot="caption" />
+  <div class="scroll" data-pagefind-ignore>
+    <table class="heatmap">
+      <thead>
+        <tr>
+          <td />
+          {series.map((name) => (
+            <th scope="col">{name}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row) => (
+          <tr>
+            <th scope="row">{row[label]}</th>
+            {series.map((name) => {
+              const level = Number(row[name]) / max;
+              return (
+                <td
+                  class:list={{ deep: level >= 0.5 }}
+                  style={`--level: ${level * 100}%; --dark: ${dark(level) * 100}%`}
+                >
+                  {format(Number(row[name]))}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</ChartFrame>
+
+<style>
+  .scroll {
+    overflow-x: auto;
+  }
+
+  table.heatmap {
+    display: table;
+    border-collapse: separate;
+    border-spacing: var(--space-3xs);
+    margin: 0 calc(var(--space-3xs) * -1);
+
+    & :is(th, td) {
+      padding: var(--space-2xs) var(--space-xs);
+      border: 0;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    & th {
+      color: var(--text-muted);
+      font-weight: var(--weight-strong);
+    }
+
+    & th[scope='row'] {
+      text-align: left;
+    }
+
+    /* one hue, stronger as the number grows, and the text flips once the yellow gets deep */
+    & td {
+      min-width: 2.75rem;
+      border-radius: var(--radius);
+      background: light-dark(
+        color-mix(in oklab, var(--accent) var(--level), var(--surface)),
+        color-mix(in oklab, var(--accent) var(--dark), var(--surface))
+      );
+    }
+
+    & td.deep {
+      color: var(--on-accent);
+    }
+  }
+</style>

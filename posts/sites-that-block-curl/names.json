@@ -1,0 +1,12 @@
+[
+  { "User-Agent": "Miniflux", "Let in": 88 },
+  { "User-Agent": "myfetcher/1.0", "Let in": 85 },
+  { "User-Agent": "Mozilla/5.0", "Let in": 34 },
+  { "User-Agent": "node", "Let in": 32 },
+  { "User-Agent": "none at all", "Let in": 25 },
+  { "User-Agent": "Go-http-client", "Let in": 17 },
+  { "User-Agent": "Wget", "Let in": 16 },
+  { "User-Agent": "Curl", "Let in": 14 },
+  { "User-Agent": "python-requests", "Let in": 9 },
+  { "User-Agent": "curl", "Let in": 2 }
+]

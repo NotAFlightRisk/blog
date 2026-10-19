@@ -1,0 +1,119 @@
+---
+import Axis from '../Axis.astro';
+import ChartFrame from '../ChartFrame.astro';
+import { columns, formatter, scale, type Rows } from '../../lib/rows';
+
+interface Props {
+  title: string;
+  // a label, then the number along the bottom, then the one up the side
+  data: Rows;
+  // the labels of any dots worth naming on the plot
+  name?: string[];
+  unit?: string;
+}
+
+const { title, data, name = [], unit } = Astro.props;
+const { label, series } = columns('Scatter', title, data);
+if (series.length !== 2) throw new Error(`Scatter "${title}" wants exactly two columns of numbers`);
+
+const format = formatter(unit);
+const [across, up] = series.map((key) =>
+  scale(Math.max(...data.map((row) => Number(row[key]))) || 1),
+);
+const x = (value: unknown) => (Number(value) / across.top) * 100;
+const y = (value: unknown) => 100 - (Number(value) / up.top) * 100;
+---
+
+<ChartFrame {title} {unit} table={data}>
+  <slot slot="caption" />
+  <div class="scatter" aria-hidden="true" data-pagefind-ignore>
+    <Axis side="y" ticks={up.ticks.map((tick) => ({ at: y(tick), text: format(tick) }))} />
+    <div class="plot">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+        {up.ticks.map((tick) => (
+          <line x1="0" x2="100" y1={y(tick)} y2={y(tick)} />
+        ))}
+      </svg>
+      {data.map((row) => (
+        <span
+          class:list={['dot', { named: name.includes(String(row[label])) }]}
+          style={`--x: ${x(row[series[0]])}%; --y: ${y(row[series[1]])}%`}
+          title={`${row[label]}: ${format(Number(row[series[0]]))}, ${format(Number(row[series[1]]))}`}
+        >
+          {name.includes(String(row[label])) && <span class="name">{row[label]}</span>}
+        </span>
+      ))}
+    </div>
+    <Axis side="x" ticks={across.ticks.map((tick) => ({ at: x(tick), text: format(tick) }))} />
+    <span class="key">{series[0]} →</span>
+    <span class="key up">↑ {series[1]}</span>
+  </div>
+</ChartFrame>
+
+<style>
+  .scatter {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    column-gap: var(--space-s);
+    padding-top: 0.75em;
+  }
+
+  .plot {
+    position: relative;
+    grid-area: 1 / 2;
+    height: 16rem;
+
+    & svg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    & line {
+      stroke: var(--border);
+      vector-effect: non-scaling-stroke;
+    }
+  }
+
+  .dot {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    background: var(--series-2);
+    box-shadow: 0 0 0 2px var(--bg);
+    opacity: 0.85;
+    translate: -50% -50%;
+
+    &.named {
+      background: var(--series-1);
+      opacity: 1;
+    }
+  }
+
+  .name {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    color: var(--text);
+    font-weight: var(--weight-strong);
+    white-space: nowrap;
+    translate: -50% -0.25rem;
+  }
+
+  .key {
+    grid-column: 2;
+    justify-self: end;
+    color: var(--text-muted);
+
+    &.up {
+      grid-area: 1 / 2;
+      align-self: start;
+      justify-self: start;
+      margin: -1.75em 0 0 var(--space-xs);
+    }
+  }
+</style>

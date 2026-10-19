@@ -1,0 +1,17 @@
+[
+  {
+    "severity": "Critical",
+    "May-Sep 2025": 75,
+    "May-Sep 2026": 31
+  },
+  {
+    "severity": "High",
+    "May-Sep 2025": 88,
+    "May-Sep 2026": 34
+  },
+  {
+    "severity": "Medium or low",
+    "May-Sep 2025": 90,
+    "May-Sep 2026": 30
+  }
+]

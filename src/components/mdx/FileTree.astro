@@ -1,0 +1,53 @@
+<!-- a nested list of files, anything with a list inside it is a folder, bold ones stand out -->
+<div class="tree">
+  <slot />
+</div>
+
+<style>
+  .tree {
+    margin-block: var(--space-l);
+    padding: var(--space-m) var(--space-l);
+    overflow-x: auto;
+    border-radius: var(--radius);
+    background: var(--code-bg);
+    font-family: var(--font-mono);
+    font-size: var(--text-small);
+    line-height: var(--leading);
+
+    & :global(ul) {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    & :global(ul ul) {
+      margin-left: 0.4em;
+      padding-left: var(--space-m);
+      border-left: var(--separator);
+    }
+
+    & :global(li) {
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    & :global(li:has(> ul)) {
+      font-weight: var(--weight-strong);
+    }
+
+    & :global(li:not(:has(> ul))) {
+      font-weight: normal;
+    }
+
+    & :global(strong) {
+      padding: 0 0.25em;
+      border-radius: var(--radius);
+      background: var(--code-line);
+    }
+
+    & :global(em) {
+      color: var(--text-muted);
+      font-family: inherit;
+    }
+  }
+</style>

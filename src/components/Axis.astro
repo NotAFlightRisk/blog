@@ -1,0 +1,60 @@
+---
+interface Props {
+  side: 'x' | 'y';
+  // how far along each tick sits, in percent from the left, or down from the top
+  ticks: { at: number; text: string }[];
+}
+
+const { side, ticks } = Astro.props;
+---
+
+<div class:list={['axis', side]} aria-hidden="true">
+  {ticks.map(({ at, text }) => (
+    <span style={`--at: ${at}%`}>{text}</span>
+  ))}
+</div>
+
+<style>
+  .axis {
+    color: var(--text-muted);
+  }
+
+  /* the numbers share one cell, each slid down to its own height */
+  .y {
+    display: grid;
+    grid-area: 1 / 1;
+    grid-template-rows: 100%;
+    line-height: 1.4;
+
+    & span {
+      grid-area: 1 / 1;
+      align-self: start;
+      justify-self: end;
+      position: relative;
+      top: var(--at);
+      translate: 0 -50%;
+    }
+  }
+
+  .x {
+    grid-column: 2;
+    position: relative;
+    height: 1.5em;
+    margin-top: var(--space-2xs);
+
+    /* slides back by as much of itself as it is across, so the ends stay inside */
+    & span {
+      position: absolute;
+      left: var(--at);
+      translate: calc(var(--at) * -1);
+      white-space: nowrap;
+    }
+
+    /* half as many on a phone, still ending on the last */
+    @media (width < 36rem) {
+      & span:nth-last-child(even) {
+        display: none;
+      }
+    }
+  }
+</style>

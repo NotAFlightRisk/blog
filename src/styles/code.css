@@ -15,6 +15,7 @@
     }
 
     & .line {
+      min-block-size: 1lh;
       padding-inline: var(--space-m);
     }
 

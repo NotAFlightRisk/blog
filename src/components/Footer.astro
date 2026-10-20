@@ -3,7 +3,11 @@ import { nav, site } from '../site';
 
 // built, not served, so this is the year of the last build
 const year = new Date().getFullYear();
-const sections = [...nav, { label: 'RSS', href: '/rss.xml' }];
+const sections = [
+  ...nav,
+  { label: 'RSS', href: '/rss.xml' },
+  { label: 'Projects', href: 'https://peng.ly/projects' },
+];
 const elsewhere = [
   { label: site.home.name, href: site.home.url },
   { label: 'Source', href: site.repo },

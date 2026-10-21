@@ -53,6 +53,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Check every chart has its picture
+        run: npm run charts -- --check
       - name: Check every link in the build
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:

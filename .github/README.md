@@ -30,6 +30,8 @@ tags: [meta, astro]
 
 `updated`, `draft` and `cover` are optional, and an `.mdx` post can use the callouts, figures, videos, charts, stats, timelines and the rest in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong.
 
+Feed readers can't draw the charts, so the RSS feed swaps each one for a picture. After adding or changing a chart, run `npm run charts` (it wants `npx playwright install chromium` the first time) and commit the PNGs it drops in the post's `charts/` folder. CI fails if a post's charts and pictures don't add up.
+
 ---
 
 ## Development

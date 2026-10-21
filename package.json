@@ -14,9 +14,10 @@
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "check": "astro check",
+    "charts": "node scripts/chart-images.ts",
     "test": "node --test \"src/**/*.test.ts\"",
-    "format": "prettier --write src astro.config.ts vercel.json .github/workflows",
-    "format:check": "prettier --check src astro.config.ts vercel.json .github/workflows"
+    "format": "prettier --write src scripts astro.config.ts vercel.json .github/workflows",
+    "format:check": "prettier --check src scripts astro.config.ts vercel.json .github/workflows"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.2",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "pagefind": "^1.5.2",
+    "playwright": "^1.64.1",
     "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.1.1",
     "typescript": "^6.0.3"

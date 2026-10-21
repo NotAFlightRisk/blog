@@ -1,0 +1,68 @@
+---
+title: One domain seller is 6% of the HSTS preload list
+description: 5,691 entries on Chromium's HSTS preload list are one seller's domains for sale. Chromium cut them twice, they came back twice, and Firefox kept losing them.
+date: 2026-10-20
+tags: [security, hsts, browsers, web]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import addresses from './addresses.json';
+import chromium from './chromium.json';
+import firefox from './firefox.json';
+
+The [HSTS preload list](https://hstspreload.org/) is the list of sites your browser will only ever load over HTTPS, before it's even visited them once. It's built into Chrome and Edge, and Firefox makes its own copy from it. You get on by serving HTTPS on every subdomain, sending one header and filling in a form, and the idea is that it's for sites that care about HTTPS enough to promise it for good.
+
+I pulled [Chromium's copy](https://github.com/chromium/chromium/blob/main/net/http/transport_security_state_static.json) on 17 October and looked up all 95,147 entries, mostly out of nosiness about who's on it. The two addresses with the most names on them both belong to someone selling domains.
+
+<Chart title="Who's on the HSTS preload list" data={addresses}>
+  Chromium's entries by the first IPv4 address they resolve to, 17 October 2026. Below the top two, every row is a host with lots of customers or one company's own sites. Cloudflare's behind far more than any of these, but spread over lots of addresses.
+</Chart>
+
+That's 5,691 entries between them, about one in every seventeen on the list. Pick one at random and you'll get a white page with the name in capitals, like "HAOMIN.COM MAY BE AVAILABLE!", a button to buy it on GoDaddy and "Proudly Powered by GKJ.com" at the bottom. [GKJ's own site](https://gkj.com/) says "You came looking for a domain. We probably already own it", and puts the count at 5,000+. Who's registered them is redacted, so I'm going on their word that it's one seller.
+
+I fetched them slowly in random order until the server started telling me to go away. 498 of the 511 that answered were that sale page, 7 more said "UNDER CONSTRUCTION" in the same style, and all 511 sent `max-age=63072000; includeSubDomains; preload`. There's nothing against the rules in that. When I ran 20 of them through [Chromium's own checker](https://github.com/chromium/hstspreload) this afternoon, all 20 said "Satisfies requirements".
+
+Why a domain seller bothers, I don't know. The few pages the Wayback Machine kept from 2022 to 2024 come from the same kit, with the name in capitals over a slogan like "IN GOD WE TRUST", and the 2022 ones already sent the header. So my guess is it just comes with whatever makes the pages.
+
+It does matter to whoever buys one, though. They get a domain that browsers will only load over HTTPS, and every subdomain under it too, so `nas.theirname.com` with a self-signed certificate on the home network won't load, because HSTS takes away the button that lets you click through the warning. Getting off the list means asking for removal and then waiting, which hstspreload.org reckons "may take 6-12 weeks to reach most Chrome users, and may take longer for other browsers". You can check any name first with `curl "https://hstspreload.org/api/v2/status?domain=haomin.com"`, which says `"status": "preloaded"` for this one.
+
+## Chromium cut them twice
+
+<Chart title="This seller's names on Chromium's list" data={chromium} type="line">
+  How many of today's 5,691 names were on the list at the end of each month, January 2022 to October 2026.
+</Chart>
+
+Nine in ten of them went on in one [bulk update in June 2022](https://github.com/chromium/chromium/commit/6886f98ba4709980fdb9b418a6c7db6aa7c6c7b5). In April 2023 Chromium [pruned](https://chromium-review.googlesource.com/c/chromium/src/+/4455622) every domain that had "repeatedly failed to meet the continued requirements", which took out 41% of the list and 91% of this seller's names. They went back through the same form as everyone else, and most were back on within six months.
+
+Then a [bulk update in August 2025](https://chromium-review.googlesource.com/c/chromium/src/+/6897476) did it again, cutting the list from 171,166 entries to 95,329 and the seller from over 5,500 to 405. Of 40 other names it removed, every one still fails today, mostly because nothing answers, so it wasn't a bad clear-out. It just took these with it, and 4,659 of the names on the list today have now been cut twice.
+
+They were back within months again, and because that update cleared out so much else, this seller's now pretty much all of the list's growth. Since August 2025 the whole list has shrunk by 182 entries, while this one block grew by 5,286.
+
+## Firefox kept losing them
+
+Firefox doesn't take Chromium's list as it is. [A script](https://github.com/mozilla-firefox/firefox/blob/main/taskcluster/docker/periodic-updates/scripts/getHSTSPreloadList.js) visits every site on it about once a week and drops the ones that don't send the header.
+
+Visiting thousands of sites on one server all at once is exactly what this server doesn't like. When I fetched all 5,691 at 64 at a time, nearly every answer was a 429 Too Many Requests, and not one of those had the header. So in Firefox they came and went depending on how the week's run went:
+
+<Chart title="This seller's names on Firefox's list" data={firefox} type="columns">
+  Each update to Firefox's preload list since June 2026. Mozilla's fix went in on 5 October, between the 2 and 6 October updates.
+</Chart>
+
+Ryan VanderMeulen at Mozilla spotted it last month. In [bug 2075853](https://bugzilla.mozilla.org/show_bug.cgi?id=2075853) he wrote that Chromium's list "holds thousands of domains of one hosting operator in a contiguous block, all served from two addresses", and that checking them in list order meant "the operator answered with 429 for thousands of hosts that otherwise send a valid header, which kept them off the preload list".
+
+The fix landed on 5 October. The script now shuffles the list, tries 429s again at the end, and an error page without the header doesn't knock a site off anymore. Before that, a run where more of them got through, like 26 September's, was gone again the week after. Since then every update has kept what it had and added more, up to 2,275 on 16 October. That's still well short of 5,691, and the bug says why: "the operator still limits the rate over the run as a whole".
+
+## Chromium's checker gets waved through
+
+I'd assumed Chromium's culls tripped over the same 429s. Its [removal job](https://github.com/chromium/hstspreload.org/blob/main/api/domain_handlers.go) checks every bulk entry weekly, only looks at the header and not the status code, and queues a domain for removal once it's failed for a month.
+
+But Chromium's checker calls itself `hstspreload-bot`, so this evening I got the server annoyed with 300 quick requests, then asked ten more names for their page under four different User-Agents:
+
+| User-Agent | What came back | HSTS header |
+| --- | --- | --- |
+| Chrome | 429 | no |
+| Firefox | 429 | no |
+| Googlebot | 429 | no |
+| `hstspreload-bot` | 200 | yes |
+
+Same for all ten names. So the rate limit lets Chromium's checker straight through, and it's everyone else who gets the 429, Firefox included. What it did in 2023 and 2025 I can't tell, and the Wayback Machine won't show me enough from just before either cull to find out. They pass Chromium's checks now, and they were cut anyway.

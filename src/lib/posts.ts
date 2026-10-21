@@ -14,6 +14,7 @@ export async function getPosts() {
 export const postUrl = (post: Post) => `/${post.id}/`;
 export const rawUrl = (post: Post) => `/${post.id}.md`;
 export const ogUrl = (post: Post) => `/${post.id}/og.png`;
+export const chartUrl = (post: Post, chart: number) => `/${post.id}/charts/${chart}.png`;
 export const tagUrl = (tag: string) => `/tags/${tag}/`;
 export const absolute = (path: string) => new URL(path, site.url).href;
 

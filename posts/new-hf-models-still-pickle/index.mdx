@@ -1,0 +1,88 @@
+---
+title: Pickle-only uploads to Hugging Face doubled since 2024
+description: About one in eight people uploading model weights to Hugging Face now upload only pickles, twice 2024's share. I opened 114 to see which load safely.
+date: 2026-10-22
+tags: [ai, security, hugging-face, pytorch]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Waffle from '../../src/components/mdx/Waffle.astro';
+import monthly from './monthly.json';
+import loads from './loads.json';
+
+Hugging Face is getting more pickle files, not fewer. In the second half of 2024, about one in seventeen people uploading model weights each month put up nothing but pickles. Since March it's been about one in eight.
+
+<Chart type="line" title="Pickle-only share of new Hugging Face models" data={monthly} unit="%">
+  Each uploader counted once a month. Pickle only means `.pt`, `.pth`, `.ckpt` or `.pkl` with no
+  safetensors, GGUF or ONNX alongside, ignoring trainer leftovers. Course and swarm uploads left
+  out.
+</Chart>
+
+That matters because a pickle runs code when you load it, and [safetensors](https://huggingface.co/docs/safetensors/index) doesn't. Safetensors is what `transformers` writes, and the old pickles on the Hub are meant to be leftovers from before it caught on.
+
+The numbers come from [hub-stats](https://huggingface.co/datasets/cfahlgren1/hub-stats), a daily dump of every public repo on the Hub with its file list, as of 21 October. I counted uploaders rather than repos, because one person can push a thousand repos in an afternoon. I also left out the Hugging Face RL course's LunarLander and Huggy models, and Gensyn's BlockAssist, which had over 9,000 people uploading pickled checkpoints from the same app last autumn. Leave those in and October 2025 reads 32%.
+
+It peaked at 15% in May and has slipped every month since, which I'll come back to.
+
+## Most of them load with weights_only
+
+Since [PyTorch 2.6](https://dev-discuss.pytorch.org/t/bc-breaking-change-torch-load-is-being-flipped-to-use-weights-only-true-by-default-in-the-nightlies-after-137602/2573), `torch.load` only unpickles tensors and a short list of harmless types unless you tell it otherwise. If these files load that way, the pickle doesn't really matter.
+
+I took one pickle-only repo with a PyTorch checkpoint (`.pt`, `.pth` or `.ckpt`) from each of 114 uploaders, picked at random from everything created between August and 21 October, and read the pickle inside the biggest checkpoint without running it. That's just Python's `pickletools` over a few ranged requests, so no downloading gigabytes and nothing gets executed. Then I checked everything it asks to import against [torch's list](https://github.com/pytorch/pytorch/blob/main/torch/_weights_only_unpickler.py).
+
+<Waffle title="What's inside 114 new pickle-only models" data={loads}>
+  One repo per uploader, read on 22 October. Each square is about one percent. Tensors only means it
+  loads with `weights_only=True`.
+</Waffle>
+
+89 of them are a `state_dict` and maybe an epoch number, and load fine with `weights_only` on.
+
+The other 25 won't load. Ten of those are over something boring, like a numpy float for the best accuracy or the `argparse` settings from training. Here's torch 2.14 on the numpy one, trimmed:
+
+```text
+Weights only load failed. [...]
+  (1) [...] Re-running `torch.load`
+  with `weights_only` set to `False`
+  will likely succeed, but it can
+  result in arbitrary code execution.
+  [...]
+  (2) Alternatively, to load with
+  `weights_only=True` please check
+  the recommended steps in the
+  following error message.
+  WeightsUnpickler error: Unsupported
+  global: GLOBAL
+  numpy._core.multiarray.scalar was
+  not an allowed global by default.
+  [...]
+```
+
+The proper fix is option two, `torch.serialization.add_safe_globals([...])` with the one numpy type it names. Option one is turning the protection off, it's listed first and it says it'll "likely succeed". I'd guess that's the one most people pick, but I've no way of checking that.
+
+Another seven pickle a class from whatever they were trained with, like a LeRobot policy config, a DeepSpeed object or a model class from the uploader's own code, so they won't load at all without that code installed.
+
+## YOLO turns it off for you
+
+The last eight are YOLO models pickled whole, Ultralytics classes and all, usually called `best.pt`. My favourite spots Xbox controllers. You'd load one with `YOLO("best.pt")`, and you never see torch's error, because [Ultralytics' loader](https://github.com/ultralytics/ultralytics/blob/main/ultralytics/nn/tasks.py) calls `torch.load` with `weights_only=False` unless you've asked otherwise. Since June there's been [an opt-in safe mode](https://github.com/ultralytics/ultralytics/pull/24829) that loads them with `weights_only=True` and an allowlist of Ultralytics' own classes:
+
+```sh
+ULTRALYTICS_SAFE_LOAD=1 python detect.py
+```
+
+Without it, a stranger's `best.pt` runs whatever's in it, on the latest torch and the latest Ultralytics.
+
+None of the 114 files I read asks for anything nasty like `os` or `eval`. It's people saving whatever was lying around at the end of training. But you can't tell without looking inside, and most people look inside by loading it.
+
+## The newcomers brought them
+
+Between July 2024 and July 2025, about 1,100 people a month uploaded a pickle-only model. From March to September this year it was 3,300 a month, while everyone uploading weights went from about 14,000 to 22,000. Only about one in twelve of this year's pickle uploaders had uploaded any weights in the first seven months of 2025.
+
+Four in five of their repos don't say what library they're for. Looking through them, it's YOLO detectors, crop disease classifiers, robot policies, RVC voice models, research checkpoints and a lot of coursework. `torch.save(model, "best.pt")` and push.
+
+They don't seem to get many downloads, though that's hard to pin down. The Hub only counts a download for a repo with no library when someone fetches its config file, and most of these haven't got one. Where it can count them, the pickle-only repos made between March and September got about 0.2% of the last 30 days' downloads of everything new from those months. This is the long tail, the stuff you land on from a search, a paper or a tutorial.
+
+## It's slipped since May
+
+May was 15.1%, then 14.0, 13.0, 12.5 and 12.3 in September. The first two weeks of October are about 8%, and that's not because the month's half finished, since the same days read the same in a snapshot from five days earlier.
+
+Some of October is a wave of new people. Nearly 2,000 more a week than September's average uploaded weights, most of it safetensors, under names like `tiny-transformer` and `cnn-transformer` that look a lot like a new term. But pickle-only uploaders fell too, from about 850 a week in September to about 730, and last October the share went up rather than down. I'm not sure what's going on there.

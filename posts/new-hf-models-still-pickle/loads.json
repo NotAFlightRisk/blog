@@ -1,0 +1,18 @@
+[
+  {
+    "What it asks for": "Tensors only",
+    "Repos": 89
+  },
+  {
+    "What it asks for": "Numpy values or training args",
+    "Repos": 10
+  },
+  {
+    "What it asks for": "Other classes, configs or TorchScript",
+    "Repos": 7
+  },
+  {
+    "What it asks for": "A whole YOLO model",
+    "Repos": 8
+  }
+]

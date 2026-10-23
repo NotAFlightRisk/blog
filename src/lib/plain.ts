@@ -23,8 +23,10 @@ const quote = (text: string) =>
     .map((line) => `> ${line.trim()}`.trimEnd())
     .join('\n');
 
-// turns an MDX body back into plain Markdown, so the .md copies read fine on their own
-export function plainMarkdown(body: string, files: string) {
+// turns an MDX body back into plain Markdown, so the .md copies read fine on their own.
+// Given picture(n), the nth chart also shows as that picture
+export function plainMarkdown(body: string, files: string, picture?: (chart: number) => string) {
+  let drawn = 0;
   const imported = new Map(
     [...body.matchAll(/^import (\w+) from '\.\/(.+?)';$/gm)].map(([, name, file]) => [
       name,
@@ -66,7 +68,9 @@ export function plainMarkdown(body: string, files: string) {
               new RegExp(`<(${charts.join('|')})\\b([^>]*?)(?:/>|>([\\s\\S]*?)</\\1>)`, 'g'),
               (_, _name, props, caption = '') => {
                 const data = imported.get(prop(props, 'data') ?? '');
-                const title = `**${prop(props, 'title')}**${data ? ` ([the data](${data}))` : ''}`;
+                const name = prop(props, 'title');
+                const image = picture ? `![${name}](${picture(++drawn)})\n\n` : '';
+                const title = `${image}**${name}**${data ? ` ([the data](${data}))` : ''}`;
                 return caption.trim() ? `${title}\n\n_${caption.trim()}_` : title;
               },
             )

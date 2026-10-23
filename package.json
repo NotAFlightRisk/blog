@@ -15,6 +15,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "charts": "node scripts/chart-images.ts",
+    "crosspost": "node scripts/crosspost.ts",
     "test": "node --test \"src/**/*.test.ts\"",
     "format": "prettier --write src scripts astro.config.ts vercel.json .github/workflows",
     "format:check": "prettier --check src scripts astro.config.ts vercel.json .github/workflows"

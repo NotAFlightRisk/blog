@@ -1,0 +1,121 @@
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { setTimeout as sleep } from 'node:timers/promises';
+import { plainMarkdown } from '../src/lib/plain.ts';
+import { site } from '../src/site.ts';
+
+// copies posts to DEV, pointing back here as the original: the ones named, or the ones the last
+// commit touched, plus any live post DEV hasn't got yet. --dry-run prints them instead
+type Post = {
+  slug: string;
+  title: string;
+  description: string;
+  url: string;
+  tags: string[];
+  image: string;
+};
+
+const dry = process.argv.includes('--dry-run');
+const named = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
+const touched = named.length
+  ? named
+  : execFileSync('git', ['diff', '--name-only', 'HEAD^', 'HEAD', '--', 'posts'], {
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter(Boolean)
+      .map((path) => path.split('/')[1]);
+const source = (slug: string) =>
+  ['mdx', 'md'].map((ext) => `posts/${slug}/index.${ext}`).find(existsSync);
+// deleted posts and drafts stay where they are
+const wanted = [...new Set(touched)].filter((slug) => {
+  const file = source(slug);
+  return file && !/^draft: true$/m.test(readFileSync(file, 'utf8'));
+});
+
+async function dev(path: string, init: RequestInit = {}) {
+  const headers = {
+    'api-key': process.env.DEVTO_API_KEY ?? '',
+    accept: 'application/vnd.forem.api-v1+json',
+    'content-type': 'application/json',
+  };
+  for (let tries = 1; ; tries++) {
+    const response = await fetch(`https://dev.to/api${path}`, { ...init, headers });
+    if (response.ok) return response.json();
+    // DEV only takes a new article every so often
+    if (response.status !== 429 || tries === 5) {
+      const request = `${init.method ?? 'GET'} ${path}`;
+      throw new Error(`${request}: ${response.status} ${await response.text()}`);
+    }
+    await sleep(30_000);
+  }
+}
+
+// DEV keeps its own copy of the pictures as soon as it gets a post, so wait till they're live
+async function livePosts(): Promise<Post[]> {
+  for (let tries = 1; ; tries++) {
+    const { posts } = await (await fetch(`${site.url}/api/posts.json`)).json();
+    const missing = wanted.filter((slug) => !posts.some((post: Post) => post.slug === slug));
+    if (!missing.length) return posts;
+    if (tries === 10) throw new Error(`Still not live after 5 minutes: ${missing.join(', ')}`);
+    await sleep(30_000);
+  }
+}
+
+// DEV tags are letters and numbers only, and up to four, so keep the ones most people follow
+function tagsFor(post: Post, popular: string[]) {
+  const rank = (tag: string) => (popular.includes(tag) ? popular.indexOf(tag) : popular.length);
+  const tags = new Set(post.tags.map((tag) => tag.replace(/[^a-z0-9]/g, '')));
+  return [...tags].sort((a, b) => rank(a) - rank(b)).slice(0, 4);
+}
+
+function markdownFor(post: Post) {
+  const body = readFileSync(source(post.slug)!, 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '');
+  const files = `${site.repo.replace('github.com', 'raw.githubusercontent.com')}/main/posts/${post.slug}/`;
+  // a post's own widgets only work on the blog, so they become a link there
+  const widgets = [...body.matchAll(/^import (\w+) from '\.\/.+\.astro';$/gm)].map(
+    ([, name]) => name,
+  );
+  const linked = body.replace(/<([A-Z]\w*)\b[^>]*\/>/g, (tag, name) =>
+    widgets.includes(name) ? `[Try it on the blog](${post.url})` : tag,
+  );
+  return plainMarkdown(linked, files, (chart) => `${post.url}charts/${chart}.png`)
+    .replace(/^(```\w+) .+$/gm, '$1') // DEV wants just the language, no file name or highlights
+    .replace(/^> \[!\w+\]\n/gm, '') // DEV has no alerts, so a callout's just a quote
+    .replace(/\]\(\//g, `](${site.url}/`)
+    .replace(/\]\(#/g, `](${post.url}#`);
+}
+
+const posts = await livePosts();
+const popular = (await dev('/tags?per_page=1000')).map(({ name }: { name: string }) => name);
+// one per original, preferring a published copy over a draft
+const copies = new Map<string, number>();
+for (const { id, canonical_url, published } of await dev('/articles/me/all?per_page=1000')) {
+  if (published || !copies.has(canonical_url)) copies.set(canonical_url, id);
+}
+
+for (const post of posts.filter((post) => wanted.includes(post.slug) || !copies.has(post.url))) {
+  // the front matter DEV's own editor writes, with JSON strings standing in for YAML ones. No
+  // date, since DEV dates it when it goes up and won't take one in the past
+  const meta = {
+    title: post.title,
+    published: true,
+    description: post.description,
+    tags: tagsFor(post, popular).join(', '),
+    canonical_url: post.url,
+    cover_image: post.image,
+    ai_assisted: true,
+  };
+  const front = Object.entries(meta).map(([key, value]) => `${key}: ${JSON.stringify(value)}`);
+  const article = { body_markdown: `---\n${front.join('\n')}\n---\n\n${markdownFor(post)}` };
+  const id = copies.get(post.url);
+  if (dry) {
+    console.log(JSON.stringify({ id, ...article }, null, 2));
+    continue;
+  }
+  const saved = await dev(id ? `/articles/${id}` : '/articles', {
+    method: id ? 'PUT' : 'POST',
+    body: JSON.stringify({ article }),
+  });
+  console.log(`${post.slug}: ${id ? 'updated' : 'posted'} ${saved.url}`);
+}

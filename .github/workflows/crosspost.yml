@@ -1,0 +1,40 @@
+name: 📮 Cross-post
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      slugs:
+        description: Posts to send, space separated
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crosspost
+  cancel-in-progress: false
+
+jobs:
+  crosspost:
+    name: 📮 Copy new and changed posts to DEV
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.event.deployment_status.state == 'success'
+      && github.event.deployment.environment == 'Production')
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - name: Send them, once they're live here
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+          SLUGS: ${{ inputs.slugs }}
+        run: npm run crosspost -- $SLUGS

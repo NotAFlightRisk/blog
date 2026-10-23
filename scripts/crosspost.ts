@@ -92,6 +92,7 @@ for (const slug of new Set(slugs)) {
     tags: tagsFor(post, popular).join(', '),
     canonical_url: post.url,
     cover_image: post.image,
+    ai_assisted: true,
   };
   const front = Object.entries(meta).map(([key, value]) => `${key}: ${JSON.stringify(value)}`);
   const article = { body_markdown: `---\n${front.join('\n')}\n---\n\n${markdownFor(post)}` };

@@ -69,6 +69,15 @@ test('the other charts read the same way as Chart does', () => {
   );
 });
 
+test('charts can show as their pictures too, numbered in order', () => {
+  const body =
+    '<Chart title="One" data={[]} />\n```\n<Chart title="Code" />\n```\n<Waffle title="Two" data={[]} />';
+  assert.equal(
+    plainMarkdown(body, files, (chart) => `${files}charts/${chart}.png`),
+    `![One](${files}charts/1.png)\n\n**One**\n\`\`\`\n<Chart title="Code" />\n\`\`\`\n![Two](${files}charts/2.png)\n\n**Two**`,
+  );
+});
+
 test('quotes keep who said it, linked when there is a source', () => {
   assert.equal(
     plainMarkdown(

@@ -55,7 +55,15 @@ function markdownFor(post: Post) {
   const file = ['mdx', 'md'].map((ext) => `posts/${post.slug}/index.${ext}`).find(existsSync)!;
   const body = readFileSync(file, 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '');
   const files = `${site.repo.replace('github.com', 'raw.githubusercontent.com')}/main/posts/${post.slug}/`;
-  const markdown = plainMarkdown(body, files, (chart) => `${post.url}charts/${chart}.png`)
+  // a post's own widgets only work on the blog, so they become a link there
+  const widgets = [...body.matchAll(/^import (\w+) from '\.\/.+\.astro';$/gm)].map(
+    ([, name]) => name,
+  );
+  const linked = body.replace(/<([A-Z]\w*)\b[^>]*\/>/g, (tag, name) =>
+    widgets.includes(name) ? `[Try it on the blog](${post.url})` : tag,
+  );
+  const markdown = plainMarkdown(linked, files, (chart) => `${post.url}charts/${chart}.png`)
+    .replace(/^(```\w+) .+$/gm, '$1') // DEV wants just the language, no file name or highlights
     .replace(/^> \[!\w+\]\n/gm, '') // DEV has no alerts, so a callout's just a quote
     .replace(/\]\(\//g, `](${site.url}/`)
     .replace(/\]\(#/g, `](${post.url}#`);
@@ -76,15 +84,17 @@ for (const slug of new Set(slugs)) {
     console.log(`${slug}: not live, skipped`);
     continue;
   }
-  const article = {
+  // the front matter DEV's own editor writes, with JSON strings standing in for YAML ones
+  const meta = {
     title: post.title,
-    description: post.description,
-    body_markdown: markdownFor(post),
-    tags: tagsFor(post, popular),
-    main_image: post.image,
-    canonical_url: post.url,
     published: true,
+    description: post.description,
+    tags: tagsFor(post, popular).join(', '),
+    canonical_url: post.url,
+    cover_image: post.image,
   };
+  const front = Object.entries(meta).map(([key, value]) => `${key}: ${JSON.stringify(value)}`);
+  const article = { body_markdown: `---\n${front.join('\n')}\n---\n\n${markdownFor(post)}` };
   const id = copies.get(post.url);
   if (dry) {
     console.log(JSON.stringify({ id, ...article }, null, 2));

@@ -20,6 +20,7 @@ jobs:
   crosspost:
     name: 📮 Copy new and changed posts to DEV
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: >-
       github.event_name == 'workflow_dispatch'
       || (github.event.deployment_status.state == 'success'

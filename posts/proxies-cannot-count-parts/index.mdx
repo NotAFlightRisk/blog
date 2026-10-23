@@ -1,0 +1,140 @@
+---
+title: PHP says to count form parts at the proxy. It can't
+description: PHP's advice for PHP2Shell is to cap form fields, parts and headers at the proxy. nginx, Apache, Caddy, HAProxy and Traefik can't, and Apache skips php-fpm.
+date: 2026-10-23
+tags: [php, security, nginx, self-hosting]
+---
+
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import Quote from '../../src/components/mdx/Quote.astro';
+import limits from './limits.json';
+
+PHP shipped fixes on 21 October for PHP2Shell, two bugs that let a request from anyone run code on the server. Updating is the fix. For anyone who can't yet, the [php.net announcement](https://www.php.net/archive/2026.php#2026-10-21-5) has a list of stopgaps, and one of them is aimed at whatever sits in front of PHP:
+
+<Quote by="php.net, 21 October" href="https://www.php.net/archive/2026.php#2026-10-21-5">
+  Consider enforcing limits at the web server or proxy level for decoded request size, input field
+  count, multipart part count, header count, and nesting depth. These limits must also cover
+  requests without a usable Content-Length.
+</Quote>
+
+The first bug needs PHP to run out of memory partway through a request, and an upload form with loads of parts, or loads of headers inside one part, is a cheap way to get it there. The [GitHub advisory](https://github.com/php/php-src/security/advisories/GHSA-w8hw-w9fx-j79w) says to keep these limits even after patching, as they "reduce hard OOM and denial of service risk".
+
+I went looking for the nginx setting that counts parts, and there isn't one. So I put nginx, Apache httpd, Caddy, HAProxy and Traefik in front of a little Python backend that just counts what turns up, plus the two open-source WAFs, ModSecurity and Coraza, each with the OWASP Core Rule Set. Then I sent the same harmless forms through all of them: 20,000 one-letter fields, 5,000 empty file inputs, a field name 100 brackets deep, a part with 10,000 made-up headers and so on. Nothing vulnerable behind any of it.
+
+<Matrix title="What each layer stopped" data={limits}>
+  Multipart forms, stock settings plus a size cap, 23 October. Both WAFs run the Core Rule Set. A
+  tick or a number means it stopped forms past that. Headers are the ones inside one part, depth is
+  how many brackets deep a field name goes, and ModSecurity's parts leave out real file uploads. PHP
+  is 8.4.27, and rather than refuse the request it just drops whatever's over.
+</Matrix>
+
+## Size is the bit they can all do (mostly)
+
+Every proxy has a body size limit, and that's where most of the advice I've read stops. nginx, Caddy and Traefik all turned away a 12 MB body with an 8 MB cap, with a `Content-Length` or chunked.
+
+HAProxy's usual size check is a deny on the `Content-Length` header, which is what I used, and a chunked request doesn't have one, so the 12 MB walked through. Its own [manual](https://github.com/haproxy/haproxy/blob/v3.4.0/doc/configuration.txt) says `req.body_size` only sees what's in the buffer when the body's chunked. That's exactly the "without a usable Content-Length" case php.net asks you to cover.
+
+## Apache's size cap skips php-fpm
+
+Apache was the odd one. `LimitRequestBody` is its size cap, and through `ProxyPass` the 12 MB went straight past an 8 MB limit. Same with php-fpm behind `SetHandler "proxy:fcgi://..."`. Here's httpd 2.4.69 with `LimitRequestBody 8388608`, a text file, and a PHP script that prints how much body it got:
+
+```sh
+$ curl -s -o /dev/null -w "%{http_code}\n" --data-binary @12mb.bin localhost:8096/plain.txt
+413
+$ curl -s --data-binary @12mb.bin localhost:8096/len.php
+cl=12582912 got=12582912
+```
+
+Same server, same limit. The text file gets a 413, and PHP gets all 12 MB.
+
+The docs used to warn you. Up to 2.4.53 they said `LimitRequestBody` had "limited applicability to proxy requests". 2.4.54, the release that set the default to 1 GB, took that line out, but 2.4's code still switches the limit off for any proxied request. The fix for that went into trunk [in 2018](https://github.com/apache/httpd/commit/a3eef41) and hasn't come back to 2.4.
+
+With `mod_php` there's no proxying, so the limit works, and that's the setup php.net rates riskiest. With php-fpm behind Apache, your real size cap is PHP's own `post_max_size`.
+
+## PHP counts most of it already
+
+php.net never mentions it, but PHP has its own setting for everything on that list except the headers, and the counts are on by default. `max_input_vars` is 1,000, `max_input_nesting_level` is 64, and `max_multipart_body_parts` works out as `max_input_vars` plus `max_file_uploads`, so 1,020. Here's PHP 8.4.27 getting a 5,000-field form:
+
+```
+Warning: PHP Request Startup: Input variables exceeded 1000. To increase
+the limit change max_input_vars in php.ini.
+Warning: PHP Request Startup: Multipart body parts limit exceeded 1020.
+To increase the limit change max_multipart_body_parts in php.ini.
+```
+
+It keeps the first thousand and carries on. The advisory says the working exploit ran "with default PHP input and memory limits", so the defaults clearly aren't low enough, and it asks you to lower nesting and bound the rest. Turn them down to what your app actually takes. With these, PHP kept 100 fields and dropped the other 4,900:
+
+```ini title="php.ini"
+max_input_vars = 100
+max_multipart_body_parts = 100
+max_input_nesting_level = 8
+```
+
+Headers in a part is the one PHP has no setting for. The patched releases only keep two from each part, `Content-Disposition` and `Content-Type`, so after updating it mostly stops being PHP's problem. Until then, it's down to whatever's in front.
+
+## A WAF needs telling
+
+None of the five proxies looks inside a form at all, which makes sense, as none of them parse one. The WAFs do, but not for this.
+
+ModSecurity turned away the 5,000- and 20,000-field forms with "Failed to fully parse request body due to large argument count", a rule in its own recommended config that trips at 1,000 fields. The Core Rule Set has a field-count rule too, but it's off until you set a number. Empty file inputs count as fields, so 5,000 of those got stopped as well. Headers in a part it doesn't count at all, and one part with 10,000 of them went through with every header delivered.
+
+Coraza (inside Caddy) let all 20,000 fields through. The only thing that stopped a pile of headers was Go's own multipart reader, which gives up past 10,000 in one part, and 20 parts of 9,000 each got through fine.
+
+Both will count them if you ask, though. Their rule language has `&MULTIPART_PART_HEADERS`, the number of part headers in the request:
+
+```apache
+SecRule &MULTIPART_PART_HEADERS "@gt 500" \
+    "id:1001,phase:2,deny,status:413,msg:'too many part headers'"
+```
+
+That stopped 1,000 headers in one part on both WAFs. It counts every part header in the whole request rather than per part, so three parts of 200 trips it too.
+
+That works in your favour, since every part has at least one header, so it caps parts as well. Coraza went from letting 5,000 parts through to a 413. A file input sends two headers (`Content-Disposition` and `Content-Type`), so set it a bit over twice the fields in your biggest real form.
+
+[SOCFortress](https://github.com/socfortress/waf-platform-public/tree/main/rule-packs/php2shell) published the same idea yesterday in their PHP2Shell rule pack, set at 100 and only for multipart, along with one for nesting. I tried a version of that one on both WAFs too, and it blocked a field name 12 brackets deep and let 11 through:
+
+```apache
+SecRule ARGS_POST_NAMES|FILES_NAMES "@rx (?:\[[^\]]*\]){12}" \
+    "id:1002,phase:2,deny,status:413,msg:'name nested too deep'"
+```
+
+## nginx can count, in JavaScript
+
+nginx has no directive for any of it, but [njs](https://nginx.org/en/docs/njs/reference.html), nginx's own JavaScript module, got a form parser in 0.9.9, and `js_access` runs it before the request goes anywhere. This lets everything through except a multipart form it won't parse:
+
+```js title="gate.js"
+async function form(r) {
+  const type = r.headersIn['Content-Type'] || '';
+  if (!/^multipart\/form-data/i.test(type)) return;
+
+  try {
+    await r.readRequestForm({ maxKeys: 200 });
+  } catch (e) {
+    r.warn(`form rejected: ${e.message}`);
+    r.return(413);
+  }
+}
+
+export default { form };
+```
+
+```nginx title="nginx.conf"
+load_module modules/ngx_http_js_module.so;
+
+http {
+  js_import gate from /etc/nginx/gate.js;
+
+  server {
+    client_max_body_size 8m;
+
+    location / {
+      js_access gate.form;
+      proxy_pass http://backend;
+    }
+  }
+}
+```
+
+On nginx 1.31.8 with njs 1.0.2 it let 200 fields through and turned 201 away, and the form still reached the backend whole after njs had read it. It only looks at multipart, like the WAF rule, so a big urlencoded form is still PHP's `max_input_vars` to deal with. It does nothing about nesting either, since `a[x][x][x]` is just a name to it.
+
+The headers took care of themselves. njs won't take more than 32 in a part (`Content-Disposition` included), so 33 gets a 413 without you asking, and that's baked into the parser rather than a setting. It's a separate module, `nginx-module-njs`, which the official Docker image already has, apart from the `-slim` ones.

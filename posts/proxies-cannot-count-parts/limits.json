@@ -1,0 +1,20 @@
+[
+  {
+    "In front": "The five proxies",
+    "Fields": false,
+    "Parts": false,
+    "Headers": false,
+    "Depth": false
+  },
+  {
+    "In front": "ModSecurity",
+    "Fields": "1,000",
+    "Parts": "1,000",
+    "Headers": false,
+    "Depth": false
+  },
+  { "In front": "Coraza", "Fields": false, "Parts": false, "Headers": "10,000", "Depth": false },
+  { "In front": "WAF + rules", "Fields": true, "Parts": true, "Headers": true, "Depth": true },
+  { "In front": "nginx + njs", "Fields": true, "Parts": true, "Headers": "32", "Depth": false },
+  { "In front": "PHP", "Fields": "1,000", "Parts": "1,020", "Headers": false, "Depth": "64" }
+]

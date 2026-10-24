@@ -1,0 +1,11 @@
+[
+  { "Year": "2018", "Advisories": 6 },
+  { "Year": "2019", "Advisories": 1 },
+  { "Year": "2020", "Advisories": 7 },
+  { "Year": "2021", "Advisories": 23 },
+  { "Year": "2022", "Advisories": 15 },
+  { "Year": "2023", "Advisories": 3 },
+  { "Year": "2024", "Advisories": 2 },
+  { "Year": "2025", "Advisories": 1 },
+  { "Year": "2026", "Advisories": 60 }
+]

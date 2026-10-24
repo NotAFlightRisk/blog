@@ -1,0 +1,93 @@
+---
+title: Pillow will open your avatar.png as a Photoshop file
+description: Pillow picks the decoder from a file's bytes, not its name. An allowlist keeps out 18 of 24 upload-reachable bugs from this year's flood, but not the two worst.
+date: 2026-10-24
+tags: [security, python, pillow, django]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Breakdown from '../../src/components/mdx/Breakdown.astro';
+import years from './years.json';
+import reach from './reach.json';
+
+I saved a Photoshop document, renamed it `avatar.png`, and posted it to a Django form that only accepts images. It went through. Then three different thumbnail libraries each opened it, ran Pillow's Photoshop plugin, and read its pixels back out.
+
+Nothing there is a bug on its own. It's how [Pillow](https://pillow.readthedocs.io/) is meant to work: `Image.open` sniffs the first few bytes and picks a decoder by what it finds, not by the extension and not by the `Content-Type`. A PSD header gets the PSD plugin whatever the file's called. The name `avatar.png` is decoration.
+
+That didn't bother me much until this month, when Pillow had the worst few weeks of its life.
+
+## 60 advisories in a year, 39 of them in three days
+
+<Chart type="columns" title="Pillow advisories by year published" data={years}>
+  GitHub's advisory database, pip ecosystem, by publish date, as of 24 October. Publish year isn't
+  the same as when the bug landed - a few 2026 entries are old CVEs only now written up.
+</Chart>
+
+One in 2025. Two in 2024. Sixty so far in 2026, and 39 of those went out on 20 to 22 October in one batch. Four of the first batch were critical, and another critical landed on the 23rd while I was still counting. If you run anything that takes image uploads in Python, you got the upgrade alert this week. The fix is to upgrade, and you should, today.
+
+But I wanted to know what the `avatar.png` trick costs you in the meantime, because the Pillow handbook has a mitigation sitting right there and nobody's said how much it actually buys.
+
+## formats= shuts the door, mostly
+
+`Image.open` takes an optional `formats=` argument: a list of the plugins it's allowed to try. Leave it off and it tries all of them. Pass the handful you serve and the rest stop existing, header or no header.
+
+```python
+from PIL import Image
+
+Image.open(upload)                                   # tries every plugin
+Image.open(upload, formats=["JPEG", "PNG", "GIF", "WEBP"])  # these four only
+```
+
+With that second line, my Photoshop `avatar.png` raises `UnidentifiedImageError` instead of handing back a `PsdImageFile`. So I went through all 60 advisories by hand, sorted them by how an attacker reaches the vulnerable code, and checked each one against that four-format allowlist.
+
+<Breakdown title="How you reach this year's 60 Pillow bugs" data={reach}>
+  Hand-classified from each advisory's text and PoC on 24 October. "Opening the upload" means
+  `Image.open` plus a normal `load`, `seek`, `getexif` or `thumbnail`.
+</Breakdown>
+
+Only 24 of the 60 are reachable just by opening an uploaded file. The rest need you to do something to it first: re-save it, convert it, run a filter, render a font. More on those in a minute, because the allowlist does nothing for them.
+
+Of those 24, the four-format allowlist keeps out the vulnerable plugin for 18 (a few of those need an odd setup to fire anyway - a real filename, the optional `olefile` package, Windows). Most of the open-an-upload bugs this year are in plugins you can switch off and never miss: FITS astronomy images, DOS-era SPIDER files, FlashPix, McIdas satellite data, and a dozen more.
+
+## Not the two you'd most want gone
+
+Here's where it stops being a happy story. Six of the 24 get through the allowlist, and they're the six you can't switch off, because they're the formats you actually serve.
+
+| Gets through                      | Why                                                                               |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| JPEG heap overflow (critical)     | It's JPEG. The advisory says outright that `formats=["JPEG"]` doesn't prevent it. |
+| Multi-frame stale read (critical) | Reached through MPO, and MPO rides the JPEG plugin.                               |
+| A second MPO bug                  | Same door.                                                                        |
+| PNG eXIf                          | It's PNG, read on `getexif`.                                                      |
+| APNG                              | It's PNG.                                                                         |
+| A GIF decode bug                  | It's GIF.                                                                         |
+
+The MPO one is the sly bit. MPO is the multi-picture format your phone saves for its depth and burst shots, and Pillow has no separate detector for it. A JPEG with an extra marker gets quietly promoted to an `MpoImageFile` by the JPEG plugin itself:
+
+```python
+>>> im = Image.open(phone_photo, formats=["JPEG"])
+>>> type(im).__name__, im.n_frames
+('MpoImageFile', 2)
+>>> Image.open(phone_photo, formats=["MPO"])
+KeyError: 'MPO'
+```
+
+So you can't allow JPEG and refuse MPO. Asking for `["MPO"]` on its own is a `KeyError`, because there's nothing to register. If you need the MPO bug shut, the only lever is to check `im.format` after opening and reject anything that isn't what you wanted, knowing the header's already been parsed by the time you can look.
+
+Two of this year's criticals are stopped by the allowlist, and both come with an asterisk: the FlashPix one needs `olefile` installed, the Ghostscript one needs a filename the attacker chose. The two criticals that need nothing but a plain `Image.open` are the JPEG overflow and the MPO read, and the allowlist can't touch either.
+
+## It doesn't help after the open, either
+
+That `avatar.png` from the start did get decoded three times, remember. I wired up a one-file Django app with [easy-thumbnails](https://github.com/SmileyChris/easy-thumbnails), [sorl-thumbnail](https://github.com/jazzband/sorl-thumbnail) and [django-imagekit](https://github.com/matthewwithanm/django-imagekit), uploaded a benign file in each niche format as `avatar.png`, and traced every `load` Pillow ran. All three thumbnailers decoded all of them with their own plugin: the PSD body through the raw PSD decoder, FITS through FITS, JPEG2000 through OpenJPEG, right down to reading back the correct pixel. easy-thumbnails even walked to the second MPO frame.
+
+None of those three passes `formats=`, and neither does the thing that let the file in. Django's own `ImageField` is this, in `django/forms/fields.py`:
+
+```python
+image = Image.open(file)
+```
+
+No allowlist. It parses the header to confirm the upload is _an_ image, sets the content type from whatever Pillow detected, and saves it. Wagtail and Saleor sniff the MIME type first and are a bit better off; most of the rest I looked at open it bare.
+
+And the whole second half of the advisory pile - 14 save bugs, 8 operations, the fonts - sits past the point an allowlist can see. Those fire when you re-save the upload as a different format, resize it, apply a colour profile, re-encode it as a thumbnail. Which is exactly what an avatar pipeline does to every file, one plugin or forty. A crafted JPEG that's fine to open but overflows when it's re-saved with an ICC profile and a comment doesn't care which formats you allowed on the way in.
+
+So: upgrade Pillow first, that's the actual fix for all 60. If you take image uploads, also pass `formats=` with the few you serve - it's one argument and it retires a decent chunk of the attack surface for free. And if you need the MPO door shut too, check `im.format` after opening and reject anything you didn't ask for. Just don't file any of it under "fixed". The JPEG you have to allow is still the JPEG with the hole in it.

@@ -1,0 +1,7 @@
+[
+  { "How you reach it": "Opening the upload", "Advisories": 24 },
+  { "How you reach it": "Opening, with an odd call", "Advisories": 5 },
+  { "How you reach it": "Saving or converting", "Advisories": 14 },
+  { "How you reach it": "An operation on the pixels", "Advisories": 8 },
+  { "How you reach it": "Fonts and other", "Advisories": 9 }
+]

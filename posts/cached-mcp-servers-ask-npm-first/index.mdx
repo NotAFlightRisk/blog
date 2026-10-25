@@ -1,0 +1,129 @@
+---
+title: Your cached MCP server still asks npm first
+description: Pinning your MCP server doesn't stop npx asking npm on every launch. When npm's down, it waits 70 seconds, and Claude gives up at 30.
+date: 2026-10-25
+tags: [ai, mcp, javascript, python, npm]
+---
+
+import Dots from '../../src/components/mdx/Dots.astro';
+import starts from './starts.json';
+
+The [filesystem server's README](https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem) has you paste something like this into your config:
+
+```json title=".mcp.json"
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2.0.1",
+        "/tmp"
+      ]
+    }
+  }
+}
+```
+
+The first launch downloads the package. After that it's in npx's cache, so I figured it ran from disk, and that pinning the version (which write-ups like [Archestra's](https://archestra.ai/blog/pin-mcp-server-versions) tell you to do) made that even more true. Then I watched what npm does when it can't reach the registry, with that exact version already cached (URLs cut down to the package name):
+
+```text
+npm http fetch GET .../server-filesystem attempt 1 failed with EAI_AGAIN
+npm http fetch GET .../server-filesystem attempt 2 failed with EAI_AGAIN
+npm http fetch GET .../server-filesystem attempt 3 failed with EAI_AGAIN
+npm http fetch GET 200 .../server-filesystem 70134ms (cache stale)
+Secure MCP Filesystem Server running on stdio
+```
+
+Seventy seconds of asking, and then it runs the copy it had all along. Claude Code had already given up on it.
+
+## Who's offline, though?
+
+On a plane Claude can't reach its model either, so a missing filesystem server is the least of your worries.
+
+Where it bites is narrower: npm can't be reached, but the model can. A work proxy that lets `api.anthropic.com` through and not `registry.npmjs.org`. npm or PyPI having a bad hour. In my case, I noticed this during the [recent incident](https://status.npmjs.org/incidents/xfp75s9j3bp8) npm had, where installs were degraded. But it would also affect an agent on a local model, which never needed the internet in the first place.
+
+So I tested that case. Claude Code 2.1.310 running normally, with each MCP server started inside a Docker container that has no network, so Claude could reach Anthropic and the servers couldn't reach npm. Three copies of the server above, already cached: as written (`npx-pinned`), with `--prefer-offline` added to the args (`npx-flag`), and with the same setting in the server's env instead (`npx-env`). Claude Code waited 30 seconds, then reported:
+
+```json
+"mcp_servers": [
+  { "name": "npx-pinned",
+    "status": "failed" },
+  { "name": "npx-flag",
+    "status": "connected" },
+  { "name": "npx-env",
+    "status": "connected" }
+]
+```
+
+The session carries on without the failed one, minus its tools. Codex 0.164.0 did the same: "timed out handshaking with MCP server after 29.999999026s", and still no tools from it when I asked 100 seconds in.
+
+You can wait it out. With `MCP_TIMEOUT=100000` (Claude Code's [startup timeout](https://code.claude.com/docs/en/mcp), in milliseconds), the pinned one connected after about 70 seconds. Every launch.
+
+And that's the kind version, where DNS fails straight away. I also faked a network that silently drops packets, the sort that never says no, just never answers. The pinned server still hadn't started when I stopped waiting at 250 seconds.
+
+## npx asks every time
+
+npm keeps the registry's answer about a package (which versions exist and where to get them), and the registry says that answer's good for five minutes. npx doesn't care: it [hard-codes `preferOnline: true`](https://github.com/npm/cli/blob/latest/workspaces/libnpmexec/lib/index.js) when it looks a package up, so it asks again every launch. Two launches seconds apart each send a request and log `(cache revalidated)`, exact version and all.
+
+When the request fails, npm does what it does for any fetch: tries again twice, waiting 10 seconds and then 60 (the default `fetch-retries`, `fetch-retry-mintimeout` and `fetch-retry-maxtimeout`). Only after the last try does it settle for the cached copy.
+
+<Dots title="Seconds to start a cached server-filesystem with npx" data={starts} unit="s">
+  npm 12.2.1, warm cache, one run each on 25 October. "Can't be reached" is a container with no
+  network. The two prefer-offline dots sit on top of each other, both about a second.
+</Dots>
+
+Pinned or not makes no real difference. The flag skips the request whether npm's there or not.
+
+## uvx doesn't wait, it fails
+
+uv plays it straighter. PyPI says its answer's good for ten minutes, and uv believes it: for ten minutes after uvx last checked a package with PyPI, `mcp-server-fetch` starts from the cache with no network in a second or three.
+
+After that it asks, and if PyPI doesn't answer, it gives up rather than run what it's got:
+
+```text
+error: Request failed after 3 retries in 7.3s
+  cause: Failed to fetch: https://pypi.org/simple/mcp-server-fetch/
+  cause: error sending request for url (https://pypi.org/simple/mcp-server-fetch/)
+  cause: client error (Connect)
+  cause: dns error
+  cause: failed to lookup address information: Temporary failure in name resolution
+```
+
+That one was pinned to `mcp-server-fetch==2026.10.24`, which was sitting in the cache. Unpinned fails the same way, and Claude Code marks it failed. Ten minutes isn't long, either.
+
+## Telling them not to ask
+
+For npx, put `--prefer-offline` first in the args. It uses whatever's cached and only goes to the registry for things that aren't. For uvx, `--offline` doesn't go to PyPI at all, so it needs one launch with the network first or it fails with "not found in the cache".
+
+```json title=".mcp.json" {6,14}
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "--prefer-offline",
+        "-y",
+        "@modelcontextprotocol/server-filesystem@2.0.1",
+        "/tmp"
+      ]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["--offline", "mcp-server-fetch==2026.10.24"]
+    }
+  }
+}
+```
+
+If you'd rather leave the args alone, set it in the server's env instead:
+
+```json
+"env": { "npm_config_prefer_offline": "true" }
+```
+
+That's `npx-env` above. `UV_OFFLINE=1` does the same for uvx. Both started in under two seconds with no network.
+
+The catch is updates. I put a tiny package on a throwaway local registry, ran it unpinned with `--prefer-offline`, then published a new version. Just over five minutes later, past the registry's five, it was still running the old one. It moved once a normal `npx` launch fetched the list again. With the flag on, an unpinned server sticks to whatever you happened to have cached, and you don't get to pick which.
+
+Pin it as well, then, and bump it yourself. The security posts had that bit right.

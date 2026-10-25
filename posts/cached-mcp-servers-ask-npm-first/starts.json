@@ -1,0 +1,5 @@
+[
+  { "launch": "npx, pinned", "npm answers": 1.3, "npm can't be reached": 72.3 },
+  { "launch": "npx, unpinned", "npm answers": 2, "npm can't be reached": 79.4 },
+  { "launch": "npx --prefer-offline", "npm answers": 1, "npm can't be reached": 0.8 }
+]

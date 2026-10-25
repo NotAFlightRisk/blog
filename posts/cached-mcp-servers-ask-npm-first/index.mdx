@@ -41,7 +41,7 @@ Seventy seconds of asking, and then it runs the copy it had all along. Claude Co
 
 On a plane Claude can't reach its model either, so a missing filesystem server is the least of your worries.
 
-Where it bites is narrower: npm can't be reached, but the model can. A work proxy that lets `api.anthropic.com` through and not `registry.npmjs.org`. npm or PyPI having a bad hour. An agent on a local model, which never needed the internet in the first place.
+Where it bites is narrower: npm can't be reached, but the model can. A work proxy that lets `api.anthropic.com` through and not `registry.npmjs.org`. npm or PyPI having a bad hour, like the two hours of [degraded installs](https://status.npmjs.org/incidents/xfp75s9j3bp8) npm had in the early hours of 22 October. An agent on a local model, which never needed the internet in the first place.
 
 So I tested that case. Claude Code 2.1.310 running normally, with each MCP server started inside a Docker container that has no network, so Claude could reach Anthropic and the servers couldn't reach npm. Three copies of the server above, already cached: as written (`npx-pinned`), with `--prefer-offline` added to the args (`npx-flag`), and with the same setting in the server's env instead (`npx-env`). Claude Code waited 30 seconds, then reported:
 

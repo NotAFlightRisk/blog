@@ -1,0 +1,106 @@
+---
+title: Your self-hosted newsletter still has a tracking pixel
+description: Fresh installs of listmonk, Keila, phpList, Mautic and Ghost all tracked the first email I sent. France now wants consent for even an anonymous open count.
+date: 2026-10-25
+tags: [privacy, self-hosting, open-source, email]
+---
+
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import Quote from '../../src/components/mdx/Quote.astro';
+import defaults from './defaults.json';
+
+Untick one box in [Keila](https://www.keila.io/) before you send a campaign, and its stats page thanks you for it: "You have disabled tracking for this campaign. Thanks for respecting the privacy of your recipients!"
+
+Lovely. The box comes ticked, mind.
+
+Moving a newsletter off Mailchimp or Substack onto something you run yourself feels like the privacy move. Tracking is their business model, and the open-source tools are mostly built by people who'd agree with you about that. So I installed five of the better-known ones fresh in Docker, sent one campaign from each on its stock settings, and read the raw email that came out. Then I sent it again with tracking off, to check the switch does anything.
+
+<Matrix title="All five tracked the first email" data={defaults}>
+  listmonk 6.2, Keila 0.30, phpList 3.6, Mautic 7.2 and Ghost 6, sent the week of 20 October. "Knows
+  who" means the pixel or links carry something that points back to one subscriber.
+</Matrix>
+
+Every off switch worked. Flip it and the next email came through with no pixel and plain links. That matters a bit more since this summer, because France now says even the gentlest of the five needs your readers' permission.
+
+## Even the anonymous count needs asking
+
+[listmonk](https://listmonk.app/) is the gentle one. Its default template has `{{ TrackView }}` near the bottom, which turned into a pixel at this address:
+
+```
+/campaign/d426de98-.../00000000-0000-0000-0000-000000000000/px.png
+```
+
+The first ID is the campaign. The second's meant to be the subscriber, and it's all zeros, because "Individual subscriber tracking" starts off. So listmonk counts how many people opened, not who, and any link you mark for tracking gets the same zeros. Switching it off completely is Settings > Privacy > Disable tracking.
+
+France's data regulator, the CNIL, published [a recommendation on email pixels](https://www.cnil.fr/fr/recommandation-pixel-suivi-courriels) in April and followed it with [a FAQ](https://cnil.fr/fr/faq-recommandation-pixels-courriers-electroniques) in July. The short version is that a tracking pixel needs the reader's consent first. There's one exemption, for keeping your list clean. A pixel can record when someone last opened, so you can stop mailing people who never do, and only in mail they asked for. Log the time of each open, or anything more than that, and you need consent again.
+
+So does listmonk's anonymous count get a pass? Question 18 asks exactly that:
+
+<Quote
+  by="CNIL's FAQ, question 18 (my translation)"
+  href="https://cnil.fr/fr/faq-recommandation-pixels-courriers-electroniques"
+>
+  No. Article 82 of the Informatique et Libertés law applies whether or not the data concerned is
+  personal.
+</Quote>
+
+Article 82 is the rule about reading things off someone's device, and the CNIL treats a pixel loading as exactly that, whatever your server does with the request afterwards. I'm not a lawyer. It's about readers in France, but question 2 says it can still apply when the sender's outside the EU. And question 4 asks the people who make these tools to make trackers easy to turn off, and to protect data by default. None of the five ships like that.
+
+## Keila asks, with the answer filled in
+
+Keila's new-campaign form has an "Enable click/open tracking" checkbox, already ticked on a fresh project. Leave it, and the email gets a pixel tagged with that recipient's message ID, and every outbound link goes through a redirect carrying the same ID (the "powered by Keila" one too).
+
+The form only shows the box for the block and Markdown editors, though. Pick MJML or raw HTML and it's tracked unless you go and find the same box in the campaign's settings afterwards. On the plus side, once you untick it the next new campaign remembers.
+
+## phpList doesn't ask at all
+
+[phpList](https://www.phplist.org/) asked me nothing about tracking while I set up the campaign. The only tracking option on the last tab is Google Analytics tags, and that one starts off. The email still ended with this:
+
+```html
+<img src=".../lists/ut.php?u=db0740a8...&m=2" width="1" height="1" />
+```
+
+`u` is the subscriber's ID. Every link went through `lt.php?tid=` with a token per subscriber, and that includes the forward link, the preferences link and "opt-out completely". Even the way out goes through the click tracker.
+
+There's nothing in the admin UI to stop it. It's two lines in `config.php`:
+
+```php title="config.php"
+define('ALWAYS_ADD_USERTRACK', 0);
+define('CLICKTRACK', 0);
+```
+
+That was the 3.6.15 Docker image. Its `latest` tag moved to 3.7.0 on 24 October, with the same two defaults.
+
+## Mautic and Ghost know exactly who
+
+[Mautic](https://mautic.org/) adds a 1x1 `/email/<id>.gif` before `</body>`, with an ID for that one send, and rewrites links to `/r/<id>?ct=` plus a blob of base64. Decode the blob and it's a serialised PHP array. The interesting bits:
+
+```
+stat      => 6adb632255e71047646837
+sent_time => 1792762658
+lead      => 1
+```
+
+`lead` is the contact. Mautic's a marketing automation tool, so nobody's hiding anything here, that's what it's for. Both switches are under Configuration > Email Settings: "Append tracking pixel into email body ?" and "Disable trackable urls". The pixel one comes with a tooltip warning that turning it off "will disable tracking of email open actions!", which is rather the point.
+
+[Ghost](https://ghost.org/) only sends newsletters through Mailgun, so I pointed it at a fake Mailgun that saved whatever Ghost sent. There's no pixel in Ghost's HTML. Instead, at the end of the request:
+
+```
+Content-Disposition: form-data; name="o:tracking-opens"
+
+yes
+```
+
+That's Ghost asking Mailgun to add one. Every link bar the unsubscribe and "Powered by Ghost" ones was rewritten to `/r/<id>?m=%recipient.uuid%`, which Mailgun fills in with each member's ID as it sends. The switches are "Email opens" and "Email clicks" under Analytics in Ghost's settings, and both start on.
+
+Smaller thing: the stock newsletter template loads a couple of images straight from `static.ghost.org`, tracking or no tracking. Nothing in those requests says which member it is, but Ghost's CDN still hears about it when someone opens the email with images on.
+
+## Not the only ones
+
+Sendportal, Plunk and Dittofeed don't add a pixel themselves, they leave tracking to whichever email provider you plug in. Sendportal's "Track Opens" and "Track Clicks" boxes still start ticked, and it passes them on to SendGrid, Postmark, Mailjet and Mailgun. BillionMail and Mailtrain both start with tracking on in their code. [Mailcoach](https://www.mailcoach.app/), the paid self-hosted one, makes open tracking [something you can turn on](https://www.mailcoach.app/resources/learn-mailcoach/getting-started/sending-your-first-campaign/) in its setup wizard.
+
+And [Hyvor Post](https://hyvor.com/post), which is AGPL but not ready to self-host yet, took it out altogether:
+
+<Quote by="Hyvor Post's docs" href="https://hyvor.com/post/docs">
+  There is no hidden switch to turn on tracking.
+</Quote>

@@ -1,0 +1,7 @@
+[
+  { "Tool": "listmonk", "Knows who": false, "Off switch": "One setting" },
+  { "Tool": "Keila", "Knows who": true, "Off switch": "A pre-ticked box per campaign" },
+  { "Tool": "phpList", "Knows who": true, "Off switch": "Only in config.php" },
+  { "Tool": "Mautic", "Knows who": true, "Off switch": "Two settings" },
+  { "Tool": "Ghost", "Knows who": true, "Off switch": "Two settings" }
+]

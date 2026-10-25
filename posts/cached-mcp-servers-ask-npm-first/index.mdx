@@ -1,6 +1,6 @@
 ---
 title: Your cached MCP server still asks npm first
-description: When npm's unreachable but Claude isn't, a cached, pinned npx MCP server gets dropped before it starts, and uvx just fails. A flag each fixes them.
+description: Pinning your MCP server doesn't stop npx asking npm on every launch. When npm's down, it waits 70 seconds, and Claude gives up at 30.
 date: 2026-10-25
 tags: [ai, mcp, javascript, python, npm]
 ---

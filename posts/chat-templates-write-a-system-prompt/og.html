@@ -1,0 +1,114 @@
+<style>
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 500px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      color: var(--text-muted);
+    }
+  }
+  h1 {
+    position: absolute;
+    top: 128px;
+    left: 500px;
+    width: 640px;
+    margin: 0;
+    font-size: 68px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .said {
+    position: absolute;
+    top: 470px;
+    left: 500px;
+    padding: 14px 22px;
+    border-radius: 22px 22px 22px 4px;
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+    font-size: 30px;
+    & small {
+      display: block;
+      color: var(--text-muted);
+      font-size: 18px;
+    }
+  }
+  .calendar {
+    position: absolute;
+    top: 84px;
+    left: 72px;
+    width: 360px;
+    height: 470px;
+    rotate: -3deg;
+    background: var(--surface);
+    box-shadow: 3px 6px 0 var(--shadow-soft);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% 96%,
+      92% 100%,
+      84% 96%,
+      76% 100%,
+      68% 96%,
+      60% 100%,
+      52% 96%,
+      44% 100%,
+      36% 96%,
+      28% 100%,
+      20% 96%,
+      12% 100%,
+      4% 96%,
+      0 100%
+    );
+    text-align: center;
+    & header {
+      padding: 34px 0 20px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-size: 46px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    & b {
+      display: block;
+      margin-top: 14px;
+      font-size: 220px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.06em;
+    }
+    & span {
+      font-size: 32px;
+      color: var(--text-muted);
+    }
+  }
+  .rings {
+    position: absolute;
+    top: 74px;
+    left: 72px;
+    width: 360px;
+    rotate: -3deg;
+    display: flex;
+    justify-content: space-around;
+    & i {
+      width: 18px;
+      height: 44px;
+      border-radius: 9px;
+      background: var(--text-muted);
+    }
+  }
+</style>
+
+<div class="calendar">
+  <header>JUL 2024</header>
+  <b>26</b>
+  <span>Friday</span>
+</div>
+<div class="rings"><i></i><i></i></div>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<h1>Skip the system prompt and the template writes one</h1>
+<div class="said">Who made you?<small>me, on 19 October 2026</small></div>

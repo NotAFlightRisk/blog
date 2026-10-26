@@ -1,0 +1,105 @@
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      color: var(--accent);
+    }
+  }
+  h1 {
+    position: absolute;
+    top: 112px;
+    left: 72px;
+    width: 680px;
+    margin: 0;
+    font-size: 68px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .stat {
+    position: absolute;
+    top: 404px;
+    left: 72px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    width: 640px;
+    & b {
+      color: var(--accent);
+      font-size: 104px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    & span {
+      color: var(--text-muted);
+      font-size: 26px;
+      line-height: 1.25;
+    }
+  }
+  svg {
+    position: absolute;
+    top: 96px;
+    right: 96px;
+  }
+  .pickle {
+    fill: var(--tip);
+    stroke: color-mix(in srgb, var(--tip), black 45%);
+    stroke-width: 4;
+  }
+  .bump {
+    fill: color-mix(in srgb, var(--tip), black 30%);
+  }
+</style>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<h1>Pickle-only uploads to Hugging Face doubled since 2024</h1>
+<div class="stat">
+  <b>1 in 8</b>
+  <span>people uploading model weights now upload only pickles. In late 2024 it was 1 in 17</span>
+</div>
+
+<svg viewBox="0 0 320 460" width="320" height="460">
+  <defs>
+    <clipPath id="jar">
+      <rect x="22" y="96" width="276" height="354" rx="44" />
+    </clipPath>
+    <g id="pickle">
+      <rect class="pickle" x="-30" y="-78" width="60" height="156" rx="30" />
+      <circle class="bump" cx="-10" cy="-44" r="4" />
+      <circle class="bump" cx="10" cy="-14" r="4" />
+      <circle class="bump" cx="-8" cy="20" r="4" />
+      <circle class="bump" cx="12" cy="50" r="4" />
+    </g>
+  </defs>
+
+  <rect x="22" y="96" width="276" height="354" rx="44" fill="var(--surface)" />
+  <g clip-path="url(#jar)">
+    <use href="#pickle" transform="translate(72 360) rotate(-14)" />
+    <use href="#pickle" transform="translate(146 380) rotate(6)" />
+    <use href="#pickle" transform="translate(226 366) rotate(18)" />
+    <use href="#pickle" transform="translate(100 196) rotate(10)" />
+    <use href="#pickle" transform="translate(184 190) rotate(-8)" />
+    <use href="#pickle" transform="translate(258 210) rotate(-20)" />
+  </g>
+  <rect x="22" y="96" width="276" height="354" rx="44" fill="none" stroke="var(--text-muted)" stroke-width="6" />
+  <path d="M52 140 V250" stroke="var(--text)" stroke-width="8" stroke-linecap="round" opacity="0.3" />
+
+  <rect x="64" y="70" width="192" height="34" fill="var(--surface-hover)" stroke="var(--text-muted)" stroke-width="6" />
+  <rect x="44" y="8" width="232" height="66" rx="10" fill="var(--accent)" />
+  <g stroke="var(--on-accent)" stroke-width="4" opacity="0.2">
+    <path d="M74 18 V64 M104 18 V64 M134 18 V64 M164 18 V64 M194 18 V64 M224 18 V64 M254 18 V64" />
+  </g>
+
+  <rect x="58" y="244" width="204" height="86" rx="6" fill="var(--text)" transform="rotate(-3 160 287)" />
+  <text x="160" y="301" text-anchor="middle" transform="rotate(-3 160 287)" style="font: 700 36px var(--font-mono); fill: var(--bg)">best.pt</text>
+</svg>

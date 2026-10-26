@@ -13,7 +13,15 @@ export async function getPosts() {
 
 export const postUrl = (post: Post) => `/${post.id}/`;
 export const rawUrl = (post: Post) => `/${post.id}.md`;
-export const ogUrl = (post: Post) => `/${post.id}/og.png`;
+// a post's own share card at posts/<slug>/og.png, when it has one the right size, or the drawn one
+const cards = import.meta.glob<ImageMetadata>('/posts/*/og.png', {
+  import: 'default',
+  eager: true,
+});
+export function ogUrl(post: Post) {
+  const card = cards[`/posts/${post.id}/og.png`];
+  return card?.width === 1200 && card.height === 630 ? card.src : `/${post.id}/og.png`;
+}
 export const chartUrl = (post: Post, chart: number) => `/${post.id}/charts/${chart}.png`;
 export const tagUrl = (tag: string) => `/tags/${tag}/`;
 export const absolute = (path: string) => new URL(path, site.url).href;

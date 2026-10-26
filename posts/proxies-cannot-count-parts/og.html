@@ -1,0 +1,96 @@
+<style>
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      color: var(--text-muted);
+    }
+  }
+  h1 {
+    position: absolute;
+    top: 112px;
+    left: 72px;
+    width: 1056px;
+    margin: 0;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .grid {
+    position: absolute;
+    top: 284px;
+    left: 72px;
+    display: grid;
+    grid-template-columns: 196px repeat(6, 1fr);
+    gap: 8px;
+    width: 1056px;
+    font-size: 22px;
+    & b {
+      font-weight: 600;
+      text-align: center;
+    }
+    & span {
+      align-self: center;
+      color: var(--text-muted);
+    }
+  }
+  .x,
+  .php {
+    display: grid;
+    place-items: center;
+    height: 50px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+  }
+  .x::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    background:
+      linear-gradient(45deg, transparent 43%, var(--series-5) 43% 57%, transparent 57%),
+      linear-gradient(-45deg, transparent 43%, var(--series-5) 43% 57%, transparent 57%);
+  }
+  .php {
+    background: var(--accent);
+    color: var(--on-accent);
+    font: 700 22px var(--font-mono);
+  }
+  .php.x {
+    background: var(--accent);
+    &::before {
+      background:
+        linear-gradient(45deg, transparent 43%, var(--on-accent) 43% 57%, transparent 57%),
+        linear-gradient(-45deg, transparent 43%, var(--on-accent) 43% 57%, transparent 57%);
+    }
+  }
+</style>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<h1>PHP says to count form parts at the proxy. It can't</h1>
+
+<div class="grid">
+  <span></span>
+  <b>nginx</b><b>Apache</b><b>Caddy</b><b>HAProxy</b><b>Traefik</b><b>PHP itself</b>
+
+  <span>form fields</span>
+  <i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i>
+  <i class="php">1,000</i>
+
+  <span>multipart parts</span>
+  <i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i>
+  <i class="php">1,020</i>
+
+  <span>headers per part</span>
+  <i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i>
+  <i class="php x"></i>
+
+  <span>nesting depth</span>
+  <i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i><i class="x"></i>
+  <i class="php">64</i>
+</div>

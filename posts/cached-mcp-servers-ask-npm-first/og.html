@@ -1,0 +1,110 @@
+<style>
+  .bar {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 1;
+    height: 64px;
+    padding: 0 72px;
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: var(--bar-shadow);
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 64px;
+    & span {
+      opacity: 0.4;
+    }
+  }
+  .penguin {
+    position: absolute;
+    top: 182px;
+    right: 112px;
+    width: 96px;
+  }
+  h1 {
+    position: absolute;
+    top: 104px;
+    left: 72px;
+    width: 960px;
+    margin: 0;
+    font-size: 68px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  pre {
+    position: absolute;
+    top: 268px;
+    left: 72px;
+    width: 1056px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 22px 28px;
+    border: var(--separator);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+    font: 21px/1.5 var(--font-mono);
+    color: var(--text-muted);
+    & b {
+      font-weight: 400;
+      color: var(--series-5);
+    }
+    & mark {
+      padding: 0 4px;
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+  }
+  .track {
+    position: absolute;
+    top: 540px;
+    left: 72px;
+    width: 1056px;
+    height: 10px;
+    border-radius: 5px;
+    background: var(--surface-hover);
+    & i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 986px;
+      border-radius: 5px;
+      background: var(--accent);
+    }
+  }
+  .at {
+    position: absolute;
+    top: 492px;
+    padding-left: 14px;
+    border-left: 4px solid currentColor;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 66px;
+    white-space: nowrap;
+    &.end {
+      translate: -100%;
+      padding: 0 14px 0 0;
+      border: 0;
+      border-right: 4px solid currentColor;
+    }
+    & small {
+      font-size: 20px;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+  }
+</style>
+
+<div class="bar">Peng.ly <span>/</span> Blog</div>
+<div class="penguin"></div>
+<h1>Your cached MCP server still asks npm first</h1>
+
+<pre>npm http fetch GET .../server-filesystem attempt 1 <b>failed with EAI_AGAIN</b>
+npm http fetch GET .../server-filesystem attempt 2 <b>failed with EAI_AGAIN</b>
+npm http fetch GET .../server-filesystem attempt 3 <b>failed with EAI_AGAIN</b>
+npm http fetch GET 200 .../server-filesystem <mark>70134ms</mark> (cache stale)</pre>
+
+<div class="track"><i></i></div>
+<div class="at" style="left: 492px; color: var(--series-5)">30s <small>Claude Code gives up</small></div>
+<div class="at end" style="left: 1060px"><small>the cached copy starts</small> 70s</div>

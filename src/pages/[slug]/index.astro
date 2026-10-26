@@ -24,7 +24,7 @@ const contents = headings.filter(({ depth }) => depth <= 3);
 const { newer, older } = neighbours(post, posts);
 const more = related(post, posts);
 const url = absolute(postUrl(post));
-const image = { src: ogUrl(post), alt: `${title}, on a yellow card with a cartoon penguin` };
+const image = { src: ogUrl(post), alt: `${title}, on the post's share card` };
 
 const schema = [
   {

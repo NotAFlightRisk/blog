@@ -32,6 +32,8 @@ tags: [meta, astro]
 
 Feed readers can't draw the charts, so the RSS feed swaps each one for a picture. After adding or changing a chart, run `npm run charts` (it wants `npx playwright install chromium` the first time) and commit the PNGs it drops in the post's `charts/` folder. CI fails if a post's charts and pictures don't add up.
 
+Links to a post show a yellow card with its title and the penguin, drawn at build time. To give a post its own instead, design it in `posts/<slug>/og.html` and run `npm run og -- <slug>`, which turns it into the `og.png` next to it. The page gets the site's colours, font and a `.penguin` to drop in, so the HTML's just the card itself. The site and DEV then use that picture, and fall back to the drawn card when it's missing or isn't 1200x630.
+
 ---
 
 ## Development

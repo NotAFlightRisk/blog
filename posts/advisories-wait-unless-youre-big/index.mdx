@@ -54,9 +54,18 @@ The 26 August bit threw me. I'd expected GitHub to publish a CVE when it reviewe
 
 ## Mine are waiting too
 
-I report a fair few of these myself ([here's the list](https://peng.ly/security-reports)). Of the 22 that maintainers had published by 26 September on packages Dependabot covers, GitHub's reviewed 8, and all 8 are on npm. Still waiting is [aedes](https://github.com/moscajs/aedes/security/advisories/GHSA-52qw-whmv-87c5), where one MQTT packet, no login needed, crashes the broker for everyone connected to it (fixed in 1.1.3 on 15 September). So is [saxen](https://github.com/nikku/saxen/security/advisories/GHSA-6w8c-5m3c-g2m8), where nested XML runs it out of memory in a way no `try/catch` can stop (11.2.0, 21 September), and [comrak](https://github.com/kivikakk/comrak/security/advisories/GHSA-xg9p-p4jc-c46g), where a long list of email addresses in Markdown aborts the whole process when GitHub-style autolinks are on (0.55.0, 6 September).
+I'm writing this from experience ([here's what I've reported](https://peng.ly/security-reports)). I recently found several quite severe vulnerabilities that are all fixed and public, and still waiting on GitHub's review, so Dependabot hasn't warned anyone about them:
 
-Even huge isn't a sure thing. [strnum](https://github.com/NaturalIntelligence/strnum/security/advisories/GHSA-w2f6-j622-j3mg) gets 290 million downloads a month, and its fix has been out since 14 August. Run `npm audit` on the old aedes, saxen and strnum today and it says `found 0 vulnerabilities`.
+- [@libredb/studio](https://github.com/libredb/libredb-studio/security/advisories/GHSA-3wh2-8x78-jfw4) - any signed-in user can run SQL on a database someone else has open, with that person's credentials (since 21 September)
+- [aedes](https://github.com/moscajs/aedes/security/advisories/GHSA-52qw-whmv-87c5) - one MQTT packet, no login needed, crashes the broker for everyone connected to it (since 15 September)
+- [saxen](https://github.com/nikku/saxen/security/advisories/GHSA-6w8c-5m3c-g2m8) - nested XML runs it out of memory in a way no `try/catch` can stop (since 21 September)
+- [comrak](https://github.com/kivikakk/comrak/security/advisories/GHSA-xg9p-p4jc-c46g) - a long list of email addresses in Markdown aborts the whole process when GitHub-style autolinks are on (since 6 September)
+- [social-auth-core](https://github.com/python-social-auth/social-core/security/advisories/GHSA-8hrj-gg7r-fxg9) - the VK app login lets you sign in as any VK user (since 18 September)
+- [pyhanko-certvalidator](https://github.com/MatthiasValvekens/pyHanko/security/advisories/GHSA-97fq-v55v-9vg9) - changing the case of a hostname gets a certificate past a name constraint meant to block it (since 10 September)
+- [css_parser](https://github.com/premailer/css_parser/security/advisories/GHSA-84w7-hpvm-rxx2) - a few dozen bytes of CSS can pin a CPU core for minutes (since 20 September)
+- [strnum](https://github.com/NaturalIntelligence/strnum/security/advisories/GHSA-w2f6-j622-j3mg) - a long run of zeros in a number takes quadratic time, reachable through fast-xml-parser's defaults, on a package with 290 million downloads a month (since 14 August)
+
+That said, others I reported made it into GitHub's Advisory Database relatively quickly, like [RabbitMQ's Java client](https://github.com/advisories/GHSA-cqgh-8p3p-mx4m) in 6 days, [simple-git](https://github.com/advisories/GHSA-g4wm-2vf7-vfgr) in 10, [fast-uri](https://github.com/advisories/GHSA-fph4-wmhf-6fwf) in 11, [smol-toml](https://github.com/advisories/GHSA-r4xh-jqrq-34v2) in 13, [svgo](https://github.com/advisories/GHSA-w27v-7q3p-w38r) in 15 and [seroval](https://github.com/advisories/GHSA-jp82-f5mq-hwhp) in 16.
 
 ## Stars help, a bit
 

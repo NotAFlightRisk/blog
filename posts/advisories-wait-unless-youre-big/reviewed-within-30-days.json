@@ -1,0 +1,56 @@
+[
+  {
+    "Published": "Jan",
+    "Under 100k": 100,
+    "100k to 10M": 96,
+    "Over 10M": 98
+  },
+  {
+    "Published": "Feb",
+    "Under 100k": 83,
+    "100k to 10M": 100,
+    "Over 10M": 100
+  },
+  {
+    "Published": "Mar",
+    "Under 100k": 90,
+    "100k to 10M": 99,
+    "Over 10M": 98
+  },
+  {
+    "Published": "Apr",
+    "Under 100k": 98,
+    "100k to 10M": 100,
+    "Over 10M": 100
+  },
+  {
+    "Published": "May",
+    "Under 100k": 95,
+    "100k to 10M": 98,
+    "Over 10M": 94
+  },
+  {
+    "Published": "Jun",
+    "Under 100k": 84,
+    "100k to 10M": 73,
+    "Over 10M": 98
+  },
+  {
+    "Published": "Jul",
+    "Under 100k": 45,
+    "100k to 10M": 63,
+    "Over 10M": 99
+  },
+  {
+    "Published": "Aug",
+    "Under 100k": 1,
+    "100k to 10M": 34,
+    "Over 10M": 74
+  },
+  {
+    "Published": "Sep",
+    "Under 100k": 16,
+    "100k to 10M": 44,
+    "Over 10M": 77
+  }
+]

@@ -1,0 +1,103 @@
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  .apps {
+    position: absolute;
+    top: 84px;
+    left: 72px;
+    display: grid;
+    grid-template-columns: repeat(5, 40px);
+    gap: 7px;
+    & i {
+      display: grid;
+      place-items: center;
+      height: 40px;
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    & .shut {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+    & .could {
+      box-sizing: border-box;
+      border: 3px solid var(--accent);
+      color: var(--accent);
+    }
+  }
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 380px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      color: var(--accent);
+    }
+  }
+  h1 {
+    position: absolute;
+    top: 112px;
+    left: 380px;
+    width: 760px;
+    margin: 0;
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  ul {
+    position: absolute;
+    top: 380px;
+    left: 380px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+    font-size: 26px;
+    line-height: 1.7;
+    & b {
+      color: var(--text);
+      font-weight: 800;
+    }
+    & i {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      margin-right: 14px;
+      vertical-align: -3px;
+      box-sizing: border-box;
+      border-radius: var(--radius);
+    }
+  }
+</style>
+
+<!-- a lock for the ones that are shut, an open one for the ones that could be -->
+<svg width="0" height="0" style="position: absolute">
+  <symbol id="lock" viewBox="0 0 16 18">
+    <rect y="7" width="16" height="11" rx="2" fill="currentColor" />
+    <path d="M4 7V5a4 4 0 0 1 8 0v2" fill="none" stroke="currentColor" stroke-width="2.4" />
+  </symbol>
+  <symbol id="open" viewBox="0 0 16 18">
+    <rect y="7" width="16" height="11" rx="2" fill="currentColor" />
+    <path d="M4 7V4a4 4 0 0 1 8 0" fill="none" stroke="currentColor" stroke-width="2.4" />
+  </symbol>
+</svg>
+<div class="apps"></div>
+<script>
+  const apps = document.querySelector('.apps');
+  const tile = (kind, icon) =>
+    `<i class="${kind}">${icon ? `<svg width="18" height="20"><use href="#${icon}" /></svg>` : ''}</i>`;
+  apps.innerHTML =
+    tile('shut', 'lock').repeat(11) + tile('could', 'open').repeat(26) + tile('', '').repeat(13);
+</script>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<h1>37 of the top 50 <span style="white-space: nowrap">self-hosted</span> apps can go closed</h1>
+<ul>
+  <li><i style="background: var(--accent)"></i><b>11</b> already ship some non-open code</li>
+  <li><i style="border: 3px solid var(--accent)"></i><b>26</b> could from the next release</li>
+  <li><i style="background: var(--surface)"></i><b>13</b> would have to ask first</li>
+</ul>

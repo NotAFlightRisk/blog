@@ -1,0 +1,80 @@
+<style>
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      color: var(--text-muted);
+    }
+  }
+  label {
+    position: absolute;
+    top: 126px;
+    left: 72px;
+    color: var(--text-muted);
+    font-size: 26px;
+    font-weight: 600;
+  }
+  .input {
+    position: absolute;
+    top: 166px;
+    left: 72px;
+    width: 1056px;
+    height: 150px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    border: 4px solid var(--text);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: 0 0 0 10px var(--focus-glow);
+    font: 700 108px var(--font-mono);
+    letter-spacing: -0.02em;
+    & i {
+      width: 6px;
+      height: 104px;
+      margin-left: 8px;
+      background: var(--text);
+    }
+    & small {
+      margin-left: auto;
+      color: var(--text-muted);
+      font-size: 30px;
+      font-weight: 400;
+    }
+  }
+  .comma {
+    position: absolute;
+    top: 318px;
+    left: 150px;
+    fill: var(--series-5);
+  }
+  h1 {
+    position: absolute;
+    top: 400px;
+    left: 72px;
+    width: 1056px;
+    margin: 0;
+    font-size: 72px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+</style>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<label>Amount</label>
+<div class="input">504<i></i><small>you typed 5,04</small></div>
+<!-- the comma, dropped on the way in -->
+<svg class="comma" viewBox="0 0 120 84" width="120" height="84">
+  <path d="M28 4 Q34 26 52 36" fill="none" stroke="var(--text-muted)" stroke-width="4" stroke-dasharray="6 7" />
+  <g transform="translate(78 42) rotate(28)">
+    <circle r="17" />
+    <path d="M17 0 Q19 30 -10 44 L-14 38 Q2 28 2 14 Z" />
+  </g>
+</svg>
+<h1>Your money input probably thinks 5,04 is 504</h1>

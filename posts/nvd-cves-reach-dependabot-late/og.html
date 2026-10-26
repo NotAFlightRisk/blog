@@ -1,0 +1,130 @@
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      color: var(--accent);
+    }
+  }
+  h1 {
+    position: absolute;
+    top: 112px;
+    left: 72px;
+    width: 1000px;
+    margin: 0;
+    font-size: 68px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .track {
+    position: absolute;
+    top: 312px;
+    left: 72px;
+    width: 1056px;
+    height: 230px;
+    box-sizing: border-box;
+    padding: 24px 32px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--panel-shadow);
+    & header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font: 20px var(--font-mono);
+      & b {
+        color: var(--text);
+        font-weight: 400;
+      }
+    }
+  }
+  .stops {
+    position: absolute;
+    top: 100px;
+    left: 32px;
+    right: 32px;
+    height: 110px;
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 17px;
+      height: 8px;
+      background: var(--accent);
+    }
+    &::before {
+      left: 21px;
+      width: 230px;
+    }
+    &::after {
+      left: 251px;
+      right: 21px;
+      background: repeating-linear-gradient(90deg, var(--text-muted) 0 14px, transparent 14px 26px);
+      height: 6px;
+      top: 18px;
+    }
+  }
+  .stop {
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    width: 42px;
+    height: 42px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--accent);
+    & span {
+      position: absolute;
+      top: 56px;
+      left: 0;
+      white-space: nowrap;
+      font-size: 22px;
+      font-weight: 600;
+      & small {
+        display: block;
+        color: var(--text-muted);
+        font-size: 18px;
+        font-weight: 400;
+      }
+    }
+    &.end span {
+      left: auto;
+      right: 0;
+      text-align: right;
+    }
+  }
+  .days {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 560px;
+    padding: 4px 14px;
+    border-radius: var(--radius);
+    background: var(--danger);
+    color: var(--on-accent);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+</style>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<h1>Dependabot's now a month late on Python and Go CVEs</h1>
+
+<div class="track">
+  <header><b>CVE-2026-15307 · Django</b> <span>median wait since May: 36 days</span></header>
+  <div class="stops">
+    <div class="stop" style="left: 0"><span>On NVD<small>4 Aug, 17:16</small></span></div>
+    <div class="stop" style="left: 230px"><span>On GitHub<small>4 Aug, 18:31</small></span></div>
+    <div class="days">57 days</div>
+    <div class="stop end" style="right: 0"><span>Reviewed, so Dependabot says<small>30 Sep, 23:25</small></span></div>
+  </div>
+</div>

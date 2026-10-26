@@ -1,0 +1,79 @@
+<style>
+  body {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      opacity: 0.4;
+    }
+  }
+  h1 {
+    position: absolute;
+    top: 128px;
+    left: 72px;
+    width: 580px;
+    margin: 0;
+    font-size: 68px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .penguin {
+    position: absolute;
+    top: 150px;
+    left: 778px;
+    width: 230px;
+  }
+  svg {
+    position: absolute;
+    inset: 0;
+  }
+  .shell {
+    fill: var(--surface);
+    stroke: var(--on-accent);
+    stroke-width: 7;
+    stroke-linejoin: round;
+  }
+  p {
+    position: absolute;
+    top: 496px;
+    margin: 0;
+    font: 700 24px var(--font-mono);
+    text-align: center;
+    & span {
+      display: block;
+      font-size: 20px;
+      font-weight: 400;
+      opacity: 0.7;
+    }
+  }
+</style>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<h1>New Python packages picked hatchling, not uv_build</h1>
+
+<div class="penguin"></div>
+<svg viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- the hatched one: the bottom of the shell, and its lid on the penguin's head -->
+  <path
+    class="shell"
+    d="M748 330 L784 300 L820 334 L858 296 L896 332 L934 298 L972 334 L1010 300 L1040 330
+       C1046 420 990 478 894 478 C798 478 742 420 748 330 Z"
+  />
+  <path
+    class="shell"
+    d="M836 168 C840 112 870 84 902 84 C934 84 962 112 968 168 L944 150 L922 172 L900 148 L878 172 L856 150 Z"
+    transform="rotate(14 902 130)"
+  />
+  <!-- the one that didn't -->
+  <ellipse class="shell" cx="634" cy="416" rx="46" ry="60" />
+</svg>
+<p style="left: 846px; width: 100px">hatchling<span>40%</span></p>
+<p style="left: 574px; width: 120px">uv_build<span>5%</span></p>

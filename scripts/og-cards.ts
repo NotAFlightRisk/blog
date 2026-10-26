@@ -46,7 +46,10 @@ await page.route(`${origin}/**`, (route) => {
   const path = decodeURIComponent(new URL(route.request().url()).pathname.slice(1));
   if (!existsSync(path)) return route.fulfill({ status: 404 });
   return path.endsWith('/og.html')
-    ? route.fulfill({ contentType: 'text/html', body: shell(readFileSync(path, 'utf8')) })
+    ? route.fulfill({
+        contentType: 'text/html; charset=utf-8',
+        body: shell(readFileSync(path, 'utf8')),
+      })
     : route.fulfill({ path });
 });
 

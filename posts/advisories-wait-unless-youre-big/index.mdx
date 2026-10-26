@@ -1,0 +1,84 @@
+---
+title: Unless your package is huge, your advisory waits
+description: It's now taking months for Dependabot and npm audit to flag known vulnerabilities, unless the package is one of the giants.
+date: 2026-10-26
+tags: [security, opensource, github, dependabot, npm, python]
+---
+
+import Heatmap from '../../src/components/mdx/Heatmap.astro';
+import Timeline from '../../src/components/mdx/Timeline.astro';
+import within from './reviewed-within-30-days.json';
+
+On 11 July, [Weblate](https://weblate.org) published six security advisories on its GitHub repo, each naming the fixed version, 2026.7. Two made it into GitHub's Advisory Database seven weeks later. The other four still haven't, even though GitHub itself published CVEs for them on 26 August.
+
+That matters because Dependabot [only alerts on advisories](https://docs.github.com/en/code-security/dependabot/dependabot-alerts/about-dependabot-alerts) GitHub has reviewed into that database. Until then, nobody whose Dependabot watches Weblate hears a thing. GitHub's [docs](https://docs.github.com/en/code-security/concepts/vulnerability-reporting-and-management/repository-security-advisories#dependabot-alerts-for-published-security-advisories) still say review "can take up to 72 hours", and in spring that was about right: Weblate's earlier advisories this year went in within a day or so.
+
+Last week I [wrote about the same wait](/nvd-cves-reach-dependabot-late/) for CVEs that reach GitHub through NVD. This time it's advisories maintainers publish themselves, and I wanted to know who's doing the waiting.
+
+## The big ones get through
+
+I picked 250 projects that had an npm or PyPI advisory reviewed by GitHub in 2025, pulled every advisory they've published this year (1,808 of them), and checked each one against GitHub's database on 26 October. Then I sorted them by how often the package gets downloaded in a month.
+
+<Heatmap title="Advisories reviewed within 30 days of publishing" data={within} unit="%">
+  By the month the maintainer published it, and the package's monthly downloads. Each cell is 11
+  to 100 advisories from 7 to 21 projects, and September only counts ones published before the
+  27th, so every one's had 30 days
+</Heatmap>
+
+Up to March, nearly everything was in the database within a few days, whoever you were. April and May slowed to about a week, still for everyone. Then from June the smaller packages start falling behind, and from July it's a cliff. Packages with over 10 million downloads a month got 93% of their June to August advisories reviewed within 30 days. Under 100k it was 35%, and half of them are still missing now, two to four months on.
+
+A few projects publish dozens at once (Flowise did 33 in July), which can swing a month on its own. Counting projects instead tells the same story, though. Of the 17 with August advisories on packages under 100k, one got anything reviewed within 30 days.
+
+## Not first come, first served
+
+October's even starker. Of the advisories published this month for packages over 10 million downloads, 84 of 143 are reviewed already. Half of those are [Pillow's batch](/pillow-formats-allowlist/) from last week, all 41 in within a week. For everything smaller, it's 12 of 147, while 55 advisories on smaller packages from before August are still waiting.
+
+When I first ran this on 16 October, 301 of the advisories published January to September were waiting. GitHub's reviewed five of them since, two from Angular and one each from Hono, Next.js and devalue. All five are on packages with millions of downloads a month.
+
+Criticals don't jump the queue either, even though GitHub's [June post on the backlog](https://github.blog/security/supply-chain-security/inside-the-advisory-database-and-what-happens-when-vulnerability-volume-breaks-records/) said "critical issues prioritized". Over the summer, 48% of criticals were reviewed within 30 days, against 72% of lows.
+
+## Weblate's year
+
+Weblate gets about 25,000 downloads a month on PyPI, so it's nowhere near the top. Here's how its advisories have gone this year:
+
+<Timeline>
+- **January to May** 18 advisories, every one in GitHub's database within a week, most of them the next day.
+- **1 June** One more, reviewed after 37 days.
+- **11 July** Six more. Two reviewed 49 days later, the other four still waiting.
+- **15 August** Five more, none reviewed.
+- **26 August** GitHub, which hands out the CVE IDs for these, published CVEs for seven of the ones still waiting. NVD has them. GitHub's own database doesn't.
+- **13 October** Three more, two of them critical. Nothing yet, though that's only 13 days.
+</Timeline>
+
+The 26 August bit threw me. I'd expected GitHub to publish a CVE when it reviewed the advisory, and it looks like the two aren't tied together any more. Across the 250 projects there are 35 advisories from January to September with a CVE GitHub's published and no entry in its database. Most of Weblate's are in [OSV](https://osv.dev), but only against its git history, not the PyPI package, so osv-scanner on a pip install won't flag them.
+
+## Mine are waiting too
+
+I'm writing this from experience ([here's what I've reported](https://peng.ly/security-reports)). I recently found several quite severe vulnerabilities that are all fixed and public, and still waiting on GitHub's review, so Dependabot hasn't warned anyone about them:
+
+- [@libredb/studio](https://github.com/libredb/libredb-studio/security/advisories/GHSA-3wh2-8x78-jfw4) - any signed-in user can run SQL on a database someone else has open, with that person's credentials (since 21 September)
+- [aedes](https://github.com/moscajs/aedes/security/advisories/GHSA-52qw-whmv-87c5) - one MQTT packet, no login needed, crashes the broker for everyone connected to it (since 15 September)
+- [saxen](https://github.com/nikku/saxen/security/advisories/GHSA-6w8c-5m3c-g2m8) - nested XML runs it out of memory in a way no `try/catch` can stop (since 21 September)
+- [comrak](https://github.com/kivikakk/comrak/security/advisories/GHSA-xg9p-p4jc-c46g) - a long list of email addresses in Markdown aborts the whole process when GitHub-style autolinks are on (since 6 September)
+- [social-auth-core](https://github.com/python-social-auth/social-core/security/advisories/GHSA-8hrj-gg7r-fxg9) - the VK app login lets you sign in as any VK user (since 18 September)
+- [pyhanko-certvalidator](https://github.com/MatthiasValvekens/pyHanko/security/advisories/GHSA-97fq-v55v-9vg9) - changing the case of a hostname gets a certificate past a name constraint meant to block it (since 10 September)
+- [css_parser](https://github.com/premailer/css_parser/security/advisories/GHSA-84w7-hpvm-rxx2) - a few dozen bytes of CSS can pin a CPU core for minutes (since 20 September)
+- [strnum](https://github.com/NaturalIntelligence/strnum/security/advisories/GHSA-w2f6-j622-j3mg) - a long run of zeros in a number takes quadratic time, reachable through fast-xml-parser's defaults, on a package with 290 million downloads a month (since 14 August)
+
+That said, others I reported made it into GitHub's Advisory Database relatively quickly, like [RabbitMQ's Java client](https://github.com/advisories/GHSA-cqgh-8p3p-mx4m) in 6 days, [simple-git](https://github.com/advisories/GHSA-g4wm-2vf7-vfgr) in 10, [fast-uri](https://github.com/advisories/GHSA-fph4-wmhf-6fwf) in 11, [smol-toml](https://github.com/advisories/GHSA-r4xh-jqrq-34v2) in 13, [svgo](https://github.com/advisories/GHSA-w27v-7q3p-w38r) in 15 and [seroval](https://github.com/advisories/GHSA-jp82-f5mq-hwhp) in 16.
+
+## Stars help, a bit
+
+Downloads aren't the whole picture. Some projects with lots of GitHub stars and smaller packages did fine: Open WebUI got all 62 of its summer advisories reviewed within 30 days, and NocoDB all 21. Others didn't. Backstage got 1 of 38 through in time and Directus 2 of 19. Sentry's five are all still waiting, three of them critical. Plenty of these are apps most people run from a Docker image rather than pip or npm, so their downloads undersell how many people actually use them.
+
+It isn't that the big packages file tidier advisories. When I checked in mid-October, theirs were no more complete, and complete ones weren't reviewed any faster. GitHub's June post says it prioritises "based on several factors, including project impact and severity", and that it's looking at "additional risk signals for prioritization, such as package usage". From the outside it looks like usage counts for a lot already, but I can only see what comes out of the queue, not how it's run.
+
+Doing the big ones first is fair enough, tbh. A bug in axios hits far more people than one in Weblate. But the 72 hours in the docs hasn't been true for months, and for a lot of packages "later" is turning into "not at all".
+
+## If yours isn't one of them
+
+If you maintain something that isn't one of the giants, assume publishing the advisory won't reach anyone's Dependabot for a month or more, maybe not at all. Put it in the release notes in plain words, with the version to upgrade to, and post it wherever your users actually read. If it's on PyPI, you can also send it to [PyPA's advisory database](https://github.com/pypa/advisory-database#contributing-advisories) as a pull request, which osv-scanner reads. That's not instant either (a few have sat open for weeks), but they merged a couple last week.
+
+If you depend on things that aren't huge, a clean Dependabot run means a lot less than it did in spring. For the ones you'd hate to miss, the repo's own Security tab lists every advisory the maintainers have published, reviewed or not, and watching its releases will catch the fix.
+
+npm hasn't got a PyPA. There, the release notes are all you've got.

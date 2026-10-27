@@ -17,10 +17,13 @@ export const site = {
   color: '#febc20',
 };
 
-// the posts that make the front page, the rest live in the archive
-export const latest = 10;
+// the front page gets the newest few plus the featured ones, the rest live in the archive
+export const latest = 2;
+export const featured = 10;
 
 export const nav = [
   { label: 'Archive', href: '/archive/' },
   { label: 'Tags', href: '/tags/' },
+  { label: 'Projects', href: 'https://peng.ly/projects' },
+  { label: 'Contact', href: 'https://peng.ly/contact' },
 ];

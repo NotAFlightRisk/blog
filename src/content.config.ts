@@ -34,6 +34,7 @@ const posts = defineCollection({
         updated: z.coerce.date().optional(),
         tags: z.array(z.string().regex(kebab, 'tags are lowercase-and-hyphens')).min(1).max(6),
         draft: z.boolean().default(false),
+        featured: z.boolean().default(false),
         cover: z.strictObject({ src: image(), alt: z.string().min(1) }).optional(),
       })
       .refine(({ date, updated }) => !updated || updated >= date, {

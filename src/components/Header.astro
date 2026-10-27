@@ -135,8 +135,11 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
       padding: var(--space-m);
       box-shadow: var(--bar-shadow);
 
+      /* no taller than the links */
       &:popover-open {
         display: grid;
+        align-content: start;
+        height: fit-content;
       }
     }
 

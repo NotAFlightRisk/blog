@@ -28,11 +28,11 @@ tags: [meta, astro]
 ---
 ```
 
-`updated`, `draft` and `cover` are optional, and an `.mdx` post can use the callouts, figures, videos, charts, stats, timelines and the rest in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong.
+`updated`, `draft`, `featured` and `cover` are optional, and an `.mdx` post can use the callouts, figures, videos, charts, stats, timelines and the rest in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong. The home page shows the two newest posts, then up to ten more marked `featured: true`.
 
 Feed readers can't draw the charts, so the RSS feed swaps each one for a picture. After adding or changing a chart, run `npm run charts` (it wants `npx playwright install chromium` the first time) and commit the PNGs it drops in the post's `charts/` folder. CI fails if a post's charts and pictures don't add up.
 
-Links to a post show a yellow card with its title and the penguin, drawn at build time. To give a post its own instead, design it in `posts/<slug>/og.html` and run `npm run og -- <slug>`, which turns it into the `og.png` next to it. The page gets the site's colours, font and a `.penguin` to drop in, so the HTML's just the card itself. The site and DEV then use that picture, and fall back to the drawn card when it's missing or isn't 1200x630.
+Links to a post show a yellow card with its title and the penguin, drawn at build time. To give a post its own instead, design it in `posts/<slug>/og.html` and run `npm run og -- <slug>`, which turns it into the `og.png` next to it. Only the PNG gets committed, the HTML's ignored. The page gets the site's colours, font and a `.penguin` to drop in, so the HTML's just the card itself. The site and DEV then use that picture, and fall back to the drawn card when it's missing or isn't 1200x630.
 
 ---
 

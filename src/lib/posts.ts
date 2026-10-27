@@ -31,7 +31,9 @@ export function byTag(posts: Post[]) {
   for (const post of posts) {
     for (const tag of post.data.tags) tags.set(tag, [...(tags.get(tag) ?? []), post]);
   }
-  return [...tags].sort(([a], [b]) => a.localeCompare(b));
+  return [...tags].sort(
+    ([a, aPosts], [b, bPosts]) => bPosts.length - aPosts.length || a.localeCompare(b),
+  );
 }
 
 // the post as plain Markdown, with its files pointed at the repo so they still load

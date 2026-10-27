@@ -49,6 +49,9 @@ temp/
 Thumbs.db
 desktop.ini
 
+# Share cards are drawn from these, only the PNG ships
+posts/*/og.html
+
 # Working notes - design, plan, debug and review scratch, never committed
 iains-notes/
 /.impeccable/

@@ -1,0 +1,68 @@
+---
+title: Home Assistant's cloud drop is mostly one version check
+description: Home Assistant's analytics show installs leaning less on the cloud since 2021. Most of that is one retired update check, which on most installs still runs.
+date: 2026-10-27
+tags: [home-assistant, self-hosting, privacy, iot, opensource]
+---
+
+import Dots from '../../src/components/mdx/Dots.astro';
+import adoption from './adoption.json';
+
+Home Assistant will tell you which integrations everyone else runs. About 565,000 installs share that through its [opt-in analytics](https://analytics.home-assistant.io/), and nearly every device and service integration says in its manifest whether it talks to a cloud or stays on your network (its [IoT class](https://www.home-assistant.io/blog/2016/02/12/classifying-the-internet-of-things/)). Put the two together and you can see how cloud-heavy the average install is.
+
+Add up every integration in every install that shares, and in August 2021, 36% of them were cloud ones. Today it's 29%. Matter went from nothing to running in 41% of those installs over the same time. That looks a lot like local-first winning, so I went looking for where the drop came from.
+
+<Dots title="Share of installs running each integration" data={adoption} unit="%">
+  Of the installs that share integrations with Home Assistant's analytics: 60,321 in August 2021
+  (from the [Wayback
+  Machine](https://web.archive.org/web/20210814123006/https://analytics.home-assistant.io/data.json))
+  and 565,267 on 27 October 2026.
+</Dots>
+
+## It was the updater
+
+More than two-thirds of the drop is one integration leaving the list, and on most installs the thing it did never stopped.
+
+In 2021, 99% of installs had `updater`, which asked Home Assistant's servers once a day whether there was a new version. It was a cloud integration, and it came with `default_config`, so you had it whether you'd thought about it or not. It was [deprecated in February 2022](https://github.com/home-assistant/core/pull/67038), dropped from `default_config`, and it's down to 0.2% now. Leave it out of 2021 and the cloud share then was 31%, not 36%.
+
+Four in five installs run Home Assistant OS or Supervised, and there the Supervisor [checks version.home-assistant.io itself](https://github.com/home-assistant/supervisor/blob/30933402380d118fcb814092f3e5ac7c76b94010/supervisor/misc/tasks.py#L42). It did in 2021 as well, every two hours back then and once a day now. It isn't an integration, so the analytics never counted it. Plain container installs did go quiet. The one I ran today never asked, which also means nothing tells it when there's an update.
+
+## The cloud didn't go anywhere
+
+The average install that shares ran 4.8 cloud integrations in 2021, and it runs 5.2 now. Local ones went from 8.4 to 12.9. The share fell because people added a lot more local stuff, not because they dropped cloud ones.
+
+Tuya's the clearest case. Its integration goes through Tuya's cloud for everything, and it doubled from 15% of installs to 30% over the same years Matter turned up. People aren't swapping one for the other, they're running both.
+
+Matter's 41% isn't all people choosing it, either. Since [2024.5](https://github.com/home-assistant/core/pull/116163), a new Home Assistant OS install that spots a Matter device on the network sets Matter up, add-on and all, before you've finished onboarding. Thread does the same when it sees a border router, like an Apple TV or a Nest hub.
+
+Most of today's 565,000 installs didn't exist in 2021, so all of this is what installs looked like then against what they look like now, not the same people changing their minds.
+
+## The shopping list test
+
+The shopping list shows how much a default does. It's a local integration nobody feels strongly about, and it sat at 5% of installs from 2021 to late 2022. Onboarding started [adding it to new installs](https://github.com/home-assistant/core/pull/97974) in 2023.9, and it's at 76% now. It also turned into a to-do list in 2023.11, so onboarding doesn't get all the credit, but nobody suddenly needed a shopping list.
+
+Onboarding adds four things today ([here's the list](https://github.com/home-assistant/core/blob/c4e9a2121ebbee1516c4e107e0341f943af89b58/homeassistant/components/onboarding/views.py#L270-L275)): the shopping list, met.no's weather, Radio Browser and Google Translate's text-to-speech. The last three are cloud, and between them they're half of every cloud integration in installs that share. Google Translate doesn't call anyone until you ask Home Assistant to say something out loud, so that's a bit unfair on it. The two that do call, met.no and Radio Browser, are still nearly a third.
+
+## What a new install calls
+
+So I started a fresh Home Assistant 2026.10.4 in a container this afternoon, onboarded it with a home location and nothing else, and logged every DNS lookup and new connection it made (UTC):
+
+```text
+16:07:46  container starts
+16:08:48  alerts.home-assistant.io
+16:08:59  onboarding finished
+16:08:59  aa015h6buqvih86i1.api.met.no
+16:09:00  de1.api.radio-browser.info
+16:09:30  alerts.home-assistant.io
+17:08:00  aa015h6buqvih86i1.api.met.no
+```
+
+The alerts feed is Home Assistant's own list of known problems with integrations. It's fetched [every three hours](https://github.com/home-assistant/core/blob/c4e9a2121ebbee1516c4e107e0341f943af89b58/homeassistant/components/homeassistant_alerts/const.py#L9), and again 30 seconds after any integration loads, which is the second one. Radio Browser [asks for its stats](https://github.com/home-assistant/core/blob/c4e9a2121ebbee1516c4e107e0341f943af89b58/homeassistant/components/radio_browser/__init__.py#L28) every time Home Assistant starts, whether or not you ever play a station. Google Translate stayed quiet.
+
+That odd met.no hostname isn't yours, it's everyone's. met.no [made it for Home Assistant in 2017](https://github.com/home-assistant/core/issues/5154) after complaining about how much traffic HA sent, so they could keep an eye on it. What does come from you is your home's latitude and longitude [rounded to four decimal places](https://github.com/Danielhiversen/pyMetno/blob/0.13.0/metno/__init__.py#L91-L92), about 11 metres, plus its altitude, and it's sent again [every hour or so](https://github.com/home-assistant/core/blob/c4e9a2121ebbee1516c4e107e0341f943af89b58/homeassistant/components/met/coordinator.py#L104) (mine came back after 59 minutes). met.no's the Norwegian Meteorological Institute, not an ad network, and the forecast's useful. It's still your house to 11 metres, every hour, from a box a lot of people bought to keep that sort of thing at home.
+
+## Keeping them on purpose
+
+The four onboarding added are in `Settings --> Devices & services`. Delete Radio Browser if you don't listen to internet radio, and Google Translate if you don't use voice. The shopping list's local, so keep it or don't. The alerts feed comes with `default_config`, so you'd have to drop that and everything in it to lose it, and tbh it's the one I'd keep.
+
+For met.no, open it, hit Configure and drag the pin to the middle of town, and the forecast for your high street is the same forecast. Do move it, though. Saving the form as it opens just pins it to your house.

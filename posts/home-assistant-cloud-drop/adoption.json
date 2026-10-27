@@ -1,0 +1,8 @@
+[
+  { "integration": "Updater", "Aug 2021": 98.6, "Oct 2026": 0.2 },
+  { "integration": "Met.no weather", "Aug 2021": 77.1, "Oct 2026": 83.5 },
+  { "integration": "Radio Browser", "Aug 2021": 0, "Oct 2026": 82.8 },
+  { "integration": "Shopping list", "Aug 2021": 5, "Oct 2026": 76.4 },
+  { "integration": "Matter", "Aug 2021": 0, "Oct 2026": 41.4 },
+  { "integration": "Tuya", "Aug 2021": 14.8, "Oct 2026": 29.5 }
+]

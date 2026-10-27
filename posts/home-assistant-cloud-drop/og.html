@@ -1,0 +1,111 @@
+<style>
+  .brand {
+    position: absolute;
+    top: 64px;
+    left: 72px;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    & span {
+      color: var(--accent);
+    }
+  }
+  h1 {
+    position: absolute;
+    top: 112px;
+    left: 72px;
+    width: 1000px;
+    margin: 0;
+    font-size: 70px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+  .bar {
+    position: absolute;
+    left: 72px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    height: 76px;
+    padding: 0 24px;
+    box-sizing: border-box;
+    border-radius: var(--radius);
+    background: var(--text);
+    color: var(--bg);
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    & small {
+      font: 22px var(--font-mono);
+      opacity: 0.6;
+    }
+  }
+  .then {
+    top: 296px;
+    width: 689px;
+  }
+  .now {
+    top: 420px;
+    width: 634px;
+  }
+  .gap {
+    position: absolute;
+    top: 296px;
+    left: 765px;
+    width: 112px;
+    height: 76px;
+    box-sizing: border-box;
+    border: 3px dashed var(--border);
+    border-radius: var(--radius);
+  }
+  .chunk {
+    position: absolute;
+    top: 360px;
+    left: 830px;
+    display: grid;
+    place-items: center;
+    width: 112px;
+    height: 76px;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--on-accent);
+    font: 600 20px var(--font-mono);
+    rotate: 22deg;
+    box-shadow: var(--panel-shadow);
+  }
+  .pct {
+    position: absolute;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 76px;
+  }
+  .note {
+    position: absolute;
+    top: 522px;
+    left: 72px;
+    width: 900px;
+    font-size: 24px;
+    line-height: 1.25;
+    color: var(--text-muted);
+  }
+  .penguin {
+    position: absolute;
+    top: 374px;
+    left: 560px;
+    width: 52px;
+  }
+</style>
+
+<div class="brand">Peng.ly <span>/</span> Blog</div>
+<h1>Home Assistant's cloud drop is mostly one version check</h1>
+
+<div class="bar then">2021 <small>share of integrations that are cloud</small></div>
+<div class="pct" style="top: 296px; left: 897px">36%</div>
+<div class="gap"></div>
+<div class="chunk">updater</div>
+<div class="bar now">2026</div>
+<div class="pct" style="top: 420px; left: 730px">29%</div>
+<div class="penguin"></div>
+<div class="note">Over two-thirds of the drop is one integration leaving the list</div>

@@ -1,0 +1,6 @@
+[
+  { "Forge": "GitHub", "Strips GPS": false, "How I checked": "My upload, 28 Oct, and 297 real ones" },
+  { "Forge": "GitLab", "Strips GPS": true, "How I checked": "Its docs, and 19 of 19 real issue photos" },
+  { "Forge": "Forgejo 17", "Strips GPS": false, "How I checked": "My upload, on my own box, 27 Oct" },
+  { "Forge": "Gitea 28", "Strips GPS": false, "How I checked": "My upload, on my own box, 27 Oct" }
+]

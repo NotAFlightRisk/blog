@@ -1,0 +1,81 @@
+---
+title: GitHub keeps the GPS in photos you attach to issues
+description: Phone photos of boards and printers in GitHub issues often still say where they were taken. GitHub serves them untouched, and taking one down is patchy.
+date: 2026-10-28
+tags: [privacy, security, github, opensource]
+---
+
+import Waffle from '../../src/components/mdx/Waffle.astro';
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import photos from './photos.json';
+import forges from './forges.json';
+
+There's a little genre of bug report on GitHub where someone notices an app doesn't strip location data from uploaded images. [OpenSourcePOS has one](https://github.com/opensourcepos/opensourcepos/issues/4010) that's been open since June 2024. It's filed on a site that doesn't strip it either.
+
+I made a JPEG this afternoon with a made-up iPhone and made-up coordinates (the Royal Observatory in Greenwich, as it's sat on longitude zero), attached it to an issue on my own repo with the GitHub CLI, then pulled it back down without logging in:
+
+```text
+$ gh issue create --repo NotAFlightRisk/blog --attach ./board.jpg ...
+$ curl -sL -o back.jpg https://github.com/user-attachments/assets/a4f9b89e-...
+$ sha1sum board.jpg back.jpg
+0bf77bdd7d88984dde14adc8b148888ea72d72e4  board.jpg
+0bf77bdd7d88984dde14adc8b148888ea72d72e4  back.jpg
+```
+
+Same file, byte for byte, GPS and all, to anyone with the link. GitHub's [page on attaching files](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files) doesn't mention metadata at all. It does say that in a private repo only people with access can see the file, so this is about public ones.
+
+Then I edited it back out of the issue, and three minutes later the link was dead. I didn't expect that, and it doesn't go for older links.
+
+## Half the photos that name a phone say where
+
+Hardware projects get bug reports as photos. A 3D print that's gone stringy, a flight controller with a wire off, a Zigbee stick in a USB hub. I took 47 of those repos (printers, drones, radio controllers, Flipper firmware, Meshtastic, ESPHome and so on) and pulled the attachments linked from their issues, PRs and comments in 2025 and 2026. That's 12,011 files, mostly PNG screenshots, and 1,824 different JPEGs.
+
+556 of those JPEGs still say which phone took them. 297 of those also say where.
+
+<Waffle title="556 phone JPEGs in hardware repo issues, 2025-26" data={photos}>
+  Unique JPEGs whose EXIF names a phone maker, checked 27 October. Each square is about one
+  percent.
+</Waffle>
+
+They came from 237 different people, and 136 of them posted at least one with a location. One repo has a third of the photos on its own, but leave it out and it's still 181 of the other 376 photos. I only ever counted the coordinates, never kept them, and I'm not naming anyone or any issue here.
+
+Nearly all of these went up through the website or the app, since the CLI could only attach files from September, and GitHub isn't re-saving them either. 175 of the 297 still carry the phone maker's own private block of data (the MakerNote), which is the first thing to go when an image gets re-encoded.
+
+The other 1,237 JPEGs name no maker, so I can't tell you how many started life as phone photos and lost everything on the way. Counting every JPEG with a location, phone or not, the floor is 306 of 1,824, about one in six.
+
+## The phone was meant to stop this
+
+I'd assumed it did. Android has blanked the coordinates for apps without [a special permission](https://developer.android.com/training/data-storage/shared/media#location-info-photos) since Android 10, and you can see that in 48 more photos with a GPS section where every number's zero.
+
+By maker, though, 149 of 215 Apple photos had a location, 46 of 66 Google ones and 62 of 166 Samsung ones. On iPhones it depends how you pick the photo: per [this WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=263192), Safari strips it when you take a picture straight from the upload button, while the photo library picker has its own Location toggle. And if the photo went via your laptop first (AirDrop, Google Photos, a cable), no phone gets a say at all. The GitHub CLI's [new attach option](https://github.blog/changelog/2026-09-01-github-cli-media-in-issues-pull-requests-and-comments), which is how my test went up, doesn't look at the file either.
+
+Videos are mostly screen recordings, so less of a worry: 16 of 429 had a location in them.
+
+## GitLab's the one that strips
+
+Out of the forges you'd self-host or move to, only GitLab cleans them up. Its docs say [EXIF data is stripped](https://docs.gitlab.com/administration/raketasks/uploads/sanitize/) from JPEG and TIFF uploads, and every one of the 19 issue photos I pulled from GitLab instances had been cut down to the handful of tags it keeps, with no maker and no GPS.
+
+<Matrix title="Do forges strip GPS from issue photos?" data={forges}>
+  Forgejo 17.0.1 and Gitea 28.2.0 tested through both the web upload and the API. The GitLab
+  photos are 1 from gitlab.com and 18 from postmarketOS's own instance.
+</Matrix>
+
+Forgejo has an [open request](https://codeberg.org/forgejo/forgejo/issues/9608) to strip EXIF from uploaded images. It did strip avatars for a while, until that was [taken out](https://codeberg.org/forgejo/forgejo/pulls/13105) in June over the library's licence. Searching Gitea's tracker didn't turn up anything at all.
+
+## Taking one back down
+
+GitHub's docs don't say, that I could find, what happens to an attachment once nothing points at it, so I went through edit histories in 15 of the repos for links someone had edited back out of an issue or comment, then tried them.
+
+Of the current-style `user-attachments` links, 44 of 47 were 404s. When I went back the next day and noted when each one was edited out, every link removed in the past week was gone, and the few that still load were all removed more than 90 days ago. I can't see deleted comments, and I can't prove those links worked right before the edit, which is why my own test mattered. That one loaded fine up to the edit, still loaded straight after, and was a 404 somewhere between two and three minutes later.
+
+The older links don't work that way. Every one I found on the old `user-images` host or a repo's `/assets/` path still loads, however long ago it was edited out. For those, the only route I know of is GitHub Support, which [this 2022 discussion](https://github.com/orgs/community/discussions/28316) points you to.
+
+## Turning it off
+
+The easy fix is the phone. On an iPhone it's Settings, then Privacy & Security, Location Services, Camera, Never. On Android it's in the camera app's own settings, wherever your maker put it. Or strip the file before it goes up, which with [ExifTool](https://exiftool.org/) is this (it keeps a `photo.jpg_original` next to it, so don't attach that one):
+
+```sh
+exiftool -gps:all= photo.jpg
+```
+
+If you've already posted one, edit it out, then check the link's actually gone. And if you look after a repo that gets a lot of photos, a line in the issue template would catch most of them.

@@ -53,9 +53,11 @@ export function plainMarkdown(body: string, files: string, picture?: (chart: num
               return quote(`[!${alerts[type]}]\n${title ? `**${title}**\n` : ''}${text}`);
             })
             .replace(
-              /<Figure([^>]*)>([\s\S]*?)<\/Figure>/g,
-              (_, props, caption) =>
-                `![${prop(props, 'alt')}](${link(props, 'src')})\n\n_${caption.trim()}_`,
+              /<Figure\b([^>]*?)(?:\/>|>([\s\S]*?)<\/Figure>)/g,
+              (_, props, caption = '') => {
+                const image = `![${prop(props, 'alt')}](${link(props, 'src')})`;
+                return caption.trim() ? `${image}\n\n_${caption.trim()}_` : image;
+              },
             )
             .replace(/<Video([^>]*?)\/>/g, (_, props) => {
               const youtube = prop(props, 'youtube');

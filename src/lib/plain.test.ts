@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { plainMarkdown } from './plain.ts';
 
@@ -17,6 +18,34 @@ test('imports go, and imported files become links to where they live', () => {
     plainMarkdown(body, files),
     `![The rail](${files}rail.png)\n\n_Where the dates live_`,
   );
+});
+
+test('a figure without a caption closes itself, and leaves the next one alone', () => {
+  const body = [
+    "import one from './one.png';",
+    "import two from './two.png';",
+    '<Figure src={one} alt="One" />',
+    'Between them.',
+    '<Figure src={two} alt="Two">The second</Figure>',
+  ].join('\n');
+  assert.equal(
+    plainMarkdown(body, files),
+    `![One](${files}one.png)\nBetween them.\n![Two](${files}two.png)\n\n_The second_`,
+  );
+});
+
+test("every picture a real post imports makes it into that post's .md copy", () => {
+  for (const slug of readdirSync('posts')) {
+    const source = ['mdx', 'md'].map((ext) => `posts/${slug}/index.${ext}`).find(existsSync)!;
+    const body = readFileSync(source, 'utf8');
+    const plain = plainMarkdown(body, files);
+    for (const [, file] of body.matchAll(
+      /^import \w+ from '\.\/(.+\.(?:png|jpe?g|gif|webp|svg))';$/gm,
+    )) {
+      assert.ok(plain.includes(`${files}${file}`), `${slug}: ${file} is missing from the .md copy`);
+    }
+    assert.doesNotMatch(plain, /<Figure\b/, `${slug}: a Figure tag leaked into the .md copy`);
+  }
 });
 
 test('callouts turn into GitHub style alerts, keeping a custom title', () => {

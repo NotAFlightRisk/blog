@@ -1,6 +1,6 @@
 ---
 title: GitHub keeps the GPS in photos you attach to issues
-description: Phone photos of boards and printers in GitHub issues often still say where they were taken. GitHub serves them untouched, and taking one down is patchy.
+description: Are you doxing yourself when attaching images in GitHub issues?
 date: 2026-10-28
 tags: [privacy, security, github, opensource]
 ---
@@ -12,7 +12,7 @@ import forges from './forges.json';
 
 There's a little genre of bug report on GitHub where someone notices an app doesn't strip location data from uploaded images. [OpenSourcePOS has one](https://github.com/opensourcepos/opensourcepos/issues/4010) that's been open since June 2024. It's filed on a site that doesn't strip it either.
 
-I made a JPEG this afternoon with a made-up iPhone and made-up coordinates (the Royal Observatory in Greenwich, as it's sat on longitude zero), attached it to an issue on my own repo with the GitHub CLI, then pulled it back down without logging in:
+I made a JPEG this afternoon with a made-up iPhone and made-up coordinates (the Royal Observatory in Greenwich), attached it to an issue on my own repo with the GitHub CLI, then pulled it back down without logging in:
 
 ```text
 $ gh issue create --repo NotAFlightRisk/blog --attach ./board.jpg ...
@@ -37,7 +37,7 @@ Hardware projects get bug reports as photos. A 3D print that's gone stringy, a f
   percent.
 </Waffle>
 
-They came from 237 different people, and 136 of them posted at least one with a location. One repo has a third of the photos on its own, but leave it out and it's still 181 of the other 376 photos. I only ever counted the coordinates, never kept them, and I'm not naming anyone or any issue here.
+They came from 237 different people, and 136 of them posted at least one with a location. I only ever counted the coordinates, never kept them, and I'm not naming anyone or any issue here.
 
 Nearly all of these went up through the website or the app, since the CLI could only attach files from September, and GitHub isn't re-saving them either. 175 of the 297 still carry the phone maker's own private block of data (the MakerNote), which is the first thing to go when an image gets re-encoded.
 
@@ -60,7 +60,7 @@ Out of the forges you'd self-host or move to, only GitLab cleans them up. Its do
   photos are 1 from gitlab.com and 18 from postmarketOS's own instance.
 </Matrix>
 
-Forgejo has an [open request](https://codeberg.org/forgejo/forgejo/issues/9608) to strip EXIF from uploaded images. It did strip avatars for a while, until that was [taken out](https://codeberg.org/forgejo/forgejo/pulls/13105) in June over the library's licence. Searching Gitea's tracker didn't turn up anything at all.
+Forgejo has an [open request](https://codeberg.org/forgejo/forgejo/issues/9608) to strip EXIF from uploaded images. It did strip avatars for a while, until that was [taken out](https://codeberg.org/forgejo/forgejo/pulls/13105) in June over the library's licence.
 
 ## Taking one back down
 
@@ -78,4 +78,4 @@ The easy fix is the phone. On an iPhone it's Settings, then Privacy & Security, 
 exiftool -gps:all= photo.jpg
 ```
 
-If you've already posted one, edit it out, then check the link's actually gone. And if you look after a repo that gets a lot of photos, a line in the issue template would catch most of them.
+If you've already posted one, edit it out, then check the link's actually gone. And if you look after a repo that gets a lot of photos, maybe add a line in the issue template to warn people to strip metadata before uploading.

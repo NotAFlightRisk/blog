@@ -1,0 +1,129 @@
+---
+title: Why AI keeps getting smarter
+description: Two years ago the talk was that AI had hit a wall. It's still climbing. These are the five things that kept it going, and what each one actually bought.
+date: 2026-10-28
+tags: [ai, llm, machine-learning]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Figure from '../../src/components/mdx/Figure.astro';
+import frontier from './frontier.json';
+import astra from './astra.json';
+import thinking from './thinking.png';
+import trials from './trials.png';
+import teacher from './teacher.png';
+import agent from './agent.png';
+import experts from './experts.png';
+
+In November 2024, [The Information reported](https://techcrunch.com/2024/11/09/openai-reportedly-developing-new-strategies-to-deal-with-ai-improvement-slowdown/) that OpenAI's next big model, Orion, was better than GPT-4, but by much less than GPT-4 had been over GPT-3. A month later Ilya Sutskever got up at NeurIPS and [said it out loud](https://www.theverge.com/2024/12/13/24320811/what-ilya-sutskever-sees-openai-model-data-training): "Pre-training as we know it will unquestionably end." His reasoning was simple. You make a model smarter by training a bigger one on more text, and "there's only one internet".
+
+He was right about the internet. And yet here's the best model you could use at each point since GPT-4, on [Epoch AI's capabilities index](https://epoch.ai/benchmarks/eci), which rolls over 50 benchmarks into one score. GPT-4 scores 125.7 on it, so this is how far ahead of that the best model was:
+
+<Chart type="line" title="Points ahead of GPT-4 on Epoch's capabilities index" data={frontier}>
+  Best released model on or before each date, from Epoch's [benchmark
+  data](https://epoch.ai/data/benchmark_data.zip) as of 28 October 2026. OpenAI's first o1 models arrived in
+  September 2024. The hardest benchmarks in the index are mostly code and agent tasks.
+</Chart>
+
+From GPT-4's launch in March 2023 to the middle of 2024, the best model gained just over 4 points. Then OpenAI's first o1 models turned up in September 2024, and every six months since has added more than that whole stretch did. (Benchmarks get shaky at this end of the scale, and I'll come back to that at the bottom.)
+
+The wall was real, it was just narrower than it sounded. GPT-4.5 came out in February 2025 as the biggest pre-trained model anyone had shipped, about 18 times GPT-4's training compute. It scored below o1, which had come out two months earlier. Then GPT-5 beat both on about a sixth of GPT-4.5's compute. (Those compute figures are [Epoch's estimates](https://epoch.ai/data/ai-models), some of them rough, since labs don't publish them.) Size still bought something, and GPT-4.5 beat o1 on Epoch's writing benchmark, but it stopped explaining the frontier on its own.
+
+What took over is mostly five things. None of them were new in 2024, it's just when the labs started leaning on them hard. They don't all do the same job, though, and headlines call all of them "smarter". The second and third make the model itself better. The first lets the same model do better by spending more on each answer, and the fourth wraps it in a better setup. The fifth makes the others cheap enough to bother with.
+
+## Five ways round the wall
+
+### 1. Thinking longer: test-time compute
+
+<Figure
+  src={thinking}
+  alt="A receipt printer labelled thinking feeding out a long wavy strip of paper covered in grey lines of working, which ends at a small box that just says = 42."
+/>
+
+GPT-4 answered in one go. The first word it wrote was the start of its answer. o1 was trained to write out its working first, sometimes thousands of words you never see, and only then answer. On AIME 2024, a maths competition for strong high school students, that took OpenAI from 12% with GPT-4o to 74% with o1, according to its [o1 post](https://openai.com/index/learning-to-reason-with-llms/).
+
+Some of that is training (that's the next section), but you can also just let the same model think for longer. ARC Prize ran [GPT-6 Astra](https://arcprize.org/blog/astra) on ARC-AGI-3, a set of puzzle games with no instructions, across its effort settings. It solved 17.5% of them on low and 62.7% on max, with exactly the same weights.
+
+A [paper from Google DeepMind and Berkeley](https://arxiv.org/abs/2408.03314) found a small model thinking cleverly could beat one 14 times its size, but only on problems the small one could already solve some of the time. So thinking longer gets more out of what's in there, rather than putting more in.
+
+It also costs, every single time you ask. When o3 hit 87.5% on the first ARC-AGI test in December 2024 by thinking at great length, ARC Prize [said](https://arcprize.org/blog/oai-o3-pub-breakthrough) a puzzle could cost thousands of dollars that way, against about $5 for a person. I wondered how much of my own use this is, so I went through the token counts my Claude Code and Codex sessions log. In the last 30 days the models wrote 49 million tokens of thinking I never read, and 46 million of everything else.
+
+### 2. Learning through trial and error: reinforcement learning
+
+<Figure
+  src={trials}
+  alt="Four answer sheets for the same question. The first three guess x = 4, -2 and 5 and are stamped with red crosses. The last says x = 2 and gets a green tick."
+/>
+
+To teach a model to think usefully, give it problems a computer can mark, like maths with a known answer or code with tests. Let it have a go, mark it, and nudge it towards whatever got the right answer. Nobody writes the working out for it.
+
+DeepSeek showed how far that goes with [R1-Zero](https://arxiv.org/abs/2501.12948). They took their base model and trained it with nothing but this kind of marking, and its AIME score went from 15.6% to 77.9%. Along the way it started checking its own work and backtracking, without anyone showing it how.
+
+It's become a big chunk of training. Sutskever said in [November 2025](https://www.dwarkesh.com/p/ilya-sutskever-2) that "based on what people say on Twitter", labs now "spend more compute on RL than on pre-training". No lab publishes the split, so that's as close as it gets.
+
+It works best where a computer can do the marking, which mostly means maths and code. Funnily enough, that's also what most of the hard benchmarks test. And how much it really teaches is still argued over. A [NeurIPS 2025 paper](https://arxiv.org/abs/2504.13837) found that if you give the original model enough attempts, it solves as many problems as the trained one, or more. By that reading, RL mostly makes the right answer come out first time. [NVIDIA's ProRL](https://huggingface.co/papers/2505.24864) pushed back with much longer training that did find answers the original couldn't, on a small model at least.
+
+### 3. AI learning from AI: synthetic data and distillation
+
+<Figure
+  src={teacher}
+  alt="A big penguin next to a blackboard with a worked equation on it. A dotted arrow carries a stack of books from it to a much smaller penguin at a desk."
+/>
+
+That still leaves Sutskever's point about the internet. Epoch [reckons](https://epoch.ai/blog/will-we-run-out-of-data-limits-of-llm-scaling-based-on-human-generated-data) there's about 300 trillion tokens of usable public human text, and that at the current rate it'll all be used some time between 2026 and 2032. The early end of that is this year.
+
+So labs get models to write more of it. A strong model writes textbooks, exercises and worked answers, and a new model learns from them. Microsoft's [Phi-4](https://arxiv.org/abs/2412.08905) is a small model trained heavily on text GPT-4o wrote, and it beat GPT-4o on a graduate-level science test and a maths one. Only on those two, mind, and Microsoft put some of it down to their training mix too.
+
+Distillation is the same trick aimed at reasoning. DeepSeek had R1 write out its working on loads of problems, then trained much smaller models on it. The 7 billion parameter one, small enough to run on a decent gaming PC, [scored 55.5%](https://arxiv.org/abs/2501.12948) on AIME 2024. In the same paper, DeepSeek's own run of GPT-4o got 9.3%. The NeurIPS paper that doubted RL found distillation can teach a model genuinely new reasoning, too.
+
+### 4. Giving AI tools and autonomy: agents
+
+<Figure
+  src={agent}
+  alt="A terminal: npm test with 2 failing, an edit to src/parse.ts, then npm test again with 38 passing. Beside it a looping arrow says another go."
+/>
+
+This one doesn't touch the model at all. Instead of asking for an answer in one shot, you let it run code, read files, see the error and have another go. It's how I use these models most days now, with an agent working through a repo, running the tests and fixing what broke.
+
+[SWE-agent](https://arxiv.org/abs/2405.15793) tested this in May 2024 on SWE-bench, a set of real GitHub issues. GPT-4 Turbo, given the files a search turned up and asked for a fix, solved 1.3% of them. Given a terminal and a few commands instead, the same model solved 12.5%.
+
+That makes benchmark scores slippery. Epoch upgraded the setup and token limits it runs SWE-bench Verified with in February 2026, and [scores went up](https://epoch.ai/benchmarks/swe-bench-verified) with no model changing.
+
+[METR](https://metr.org/time-horizons/) measures this one in the most human way. It times how long people take over a pile of tasks, then finds the longest a model can finish half the time. GPT-4 managed tasks of a few minutes. o3 managed two-hour ones, and Anthropic's Claude Mythos Preview, in April 2026, ones of at least 16 hours. By [METR's count](https://evals.alignment.org/blog/2026-1-29-time-horizon-1-1/) that's doubled about every 7 months since 2019, and about every 3 months since 2024.
+
+### 5. Doing more with less: efficiency
+
+<Figure src={experts} alt="The word cat goes into a tall lit block, then a grid of 256 small dark squares with 8 of them lit.">
+  DeepSeek-V3 sends each word to 8 of its 256 experts, plus one they all share
+</Figure>
+
+Thinking longer, RL and agents all burn far more compute than just answering. They'd be stuck in labs if each step hadn't got cheaper.
+
+The big one is mixture of experts. The model's split into lots of smaller blocks, and only a few wake up for each word. [DeepSeek-V3](https://arxiv.org/abs/2412.19437) has 671 billion parameters but only uses 37 billion of them at a time. Its final training run took 2.8 million GPU hours, about $5.6 million at rental prices, and DeepSeek put it level with GPT-4o and Claude 3.5 Sonnet.
+
+Moonshot's Kimi K3, in July 2026, sat 32 points above GPT-4 on Epoch's index, on about the same training compute as GPT-4 (that one's a rough guess, Epoch says).
+
+On its own, none of this makes a model any smarter. It's why the other four are cheap enough to use outside a lab.
+
+## How they feed each other
+
+Cheaper models make long thinking affordable. Long thinking is what RL trains, and RL models write the reasoning that smaller models get distilled from. Agents need all of it, and every test suite an agent runs is another checkable task for RL to train on.
+
+Here's Astra again with two of them at once. Turn the effort up and its score climbs. Swap the harness (the program that feeds it the game and passes its moves back) and it's near the top at every setting.
+
+<Chart type="line" title="GPT-6 Astra on ARC-AGI-3, by effort setting" data={astra} unit="%">
+  ARC Prize's [published results](https://arcprize.org/blog/astra) on the semi-private set, 3
+  September 2026. The provider's harness keeps the model's reasoning between moves and compacts
+  long games. The standard one only carries forward notes the model chooses to keep. Its "none"
+  setting, left out here, scored 35.2% and 96.7%.
+</Chart>
+
+Pre-training never went away either. Astra's jump this September came with the biggest training run Epoch has on record, about two and a half times GPT-4.5's. Last November, Oriol Vinyals put Gemini 3's leap down to better pre-training and post-training, and [signed off](https://bsky.app/profile/did:plc:ckaz32jwl6t2cno6fmuw2nhn/post/3m5woagm3xc24) "No walls in sight!" A better base makes the rest work better too, since that thinking-longer paper only found gains where the model could already get some right.
+
+## Will it hit a wall eventually?
+
+Probably a few smaller ones. The human text runs out, and text written by models has to come from a model that's already smarter. RL is getting expensive. Toby Ord [went through](https://www.tobyord.com/writing/how-well-does-rl-scale) OpenAI's own charts and reckons that for the same jump in maths scores, RL needs vastly more compute than just letting the model think longer. He thinks it's close to costing labs as much as pre-training, with maybe one more cheap tenfold step left after GPT-5. And thinking longer is paid for on every answer, by whoever's asking.
+
+The one we're hitting right now is measuring it. OpenAI [stopped reporting](https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/) SWE-bench Verified in February after finding flawed tests in 59.4% of the hard problems it audited, and models that could recite the original fixes from memory. The graduate science test Phi-4 beat its teacher on is at 96% now. METR [says](https://metr.org/time-horizons/) anything over 16 hours is unreliable with its current tasks. ARC-AGI-3 launched [in March](https://arcprize.org/blog/arc-agi-3-launch) with the best model on 0.51%, and was at 62.7% (or 99.9%) by September.
+
+Epoch's top score hasn't moved since Astra on 3 September. Anthropic matched it three weeks later with Opus 5.5, its first release since Dario Amodei called for [pacing the frontier](https://darioamodei.com/post/we-must-pace-the-frontier). If the line goes flat next year, that's worth checking before anyone calls it a wall.

@@ -17,8 +17,8 @@ export const site = {
   color: '#febc20',
 };
 
-// the front page gets the newest few plus the featured ones, the rest live in the archive
-export const latest = 2;
+// the front page gets a week of the newest posts plus the featured ones, the rest live in the archive
+export const latestDays = 7;
 export const featured = 10;
 
 export const nav = [

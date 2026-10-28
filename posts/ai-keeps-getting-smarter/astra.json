@@ -1,0 +1,7 @@
+[
+  { "effort": "Low", "Standard harness": 17.5, "Provider's harness": 98 },
+  { "effort": "Medium", "Standard harness": 38.6, "Provider's harness": 98.4 },
+  { "effort": "High", "Standard harness": 54.8, "Provider's harness": 99.9 },
+  { "effort": "XHigh", "Standard harness": 59.3, "Provider's harness": 98.4 },
+  { "effort": "Max", "Standard harness": 62.7, "Provider's harness": 98.6 }
+]

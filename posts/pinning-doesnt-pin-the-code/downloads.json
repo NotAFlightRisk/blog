@@ -1,0 +1,11 @@
+[
+  { "Model": "nomic-embed-text-v1.5", "Downloads": 12.1 },
+  { "Model": "gte-large-en-v1.5", "Downloads": 1.9 },
+  { "Model": "jina-embeddings-v3", "Downloads": 1.6 },
+  { "Model": "jina-embeddings-v2-small-en", "Downloads": 1.2 },
+  { "Model": "nomic-embed-text-v1", "Downloads": 1.1 },
+  { "Model": "gte-multilingual-base", "Downloads": 0.97 },
+  { "Model": "nomic-embed-text-v2-moe", "Downloads": 0.9 },
+  { "Model": "gte-base-en-v1.5", "Downloads": 0.5 },
+  { "Model": "The other 45", "Downloads": 1.8 }
+]

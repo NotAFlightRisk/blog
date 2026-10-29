@@ -1,0 +1,12 @@
+[
+  { "How it's loaded": "AutoModel, revision=", "Config code pinned": false, "Model code pinned": false },
+  { "How it's loaded": "AutoModel, revision= and code_revision=", "Config code pinned": true, "Model code pinned": true },
+  { "How it's loaded": "pipeline(), revision= and code_revision=", "Config code pinned": false, "Model code pinned": false },
+  { "How it's loaded": "SentenceTransformer, revision=", "Config code pinned": false, "Model code pinned": false },
+  {
+    "How it's loaded": "SentenceTransformer, revision= and code_revision in model_kwargs and config_kwargs",
+    "Config code pinned": true,
+    "Model code pinned": false
+  },
+  { "How it's loaded": "A folder with the code copied in", "Config code pinned": true, "Model code pinned": true }
+]

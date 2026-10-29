@@ -1,0 +1,161 @@
+---
+title: Pinning your embedding model doesn't pin its code
+description: You pinned your embedding model to a commit, so why's it running code from another repo's main?
+date: 2026-10-29
+tags: [ai, security, python, hugging-face]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import FileTree from '../../src/components/mdx/FileTree.astro';
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import downloads from './downloads.json';
+import loaders from './loaders.json';
+
+If you load a model from Hugging Face with `revision=` set to a commit hash, which commit of its code do you think runs?
+
+For a lot of the popular embedding models, not that one. Here's gte-base-en-v1.5 pinned to a commit from April 2024, on transformers 4.57.6:
+
+```python
+from transformers import AutoModel
+import inspect
+
+pin = "aed4f757b1f39a2e85e2ecf24727a1f29dbafe92"
+model = AutoModel.from_pretrained(
+    "Alibaba-NLP/gte-base-en-v1.5", revision=pin, trust_remote_code=True
+)
+print(inspect.getfile(type(model)))
+```
+
+```text
+.../new_hyphen_impl/40ced75c3017eb27626c9d4ea981bde21a2662f4/modeling.py
+```
+
+That's a different repo, `new-impl`, at its newest commit, from August 2024. 118 lines of its `modeling.py` have changed since April. The first time it downloads, transformers even warns you about it, and the advice is the thing you just did:
+
+```text
+A new version of the following files
+was downloaded from
+https://huggingface.co/Alibaba-NLP/new-impl:
+- modeling.py
+. Make sure to double-check they do not
+contain any added malicious code. To
+avoid downloading new versions of the
+code file, you can pin a revision.
+```
+
+## The code lives in another repo
+
+Models like this one don't keep their Python in the model repo. Their `config.json` points somewhere else:
+
+```json title="config.json"
+"auto_map": {
+  "AutoConfig": "Alibaba-NLP/new-impl--configuration.NewConfig",
+  "AutoModel": "Alibaba-NLP/new-impl--modeling.NewModel",
+```
+
+The `--` means "in that repo over there". And transformers only carries your `revision` across when the code's in the same repo as the model ([here](https://github.com/huggingface/transformers/blob/v4.57.6/src/transformers/dynamic_module_utils.py#L601)):
+
+```python
+if code_revision is None and pretrained_model_name_or_path == repo_id:
+    code_revision = revision
+```
+
+Otherwise it stays `None`, and the Hub hands you `main`. Fair enough in a way, since a commit hash from one repo means nothing in another. There's a `code_revision` argument for exactly this, and it's in the docstring and not many other places.
+
+<FileTree>
+
+- gte-base-en-v1.5 _your pin, April 2024_
+  - config.json _points at new-impl_
+  - tokenizer.json
+  - model.safetensors
+- new-impl _main, August 2024_
+  - configuration.py
+  - **modeling.py** _what actually runs_
+
+</FileTree>
+
+So the pin covers the weights, the config and the tokenizer. The bit that runs on your machine is whatever's on `main` the day you download it.
+
+## It's mostly embedding models
+
+Back in 2024, Sentence Transformers' maintainer reckoned ["very few models use third party repositories to host their code"](https://github.com/huggingface/sentence-transformers/issues/2613). By count, he's right. Of the thousand most-downloaded models on the Hub that ship their own code, 53 load it from another repo, not counting test fixtures and a pile of copies of one upload (I counted on 20 October and checked again today). But they're busy ones. Between them they get about 22 million downloads a month, and nearly all of it is three families of embedding model, the thing a self-hosted RAG setup uses to turn your documents into vectors.
+
+<Chart title="Monthly downloads of models whose code lives in another repo" data={downloads} unit="M">
+  Hugging Face's last-30-days download counts on 29 October, in millions.
+</Chart>
+
+Nearly all those downloads go to models pointing at a repo from the same company, like nomic-embed-text at `nomic-ai/nomic-bert-2048`. So it's the same people's code, just on a different schedule.
+
+And the schedules drift apart. jina-embeddings-v3's own repo last changed on 8 April. Its code repo has had three commits this year, all fixes for transformers 5, the latest on 20 August. Pin v3's newest commit today and you still get August's code. For 22 of the 53, the code repo has changed since the model last did.
+
+## code_revision works, if it gets there
+
+I loaded gte-base-en-v1.5 and nomic-embed-text-v1.5, both pinned to 2024 commits, every way I could think of, with the files downloaded first and no network. Both models came out the same:
+
+<Matrix title="Does the code come from the commit you asked for?" data={loaders}>
+  transformers 4.57.6 and Sentence Transformers 5.7.0, on 29 October.
+</Matrix>
+
+`AutoModel` is fine once you pass `code_revision` with a commit from the code repo. `pipeline()` drops it, though transformers 5.22.0 fixed that this afternoon ([#49832](https://github.com/huggingface/transformers/pull/49832)).
+
+Which would be good news, except neither model's own code runs on transformers 5. Both fall over on the first encode, `main` or pinned, so if you're using gte you're on transformers 4. nomic has a way out, which I'll get to.
+
+Sentence Transformers is the awkward one, and it's how nomic's model card tells you to load it. Put `code_revision` in both `model_kwargs` and `config_kwargs` and you get the config from your commit, the model from `main`, and that same warning telling you to pin a revision. Its loader takes `code_revision` out of `model_kwargs` for its own modules, before the model ever sees it ([base/model.py](https://github.com/huggingface/sentence-transformers/blob/v5.7.0/sentence_transformers/base/model.py#L1371)):
+
+```python
+code_revision = model_kwargs.pop("code_revision", None) if model_kwargs else None
+```
+
+It's still there in 6.2.0. The revision part isn't news to Sentence Transformers, to be fair. Tom Aarsen explained it on that same 2024 issue, along with the copy-the-files fix below. What I couldn't find on its tracker is `code_revision` getting dropped. [Someone else ran into that](https://github.com/clifguy/cas/pull/688) in October and built the model up from its parts to get round it.
+
+## nomic's weights float too
+
+nomic-embed-text-v1.5, the tall bar on that chart, goes one further. Its code has its own `from_pretrained`, which fetches the weights by the model's name and nothing else. No revision. Offline, with only my pinned commit in the cache, it fails like this:
+
+```text
+OSError: Model name nomic-ai/nomic-embed-text-v1.5
+was not found.
+```
+
+It's looking for `main`. With the network up it'd just fetch `main`'s weights. Today that's the same file as the 2024 commit's, so nobody's getting different vectors. But on the most-downloaded model here, the pin covers the config and the tokenizer, and that's about it. And `code_revision` can't fix this one, because it's nomic's own code that leaves the revision out.
+
+## Pinning both
+
+Look for `--` in the model's config first:
+
+```sh
+curl -s https://huggingface.co/nomic-ai/nomic-embed-text-v1.5/raw/main/config.json | grep -- '--'
+```
+
+If it's there, which way out depends on the model.
+
+For nomic-embed-text on transformers 5.5 or later, drop `trust_remote_code` altogether. transformers has its own NomicBert now, and nomic's card says remote code isn't needed from 5.5. It wants a commit from 7 April or later, when nomic updated the config for it (the 2024 one won't load this way):
+
+```python
+model = SentenceTransformer(
+    "nomic-ai/nomic-embed-text-v1.5",
+    revision="e9b6763023c676ca8431644204f50c2b100d9aab",
+)
+```
+
+On transformers 5.22.0, with no network, that ran transformers' own code, loaded the pinned weights and gave the same vectors as nomic's code. No second repo at all.
+
+For `AutoModel`, pass `code_revision` with a commit hash from the repo it names. For anything else, nomic on transformers 4 included, copy the code in next to the model:
+
+```sh
+hf download nomic-ai/nomic-embed-text-v1.5 --local-dir nomic-embed \
+  --revision d802ae16c9caed4d197895d27c6d529434cd8c6d
+hf download nomic-ai/nomic-bert-2048 --local-dir nomic-embed --include "*.py" \
+  --revision 7710840340a098cfb869c4f65e87cf2b1b70caca
+sed -i 's|nomic-ai/nomic-bert-2048--||' nomic-embed/config.json
+```
+
+Then `SentenceTransformer("./nomic-embed", trust_remote_code=True)` takes everything from that folder. The model's name is now a folder on disk, so even nomic's loader reads its weights from there. I tried it with no network and an empty cache, and got the same vectors as before. The code you're trusting is right there in the folder too, which is roughly what `trust_remote_code` wanted you to read in the first place.
+
+## Does it matter yet?
+
+Not for your search results. Last week I ran the same text through both models with their 2024 code and with `main`'s. nomic's vectors came out bit-identical, gte's within 0.00001. Nobody's index has quietly drifted.
+
+It matters for what the pin was for. If something lands on `nomic-bert-2048`, from nomic or from whoever's got hold of a nomic token, the next fresh download of every nomic-embed-text install pinned with just `revision=` runs it. And tells them to pin a revision.
+
+The other side of it is jina. Those three transformers 5 fixes reached people because nobody's code was pinned, and a floating `main` is how a lot of these models are getting through the upgrade. Pin the code and those fixes are yours to go and fetch.

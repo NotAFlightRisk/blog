@@ -1,0 +1,112 @@
+---
+title: That tmux clipboard tip lets servers read your last copy
+description: Turned on tmux's set-clipboard to copy over SSH? The servers you log into can read your last copy back too, and your terminal never gets asked.
+date: 2026-10-30
+tags: [security, tmux, ssh, privacy]
+---
+
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import Quote from '../../src/components/mdx/Quote.astro';
+import Steps from '../../src/components/mdx/Steps.astro';
+import settings from './settings.json';
+
+I SSH'd into a box from a tmux pane and got the banner and a prompt, same as always. By the time the prompt came up, the box had already read the last thing I'd copied:
+
+```text
+box-b:~$ cat /tmp/loot
+hunter2
+```
+
+`box-b` is a throwaway Alpine container. Its `~/.profile` asks the terminal for the clipboard at login and saves whatever comes back. It worked because my tmux had `set-clipboard on`, the setting most copy-over-SSH guides tell you to turn on. On tmux's default, `/tmp/loot` stayed empty.
+
+It doesn't have to be something you copied on that box, either. A token I copied on a different server came out of `box-b` just the same.
+
+To check yours, copy something in tmux and paste this into a pane (bash or zsh). It asks for the clipboard the same way and prints the answer:
+
+```sh
+stty -echo; printf '\033]52;c;?\a'; read -r -t 1 -d $'\a' r; stty echo; echo "${r##*;}" | base64 -d; echo
+```
+
+If it prints what you copied, anything running on a server you SSH into from that pane can get it too, without you pressing a key.
+
+## What just happened?
+
+That `\033]52;c;?\a` is OSC 52, the escape code programs print to set your clipboard. Swap the copied text for a `?` and it asks what's on the clipboard instead. Here's where that question goes:
+
+<Steps>
+
+1. Something on the server prints the question. SSH carries it back to your laptop like any other output.
+2. tmux reads everything a pane prints before your terminal does. With `set-clipboard on`, it answers the question itself, with its newest paste buffer.
+3. The answer goes into the pane's input, the same place your typing goes, so ssh sends it up to the server as if you'd typed it.
+4. Whatever asked reads it back off the terminal. Nothing shows on your screen.
+
+</Steps>
+
+Your terminal never sees the question at all.
+
+## The tip everyone gives
+
+Copying over SSH is a pain, and this is the usual fix. Neovim's clipboard support and a few vim plugins copy on a server by sending OSC 52 to set your clipboard. tmux throws that away unless `set-clipboard` is `on`. [vim-oscyank's README](https://github.com/ojroques/vim-oscyank) tells you to set it, and so did seven of the nine copy-over-SSH guides I read. On GitHub, 3,796 `.tmux.conf` files have it.
+
+None of them warn about reads. Neither does the tmux man page under `set-clipboard`. The [tmux wiki](https://github.com/tmux/tmux/wiki/Clipboard#security-concerns) has a security section on it, and it's all about apps setting your clipboard, not reading it.
+
+## It's not only your copies
+
+What tmux hands over is its newest paste buffer. That's anything you've copied in tmux's copy mode, and with `on`, anything a program in any pane has copied, because that's the whole point of the setting. Programs on other servers included.
+
+So I had something on a second container, `box-a`, copy a token over OSC 52, like a yank in vim would. tmux made it a buffer, as asked:
+
+```text
+buffer0: 17 bytes: "ghp_tokenFromBoxA"
+```
+
+Then I opened a second pane and SSH'd into `box-b`. Its `/tmp/loot` said `ghp_tokenFromBoxA`. One server read what I'd copied on another one.
+
+What's not in there is anything you copied outside tmux, in your browser or a password manager. tmux only knows its own buffers.
+
+## Doesn't my terminal ask first?
+
+It would, if it got asked. Terminals worked out a while ago that OSC 52 reads are risky. [Ghostty](https://ghostty.org/docs/config/reference#clipboard-read) and [kitty](https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.clipboard_control) ask you before handing anything over, [Alacritty](https://alacritty.org/config-alacritty.html) only does copying unless you change it, and [Warp got CVE-2026-48725](https://www.superagent.sh/blog/when-terminal-output-owns-your-clipboard-osc-52-in-warp) this year for answering without asking. But tmux sits in front of all of them and answers first.
+
+Zellij, the other popular multiplexer, went the other way. It blocks reads, and when you turn them on it asks your terminal rather than answering itself. The setting for that, added in August, is called [`dangerously_enable_paste_buffer_read`](https://github.com/zellij-org/zellij/pull/5472).
+
+## mosh, and tmux on the server
+
+mosh doesn't help. I half expected it to drop the question, since it redraws the screen rather than passing bytes along. Instead mosh 1.4.0 copies the `?` across as if it were clipboard text, its client prints it out again on your laptop, tmux answers, and mosh sends the answer back up as keystrokes.
+
+A tmux on the server usually shields you. On its default, `external`, it ignores the question, and with `on` it answers from the server's own buffers. The catch is `get-clipboard`, added in tmux 3.7. Set it to `request` or `both` on the server's tmux and it passes the question up to your laptop's tmux, which answers. `box-b` read `hunter2` with either.
+
+## Who'd actually do this?
+
+Something that can read your terminal on the server. On your own box, that's you, so this is more about the boxes you don't fully trust. A shared server where somebody else has root. A server that's been broken into, where whoever's in there would love a token you copied somewhere else. A container you `docker exec -it` into, which I tried as well, and which read `hunter2` exactly the same way.
+
+On your own laptop it's not much of a hole. Anything running in a pane there could just run `tmux show-buffer`.
+
+## Keeping the copying
+
+If `tmux -V` says 3.7 or newer, keep `on` and add one line:
+
+```sh title=".tmux.conf"
+set -s set-clipboard on
+set -s get-clipboard off
+```
+
+Here's what each setting did, copying from `box-a` and then logging into `box-b`:
+
+<Matrix title="Copying over SSH, and what the server gets back" data={settings}>
+  All three with tmux 3.7c on the laptop, 30 October.
+</Matrix>
+
+On 3.6 or older there's no clean answer. `external` stops the reads, and stops copying from servers too, which was the point of turning it on. So it's that, or a newer tmux than your distro gives you. Ubuntu 24.04 ships 3.4 and 26.04 3.6a, Debian 13 ships 3.5a (its backports have 3.7c). Homebrew and Arch are on 3.8, so on a Mac it's a `brew upgrade tmux` away.
+
+And don't set `get-clipboard` to `request` or `both` on a server, for the reason above.
+
+## The option somebody asked for in 2018
+
+tmux has answered these questions since 2.9, from a [2018 commit](https://github.com/tmux/tmux/commit/a51668ca0690b84762c5a2f2dd34b94fa566f559) that never made it into the changelog. The person who [asked for it](https://github.com/tmux/tmux/issues/1477) saw this coming:
+
+<Quote by="IngoMeyer441, tmux issue 1477" href="https://github.com/tmux/tmux/issues/1477">
+  I am aware that many people consider such a feature as a potential security risk when connecting to other machines. In my opinion, clipboard reading is ok if one only connects to trusted machines. OSC52 reading could be activated with an extra option.
+</Quote>
+
+It went in behind `set-clipboard on` instead, the switch for writes. The extra option turned up in tmux 3.7 this June, as `get-clipboard`, and the changelog says it's off by default. Ask 3.7c with `tmux show -s get-clipboard` and it says `buffer`, the setting that hands out your newest copy.

@@ -1,0 +1,5 @@
+[
+  { "In .tmux.conf": "set-clipboard on", "Copying from the server works": "Yes", "Server can read your copy": "Yes" },
+  { "In .tmux.conf": "set-clipboard on, get-clipboard off", "Copying from the server works": "Yes", "Server can read your copy": "No" },
+  { "In .tmux.conf": "set-clipboard external (the default)", "Copying from the server works": "No", "Server can read your copy": "No" }
+]

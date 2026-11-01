@@ -1,0 +1,81 @@
+---
+title: VS Code remembers the commands you hid with a space
+description: A leading space keeps a command out of bash and zsh history. VS Code's terminal saves it anyway, and over Remote-SSH it lands on your laptop.
+date: 2026-11-01
+tags: [security, vscode, bash, privacy]
+---
+
+import Figure from '../../src/components/mdx/Figure.astro';
+import FileTree from '../../src/components/mdx/FileTree.astro';
+import picker from './picker.png';
+
+<Figure src={picker} alt="VS Code's Run Recent Command list. Under 'previous session': uptime, ls -lh, cd /var/log, and ' export GITHUB_TOKEN=ghp_FAKE_DO_NOT_USE_1101' with its leading space. Under 'bash history ~/.bash_history': code ., npm run dev, git status">
+  VS Code's Run Recent Command list, in a new window on my laptop. Note the space before `export`. The token's a fake.
+</Figure>
+
+The top four were typed on a different machine. I'd opened a Debian server with Remote-SSH and put a space in front of the export, so the server's bash would skip it, and it did. The server's `~/.bash_history` has `cd /var/log`, `ls -lh` and `uptime`, and no token. My laptop has it, and it's offering to run it again.
+
+## The space trick
+
+If you've ever pasted a token into a terminal, someone's probably told you to stick a space in front. bash won't save a line that starts with one when `HISTCONTROL` has `ignorespace` or `ignoreboth` in it, which Debian and Ubuntu set up for you, and zsh does the same with `setopt HIST_IGNORE_SPACE`. It's the [accepted answer](https://unix.stackexchange.com/questions/49214/how-to-remove-a-single-line-from-history) on unix.SE, along with `history -d` for when you forgot.
+
+Both of those only change what the shell writes down, though, and VS Code keeps its own list.
+
+## Where it goes instead
+
+VS Code injects a shell integration script into bash and zsh, on by default. Among other things it reads each command as it runs, and a leading space doesn't stop it. When the command finishes, anything that isn't blank goes into a list of your last 100, which VS Code keeps in a SQLite file in its user folder:
+
+<FileTree>
+
+- ~/.config/Code/User
+  - globalStorage
+    - **state.vscdb** _commands_
+    - state.vscdb.backup
+  - workspaceStorage
+    - 1d6fb3dd...
+      - **state.vscdb** _scrollback_
+      - state.vscdb.backup
+
+</FileTree>
+
+That's Linux. On a Mac the [user folder](https://code.visualstudio.com/docs/configure/settings#_settings-file-locations) is `~/Library/Application Support/Code/User` and on Windows it's `%APPDATA%\Code\User`, but I only ran it on Linux. Cursor and Windsurf (which now ships as Devin) are built on VS Code and keep the same list in their own user folders. I read their code rather than running them, so don't quote me, but the only difference I spotted is that Cursor's bash check doesn't know `ignorespace` on its own. There, only `ignoreboth` and zsh get caught.
+
+I tried bash with `ignoreboth` and zsh with `HIST_IGNORE_SPACE` on VS Code 1.144.0 on 1 November. Both times the shell's history file was clean and `state.vscdb` wasn't. A line I'd taken out with `history -d` was still in VS Code's list too, since that only edits bash's.
+
+To see your own list:
+
+```sh
+sqlite3 ~/.config/Code/User/globalStorage/state.vscdb \
+  "select value from ItemTable where key = 'terminal.history.entries.commands'" | jq -r '.entries[].key'
+```
+
+The second copy is the scrollback. VS Code saves each local terminal's contents so it can bring them back after a restart, which is the command plus whatever it printed. It saves the environment that terminal started with as well, so if VS Code itself was started from a shell where you'd exported a token, the token's in that file too, space or no space.
+
+## Over SSH, it comes home
+
+Nothing in the command list says which machine a command ran on, so with Remote-SSH, what you type on the server is saved on your laptop, hidden ones included. I searched the whole home folder on the server afterwards, VS Code's own `~/.vscode-server` included, and the token wasn't anywhere.
+
+So the copy ends up on your laptop, the one that gets backed up. It shouldn't go any further with Settings Sync, at least: the code saves the list as machine-only, which Sync skips.
+
+## Deleting it
+
+Every entry in Run Recent Command has an X, and there's a `Terminal: Clear Previous Session History` command. Both take it off the list, and neither takes it off the disk. SQLite marks the space as free and leaves the bytes alone, so `grep -a` still found the token in `state.vscdb` and its `.backup` afterwards. Clear doesn't touch the scrollback copy at all.
+
+With VS Code closed, `sqlite3 state.vscdb VACUUM` rewrites the file, and the leftovers went with it. If it was a real token though, rotate it. That's quicker than chasing every backup it's been copied into since.
+
+## Keeping it out
+
+Two settings, the first for the command list and the second for the scrollback:
+
+```json title="settings.json"
+"terminal.integrated.shellIntegration.history":
+  0,
+"terminal.integrated.enablePersistentSessions":
+  false
+```
+
+The second one means your terminals don't come back after a restart. With both on a fresh profile, the token wasn't anywhere in VS Code's folder. Setting the first empties the list you've already got, but turning the second off leaves any scrollback that's already saved.
+
+Better still, keep secrets off the command line. `read -rs GITHUB_TOKEN` asks for it without echoing, so VS Code's list gets `read -rs GITHUB_TOKEN` and never the token.
+
+VS Code does know the trick, for what it's worth. The same shell integration script sets `HISTCONTROL=ignorespace` for a special case, under the comment `# Prevent AI-executed commands from polluting shell history`.

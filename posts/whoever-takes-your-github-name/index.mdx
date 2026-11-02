@@ -1,84 +1,55 @@
 ---
 title: Whoever takes your old GitHub name gets your MCP namespace
-description: The MCP registry ties io.github namespaces to a login, not an account. Rename on GitHub and whoever takes the old name can publish as you.
+description: Rename your GitHub account and whoever takes the old name can publish new versions of your MCP servers. 145 live ones sit under names nobody holds.
 date: 2026-11-02
 tags: [security, ai, mcp, github]
 ---
 
-import Breakdown from '../../src/components/mdx/Breakdown.astro';
-import handovers from './handovers.json';
+import Stats from '../../src/components/mdx/Stats.astro';
 
-`io.github.facebook/devtools` is Meta's MCP server for managing Meta apps. It went into the official MCP registry in October, it points at Meta's own server, and it's still the current version:
+Rename your GitHub account and your MCP servers stay in the official registry under your old name. Whoever registers that name next can publish new versions of them, and the registry can't tell it isn't you.
 
-```sh
-$ curl -s 'https://registry.modelcontextprotocol.io/v0/servers?search=io.github.facebook/devtools' | jq ...
-{
-  "name": "io.github.facebook/devtools",
-  "version": "1.0.0",
-  "remote": "https://mcp.facebook.com/devtools",
-  "publishedAt": "2026-10-11T21:53:35.171063Z",
-  "isLatest": true
-}
-```
+On 2 November I checked every `io.github` name in the registry against GitHub. At least 111 names that published servers have since been renamed or deleted, and don't belong to any account now. Between them:
 
-The `facebook` in that name is a GitHub login. On 28 October Meta renamed its GitHub org from `facebook` to `meta`, and the same day a new org took the old name. Here's what GitHub's API says about the two now:
+<Stats>
 
-| Login      | Account ID | Created  | Repos |
-| ---------- | ---------- | -------- | ----- |
-| `meta`     | 69631      | Apr 2009 | 185   |
-| `facebook` | 349478847  | Oct 2026 | 0     |
+- **145** live servers still listed
+- **17,000** or so downloads a week of their npm and PyPI packages
+- **49** with only a remote URL, so no package check at all
 
-The new one is five days old and empty. It's probably Meta's, parked there so nobody else can have the name, which is the sensible thing to do. But it's a different account, and the registry gives publishing rights for `io.github.facebook` to whoever owns it.
+</Stats>
 
-## It checks the name, not the account
+They're not toys, either. The busiest one lets your coding agent drive terminals, and its npm package got 4,142 downloads last week. There are two security-lookup servers that run with your API keys for the services they query, an Azure DevOps one that wants a personal access token, one that reaches every machine you've got over SSH, and four that handle crypto wallets, payments or transactions. I'm not naming any of them while their names are free.
 
-The registry's [authentication docs](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/authentication.mdx) say that if you log in with GitHub, your server's name has to be `io.github.<username>/...`, or `io.github.<orgname>/...` for an org you're an Owner of. Here's where that happens, in [`github_at.go`](https://github.com/modelcontextprotocol/registry/blob/main/internal/api/handlers/v0/auth/github_at.go):
+## Why it works
 
-```go title="github_at.go" {2,8}
-type GitHubUserOrOrg struct {
-	Login string `json:"login"`
-	ID    int    `json:"id"`
-}
+The registry hands out `io.github.<login>/*` based on your GitHub login, not your account's ID, which is the bit that never changes ([`github_at.go`](https://github.com/modelcontextprotocol/registry/blob/main/internal/api/handlers/v0/auth/github_at.go)):
 
-// ...
-
+```go
 permissions := h.buildPermissions(user.Login, orgs)
 ```
 
-It asks GitHub who you are, gets back your login and your numeric ID, and builds the permission from the login. The ID is the bit that never changes. The login is the bit you can change in settings, and when you do, GitHub's docs say [your old username becomes available for anyone else to claim](https://docs.github.com/en/account-and-profile/concepts/username-changes). Orgs work the same way. Publishing from GitHub Actions is no different, it grants the namespace off the `repository_owner` claim in the token, not `repository_owner_id`.
+When you rename, GitHub's docs say your old name [becomes available for anyone else to claim](https://docs.github.com/en/account-and-profile/concepts/username-changes). Whoever claims it gets your namespace, and from there:
 
-## What the next holder can do
+- a new version is always active, and the highest one becomes `latest`
+- deprecating your old entry doesn't stop it (a maintainer [said as much](https://github.com/modelcontextprotocol/registry/issues/1662#issuecomment-6376241397) in October)
+- the package check only wants a package that carries the server's name, any package, not the one you published
+- a remote server has no package to check, so its next version can point at any URL
 
-If you rename, you're locked out of your old servers, since no login you hold matches them any more. People find that out the hard way: the tracker's had about twenty tickets since April from publishers asking the maintainers to tidy up entries they [can't touch any more](https://github.com/modelcontextprotocol/registry/issues/1662).
+## What a bad version gets
 
-Less obvious is what the new holder of the name can do. They can publish new servers under your namespace, and new versions of yours too. A new version is always marked active. If its number's higher than the last one, it becomes the latest, and that's the one a client gets when it asks for the server by name. Deprecating your old entry doesn't change any of that, and a maintainer [said as much](https://github.com/modelcontextprotocol/registry/issues/1662#issuecomment-6376241397) on 23 October, right after deprecating one for someone who'd renamed.
+A local MCP server runs as you, with whatever keys you put in its config. A remote one sees every tool call your agent makes to it, and gets to write the answers.
 
-There is a package check. For an npm package, the registry looks for an `mcpName` in its `package.json` that matches the server name, and a PyPI one needs `mcp-name:` and the server name somewhere in its description. That proves you control a package with the right marker in it. Any package, though, not the one the earlier versions used. And a remote server like Meta's has no package to check at all, so `io.github.facebook/devtools` 1.0.1 could point at pretty much any URL.
+If you installed the npm or PyPI package directly, a new registry version doesn't touch you. It's the clients and galleries that pick servers from the registry by name that would follow it, and the registry tells [aggregators](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/registry-aggregators.mdx) to copy it and keep their own copy.
 
-## 22 names have changed hands already
+## Names already change hands
 
-To see whether any of this had happened yet, on 2 November I pulled every version of every `io.github` server in the registry and, for each GitHub name, compared when it first published with when the account holding it today was created. If the namespace is older than the account, the name's changed hands.
+22 namespaces in the registry now belong to a GitHub account that was created after they were published. `io.github.facebook` is one, since Meta became `meta` on 28 October. So far most look like owners parking their old name, and none has published anything.
 
-That came out at 41 names.
-
-<Breakdown title="io.github names older than the account that holds them now" data={handovers}>
-  As of 2 November 2026. "Moved on" means the namespace's repos now redirect to a different owner.
-</Breakdown>
-
-Where the repos still live under the same name, it's most likely the same people who deleted and re-made their account. The 22 are the interesting ones. The publisher's repos now redirect to somebody else, which is what you get after a rename, so they've moved on and a newer account has their old name. Facebook's one of them, and seven of the 22 accounts were made in the last fortnight, two of them on 2 November.
-
-None of the 22 has published anything yet, and 15 have no public repos at all. I'd guess most are owners holding on to their old name, like Meta probably is. But I can't tell who's behind any of them from outside, and the registry doesn't try.
-
-The ones that worry me more are the names nobody holds. At least 111 GitHub names that published servers now redirect to a new owner and don't resolve to any account at all. Between them they still have 145 live servers listed, and whoever registers one of those names, once GitHub lets them, can publish new versions of them. I haven't tried, and won't.
+The other half has bitten for real. About twenty publishers have filed tickets since April because they're locked out of their own old entries, like [PaidSync](https://github.com/modelcontextprotocol/registry/issues/1662), whose old listing kept advertising an address they'd switched off until a maintainer stepped in.
 
 ## If you've renamed
 
-Take your old name back. Make a new account or org with it, then you're the one the registry hands that namespace to. It costs nothing and it's the only thing that stops someone else publishing there. Then put your servers under your new name and ask on [#1662](https://github.com/modelcontextprotocol/registry/issues/1662) for the old entries to be deprecated, so people stop finding them.
+Register your old name again today. An empty org costs nothing, and holding the name means nobody else can publish there, and you can deprecate the old entries yourself.
 
-If you build something that installs from the registry, don't treat the server name as the identity. Pin the version, and treat a change of package or remote URL between versions like a different server.
-
-## Same trick as repojacking
-
-Repojacking is when someone registers a renamed account's old name to take over the `github.com/old-name/repo` links people still point at. This is that, aimed at a publishing namespace instead of a repo, and it's no secret: [#1388](https://github.com/modelcontextprotocol/registry/issues/1388) spelled it out in June.
-
-Not much installs straight from the official registry by name yet, as far as I can tell, so right now it's a hole rather than a disaster. But it's the list the rest are built on. The registry's docs tell [aggregators](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/registry-aggregators.mdx) to scrape it every so often and keep their own copy, so whatever goes out under `io.github.facebook` next would end up in theirs too.
+If you install MCP servers, pin the package and version rather than trusting the registry name, and treat a change of package or URL between versions like a new server.

@@ -1,10 +1,10 @@
 [
-  { "server": "Coding-agent terminals", "downloads": 4142 },
-  { "server": "Business ERP connector", "downloads": 2132 },
-  { "server": "AI gateway admin", "downloads": 1247 },
-  { "server": "Hosted LLM SDK", "downloads": 1063 },
-  { "server": "Every machine over SSH", "downloads": 746 },
-  { "server": "Internet scan lookups", "downloads": 673 },
-  { "server": "Malware lookups", "downloads": 604 },
-  { "server": "Azure DevOps boards", "downloads": 527 }
+  { "package": "aiterm-mcp", "downloads": 4142 },
+  { "package": "odoo-mcp", "downloads": 2132 },
+  { "package": "portkey-admin-mcp", "downloads": 1247 },
+  { "package": "bee-sdk", "downloads": 1063 },
+  { "package": "agents-fleet", "downloads": 746 },
+  { "package": "@burtthecoder/mcp-shodan", "downloads": 673 },
+  { "package": "@burtthecoder/mcp-virustotal", "downloads": 604 },
+  { "package": "azure-board-mcp", "downloads": 527 }
 ]

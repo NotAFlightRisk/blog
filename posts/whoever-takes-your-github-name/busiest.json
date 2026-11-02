@@ -1,0 +1,10 @@
+[
+  { "package": "aiterm-mcp", "downloads": 4142 },
+  { "package": "odoo-mcp", "downloads": 2132 },
+  { "package": "portkey-admin-mcp", "downloads": 1247 },
+  { "package": "bee-sdk", "downloads": 1063 },
+  { "package": "agents-fleet", "downloads": 746 },
+  { "package": "@burtthecoder/mcp-shodan", "downloads": 673 },
+  { "package": "@burtthecoder/mcp-virustotal", "downloads": 604 },
+  { "package": "azure-board-mcp", "downloads": 527 }
+]

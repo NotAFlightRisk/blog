@@ -1,0 +1,63 @@
+---
+title: Whoever takes your old GitHub name gets your MCP namespace
+description: Rename your GitHub account and whoever takes the old name can publish new versions of your MCP servers. 145 live ones sit under names nobody holds.
+date: 2026-11-02
+tags: [security, ai, mcp, github]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Stats from '../../src/components/mdx/Stats.astro';
+import busiest from './busiest.json';
+
+Rename your GitHub account and your MCP servers stay in the official registry under your old name. Whoever registers that name next can publish new versions of them, and the registry can't tell it isn't you.
+
+On 2 November I checked every `io.github` name in the registry against GitHub. At least 111 names that published servers have since been renamed or deleted, and don't belong to any account now. Between them:
+
+<Stats>
+
+- **145** live servers are still listed
+- **17,000** or so times a week, their npm and PyPI packages get downloaded
+- **49** of them only have a remote URL, so there's no package to check at all
+
+</Stats>
+
+They're not toys, either. Here are the busiest:
+
+<Chart title="Weekly downloads of the busiest servers under unclaimed names" data={busiest}>
+  These are npm and PyPI downloads over the last week, as of 2 November. Each one is listed in the registry under a GitHub name that nobody holds now.
+</Chart>
+
+`aiterm-mcp` lets your coding agent drive terminals, `agents-fleet` reaches every machine you've got over SSH, the Shodan and VirusTotal ones run with your API keys for those services, and `azure-board-mcp` wants a personal access token. Further down the list, four more handle crypto wallets, payments or transactions.
+
+## Why it works
+
+The registry hands out `io.github.<login>/*` based on your GitHub login, not your account's ID, which is the bit that never changes ([`github_at.go`](https://github.com/modelcontextprotocol/registry/blob/main/internal/api/handlers/v0/auth/github_at.go)):
+
+```go
+permissions := h.buildPermissions(user.Login, orgs)
+```
+
+When you rename, GitHub's docs say your old name [becomes available for anyone else to claim](https://docs.github.com/en/account-and-profile/concepts/username-changes). Whoever claims it gets your namespace, and from there:
+
+- a new version is always active, and the highest one becomes `latest`
+- deprecating your old entry doesn't stop it (a maintainer [said as much](https://github.com/modelcontextprotocol/registry/issues/1662#issuecomment-6376241397) in October)
+- the package check only asks for a package that carries the server's name, and it doesn't have to be the one you published
+- a remote server has no package to check, so its next version can point at any URL
+
+## What a bad version gets
+
+A local MCP server runs as you, with whatever keys you put in its config. A remote one sees every tool call your agent makes to it, and gets to write the answers.
+
+If you installed the npm or PyPI package directly, a new registry version doesn't touch you. It's the clients and galleries that pick servers from the registry by name that would follow it, and the registry tells [aggregators](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/registry-aggregators.mdx) to copy it and keep their own copy.
+
+## Names are already changing hands
+
+22 namespaces in the registry now belong to a GitHub account that was created after they were published. `io.github.facebook` is one, since Meta became `meta` on 28 October. So far most of them look like owners holding on to their old name, and none has published anything.
+
+The other half has bitten for real. About twenty publishers have filed tickets since April because they're locked out of their own old entries, like [PaidSync](https://github.com/modelcontextprotocol/registry/issues/1662), whose old listing kept advertising an address they'd switched off until a maintainer stepped in.
+
+## If you've renamed
+
+Register your old name again today. An empty org costs nothing. Once you hold the name, nobody else can publish there, and you can deprecate the old entries yourself.
+
+If you install MCP servers, pin the package and version rather than trusting the registry name, and treat a change of package or URL between versions like a new server.

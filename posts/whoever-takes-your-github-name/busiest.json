@@ -1,0 +1,10 @@
+[
+  { "server": "Coding-agent terminals", "downloads": 4142 },
+  { "server": "Business ERP connector", "downloads": 2132 },
+  { "server": "AI gateway admin", "downloads": 1247 },
+  { "server": "Hosted LLM SDK", "downloads": 1063 },
+  { "server": "Every machine over SSH", "downloads": 746 },
+  { "server": "Internet scan lookups", "downloads": 673 },
+  { "server": "Malware lookups", "downloads": 604 },
+  { "server": "Azure DevOps boards", "downloads": 527 }
+]

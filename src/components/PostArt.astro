@@ -1,0 +1,66 @@
+---
+import { Picture } from 'astro:assets';
+import { cardOf, ogUrl, type Post } from '../lib/posts';
+
+interface Props {
+  post: Post;
+  sizes: string;
+  priority?: boolean;
+}
+
+const { post, sizes, priority = false } = Astro.props;
+const card = cardOf(post);
+// the title always sits right beside it, so screen readers skip the picture
+---
+
+{card ? (
+  <Picture
+    src={card}
+    alt=""
+    {sizes}
+    widths={[400, 800, 1200]}
+    formats={['avif', 'webp']}
+    {priority}
+    pictureAttributes={{ class: 'art' }}
+  />
+) : (
+  <picture class="art">
+    <img
+      src={ogUrl(post)}
+      alt=""
+      width="1200"
+      height="630"
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : undefined}
+      decoding="async"
+    />
+  </picture>
+)}
+
+<style>
+  /* a frame for the art to zoom inside, its hairline keeping an edge on a card the page's colour */
+  .art {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius);
+    box-shadow:
+      var(--panel-shadow),
+      0 0 0 1px var(--border);
+  }
+
+  img {
+    width: 100%;
+  }
+
+  /* in a panel it runs edge to edge, so the words on the card stay readable */
+  :global(.panel) .art {
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: 0 1px var(--border);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    img {
+      transition: scale var(--drift) var(--ease);
+    }
+  }
+</style>

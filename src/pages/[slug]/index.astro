@@ -1,12 +1,23 @@
 ---
-import { Picture } from 'astro:assets';
+import { getImage, Picture } from 'astro:assets';
 import { render } from 'astro:content';
 import '../../styles/prose.css';
 import '../../styles/code.css';
+import PostArt from '../../components/PostArt.astro';
+import PostList from '../../components/PostList.astro';
 import Toc from '../../components/Toc.astro';
 import Base from '../../layouts/Base.astro';
 import { formatDate, isoDate, readingTime } from '../../lib/format';
-import { absolute, getPosts, ogUrl, postUrl, rawUrl, tagUrl, type Post } from '../../lib/posts';
+import {
+  absolute,
+  cardOf,
+  getPosts,
+  ogUrl,
+  postUrl,
+  rawUrl,
+  tagUrl,
+  type Post,
+} from '../../lib/posts';
 import { neighbours, related } from '../../lib/rank';
 import { site } from '../../site';
 
@@ -23,8 +34,13 @@ const minutes = readingTime(post.body ?? '');
 const contents = headings.filter(({ depth }) => depth <= 3);
 const { newer, older } = neighbours(post, posts);
 const more = related(post, posts);
+// older and newer each get half the footer once there's room, and their art fills it
+const neighbourSizes = '(min-width: 40rem) 27rem, 100vw';
 const url = absolute(postUrl(post));
 const image = { src: ogUrl(post), alt: `${title}, on the post's share card` };
+// search results show a small copy of the card
+const card = cardOf(post);
+const thumb = card ? (await getImage({ src: card, width: 400, format: 'webp' })).src : image.src;
 
 const schema = [
   {
@@ -36,7 +52,7 @@ const schema = [
     mainEntityOfPage: url,
     datePublished: date.toISOString(),
     dateModified: (updated ?? date).toISOString(),
-    image: absolute(image.src),
+    image: { '@type': 'ImageObject', url: absolute(image.src), width: 1200, height: 630 },
     keywords: tags,
     wordCount: (post.body ?? '').split(/\s+/).filter(Boolean).length,
     inLanguage: site.lang,
@@ -58,7 +74,7 @@ const schema = [
 <Base {title} {description} {image} article={{ published: date, modified: updated, tags }} {schema}>
   <link slot="head" rel="alternate" type="text/markdown" href={rawUrl(post)} />
 
-  <article>
+  <article data-pagefind-meta={`image:${thumb}`}>
     <header>
       <h1>{title}</h1>
       <p>{description}</p>
@@ -122,15 +138,21 @@ const schema = [
       {(newer || older) && (
         <nav aria-label="Next and previous posts" class="neighbours">
           {older && (
-            <a href={postUrl(older)} rel="prev">
-              <span>Older</span>
-              {older.data.title}
+            <a href={postUrl(older)} rel="prev" class="panel">
+              <PostArt post={older} sizes={neighbourSizes} />
+              <span>
+                <span class="direction">Older</span>
+                {older.data.title}
+              </span>
             </a>
           )}
           {newer && (
-            <a href={postUrl(newer)} rel="next" class="newer">
-              <span>Newer</span>
-              {newer.data.title}
+            <a href={postUrl(newer)} rel="next" class="panel newer">
+              <PostArt post={newer} sizes={neighbourSizes} />
+              <span>
+                <span class="direction">Newer</span>
+                {newer.data.title}
+              </span>
             </a>
           )}
         </nav>
@@ -138,14 +160,7 @@ const schema = [
       {more.length > 0 && (
         <section aria-labelledby="related">
           <h2 id="related">Related posts</h2>
-          <ul>
-            {more.map((other) => (
-              <li>
-                <a href={postUrl(other)}>{other.data.title}</a>
-                <time datetime={isoDate(other.data.date)}>{formatDate(other.data.date)}</time>
-              </li>
-            ))}
-          </ul>
+          <PostList posts={more} heading={3} panels />
         </section>
       )}
     </footer>
@@ -278,21 +293,27 @@ const schema = [
 
     & a {
       display: grid;
-      gap: var(--space-2xs);
-      padding: var(--space-m);
-      border-radius: var(--radius);
-      background: var(--surface);
-      box-shadow: var(--panel-shadow);
+      align-content: start;
       font-weight: var(--weight-title);
       letter-spacing: var(--tracking-title);
       text-decoration: none;
 
-      &:hover {
+      &:is(:hover, :focus-visible) {
         background: var(--surface-hover);
+
+        & :global(.art img) {
+          scale: var(--hover-zoom);
+        }
       }
     }
 
-    & span {
+    & a > span {
+      display: grid;
+      gap: var(--space-2xs);
+      padding: var(--space-m);
+    }
+
+    & .direction {
       color: var(--text-muted);
       font-size: var(--text-small);
       font-weight: normal;
@@ -305,37 +326,8 @@ const schema = [
     }
   }
 
-  section {
-    & h2 {
-      margin: 0 0 var(--space-m);
-      font-size: var(--text-large);
-    }
-
-    & ul {
-      display: grid;
-      gap: var(--space-s);
-    }
-
-    & li {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 0 var(--space-m);
-    }
-
-    & a {
-      text-decoration-color: var(--accent);
-
-      &:hover {
-        background: var(--accent);
-        color: var(--on-accent);
-      }
-    }
-
-    & time {
-      color: var(--text-muted);
-      font-size: var(--text-small);
-      font-variant-numeric: tabular-nums;
-    }
+  section h2 {
+    margin: 0 0 var(--space-l);
+    font-size: var(--text-large);
   }
 </style>

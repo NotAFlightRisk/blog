@@ -14,10 +14,10 @@ const intro =
 
 <Base title="Archive" description={`Every post on the blog, ${posts.length} so far, newest first.`}>
   <Intro title="Archive">{intro}</Intro>
-  {[...years].map(([year, list]) => (
+  {[...years].map(([year, list], index) => (
     <section aria-labelledby={`y${year}`}>
       <h2 id={`y${year}`}>{year}</h2>
-      <PostList posts={list} />
+      <PostList posts={list} heading={3} priority={index === 0} />
     </section>
   ))}
 </Base>

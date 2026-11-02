@@ -119,6 +119,15 @@ pre {
   }
 }
 
+/* a raised box for a link to another post, with the post's art across the top */
+.panel {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow:
+    var(--panel-shadow),
+    0 0 0 1px var(--border);
+}
+
 .icon {
   flex-shrink: 0;
   width: var(--icon);

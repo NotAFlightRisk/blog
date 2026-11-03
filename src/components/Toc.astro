@@ -9,7 +9,7 @@ const { headings } = Astro.props;
 // a fold on a phone and an open list in the rail, and only one of them is ever shown
 ---
 
-<nav aria-label="Contents">
+<nav class="toc" aria-label="Contents">
   <details>
     <summary>
       Contents
@@ -45,14 +45,44 @@ const { headings } = Astro.props;
   </div>
 </nav>
 
+<script>
+  // the section being read is the last whose heading's scrolled up to where a click here lands it
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+  const hrefs = [...new Set(links.map((link) => link.getAttribute('href')!))];
+  const headings = hrefs.map((href) => document.getElementById(href.slice(1))!);
+  const line = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) + 1;
+
+  function mark() {
+    const current =
+      hrefs[headings.findLastIndex((heading) => heading.getBoundingClientRect().top < line)];
+    for (const link of links) {
+      link.ariaCurrent = link.getAttribute('href') === current ? 'location' : null;
+    }
+  }
+
+  addEventListener('scroll', mark, { passive: true });
+  mark();
+</script>
+
 <style>
+  /* slides open to the list's height, with room round it so the clip never cuts a focus ring */
   details {
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: var(--panel-shadow);
+    interpolate-size: allow-keywords;
+
+    &::details-content {
+      block-size: 0;
+      overflow: hidden;
+    }
+
+    &[open]::details-content {
+      block-size: auto;
+    }
 
     & ol {
-      padding: 0 var(--space-m) var(--space-s);
+      margin: var(--space-xs) var(--space-m) var(--space-s);
     }
   }
 
@@ -61,6 +91,8 @@ const { headings } = Astro.props;
     align-items: center;
     justify-content: space-between;
     padding: var(--space-xs) var(--space-m);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--tracking-title);
     list-style: none;
     cursor: pointer;
 
@@ -78,45 +110,62 @@ const { headings } = Astro.props;
     rotate: 90deg;
   }
 
-  summary,
+  /* a label like the rest of the rail's, quiet so the headings under it stand out */
   p {
     margin: 0;
-    font-weight: var(--weight-title);
-    letter-spacing: var(--tracking-title);
+    color: var(--text-muted);
   }
 
   div {
     display: none;
   }
 
+  /* a track down the side, with the section being read marked on it */
   ol {
     display: grid;
     gap: var(--space-2xs);
     margin: 0;
     padding: 0;
+    border-left: var(--separator);
     list-style: none;
-  }
-
-  .sub {
-    padding-left: var(--space-m);
   }
 
   a {
     display: block;
-    padding-block: var(--space-3xs);
-    color: var(--text-muted);
+    margin-left: -1px;
+    padding: var(--space-3xs) 0 var(--space-3xs) var(--space-s);
+    border-left: var(--underline) solid transparent;
     text-decoration: none;
 
-    &:hover {
-      color: var(--text);
-      text-decoration: underline;
-      text-decoration-color: var(--accent);
+    @media (hover: hover) {
+      &:hover {
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+      }
     }
+
+    &[aria-current] {
+      border-color: var(--accent);
+    }
+  }
+
+  .sub a {
+    padding-left: var(--space-l);
   }
 
   @media (prefers-reduced-motion: no-preference) {
     svg {
       transition: rotate var(--quick) var(--ease);
+    }
+
+    a {
+      transition: border-color var(--quick) var(--ease);
+    }
+
+    details::details-content {
+      transition:
+        block-size var(--settle) var(--ease),
+        content-visibility var(--settle) allow-discrete;
     }
   }
 
@@ -127,7 +176,7 @@ const { headings } = Astro.props;
 
     div {
       display: grid;
-      gap: var(--space-xs);
+      gap: var(--space-2xs);
     }
   }
 </style>

@@ -5,7 +5,8 @@
 }
 
 html {
-  scroll-padding-top: calc(var(--bar-height) + var(--space-m));
+  /* a heading jumped to lines up with the top of the post's sidebar */
+  scroll-padding-top: calc(var(--bar-height) + var(--space-l));
   scroll-behavior: smooth;
   scrollbar-color: var(--text-muted) var(--bg);
   accent-color: var(--accent);
@@ -40,6 +41,12 @@ h4 {
   line-height: var(--leading-title);
   letter-spacing: var(--tracking-title);
   text-wrap: balance;
+}
+
+/* no paragraph or list item left with one word on its last line */
+p,
+li {
+  text-wrap: pretty;
 }
 
 a {
@@ -95,8 +102,11 @@ pre {
   text-decoration: none;
   cursor: pointer;
 
-  &:hover {
-    box-shadow: var(--button-shadow);
+  /* hover effects only where something can hover, or a tap would leave them stuck on */
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: var(--button-shadow);
+    }
   }
 
   &:active {
@@ -112,11 +122,22 @@ pre {
     background: var(--surface);
     box-shadow: var(--panel-shadow);
 
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
+    @media (hover: hover) {
+      &:hover {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
     }
   }
+}
+
+/* a raised box for a link to another post, with the post's art across the top */
+.panel {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow:
+    var(--panel-shadow),
+    0 0 0 1px var(--border);
 }
 
 .icon {
@@ -138,6 +159,11 @@ pre {
   white-space: nowrap;
 }
 
+/* pages fade into each other, with the bar holding still on top */
+@view-transition {
+  navigation: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -146,5 +172,12 @@ pre {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* page and theme fades run on a layer of their own, out of reach of the rule above */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

@@ -3,16 +3,11 @@ import Intro from '../components/Intro.astro';
 import PostList from '../components/PostList.astro';
 import Base from '../layouts/Base.astro';
 import { absolute, getPosts } from '../lib/posts';
-import { featured, latestDays, site } from '../site';
+import { frontPage } from '../lib/rank';
+import { featured, latest, site } from '../site';
 
 const posts = await getPosts();
-const cutoff = (posts[0]?.data.date.valueOf() ?? 0) - latestDays * 24 * 60 * 60 * 1000;
-const recent = posts.filter(({ data }) => data.date.valueOf() > cutoff);
-const picks = posts
-  .slice(recent.length)
-  .filter(({ data }) => data.featured)
-  .slice(0, featured);
-const shown = [...recent, ...picks];
+const shown = frontPage(posts, latest, featured);
 const url = absolute('/');
 const schema = [
   { '@type': 'WebSite', name: site.name, url, inLanguage: site.lang },
@@ -32,7 +27,7 @@ const schema = [
   <Intro title="Blog">
     {site.description}. Follow along with <a href="/rss.xml">RSS</a>.
   </Intro>
-  {posts.length ? <PostList posts={shown} /> : <p>Nothing here yet. Noot.</p>}
+  {posts.length ? <PostList posts={shown} lead priority /> : <p>Nothing here yet. Noot.</p>}
   {posts.length > shown.length && (
     <p class="more">
       <a class="button raised" href="/archive/">

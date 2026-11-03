@@ -74,6 +74,12 @@ export const markdown: AstroUserConfig['markdown'] = {
     remarkPlugins: [altText],
     // Astro adds heading ids after our plugins, so they have to be in place before the links
     rehypePlugins: [rehypeHeadingIds, [rehypeAutolinkHeadings, { behavior: 'wrap' }], newTab],
+    // footnotes sit under a rule, so their label's only for screen readers, and not a heading
+    // that'd turn up in the contents
+    remarkRehype: {
+      footnoteLabelTagName: 'p',
+      footnoteLabelProperties: { className: ['visually-hidden'] },
+    },
   }),
   shikiConfig: {
     theme: 'css-variables',

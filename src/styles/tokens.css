@@ -97,6 +97,9 @@
   --quick: 0.15s;
   --settle: 0.3s;
   --peek: 0.8s;
+  /* a post's art easing in a touch when its card's hovered */
+  --drift: 0.6s;
+  --hover-zoom: 1.03;
   --blink-every: 7s;
 }
 

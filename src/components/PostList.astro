@@ -1,58 +1,124 @@
 ---
+import PostArt from './PostArt.astro';
 import { formatDate, isoDate, readingTime } from '../lib/format';
 import { postUrl, tagUrl, type Post } from '../lib/posts';
 
 interface Props {
   posts: Post[];
+  heading?: 2 | 3;
+  // the first post gets a whole row to itself
+  lead?: boolean;
+  // the list's near the top of the page, so the first picture can't wait
+  priority?: boolean;
+  // each post in a raised panel, like the older and newer links
+  panels?: boolean;
 }
 
-const { posts } = Astro.props;
+const { posts, heading = 2, lead = false, priority = false, panels = false } = Astro.props;
+const Heading = `h${heading}` as const;
+// roughly how wide the art lands, a column on phones and up to three on big screens
+const sizes = {
+  card: '(min-width: 60rem) 24rem, (min-width: 40rem) 47vw, 100vw',
+  lead: '(min-width: 80rem) 42rem, (min-width: 48rem) 55vw, 100vw',
+};
 ---
 
-<ol>
-  {posts.map((post) => (
-    <li>
-      <article>
-        <h2>
-          <a href={postUrl(post)}>{post.data.title}</a>
-          {post.data.draft && <span class="draft">Draft</span>}
-        </h2>
-        <p>{post.data.description}</p>
-        <p class="meta">
-          <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
-          <span>{readingTime(post.body ?? '')} min read</span>
-          {post.data.tags.map((tag) => (
-            <a href={tagUrl(tag)}>#{tag}</a>
-          ))}
-        </p>
-      </article>
-    </li>
-  ))}
+<ol class:list={{ panels }}>
+  {posts.map((post, index) => {
+    const isLead = lead && index === 0;
+    return (
+      <li class:list={{ lead: isLead }}>
+        <article class:list={{ panel: panels }}>
+          <PostArt
+            {post}
+            sizes={isLead ? sizes.lead : sizes.card}
+            priority={priority && index === 0}
+          />
+          <div>
+            <Heading class="title">
+              <a href={postUrl(post)}>{post.data.title}</a>
+              {post.data.draft && <span class="draft">Draft</span>}
+            </Heading>
+            <p class="summary">{post.data.description}</p>
+            <p class="meta">
+              <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
+              <span>{readingTime(post.body ?? '')} min read</span>
+            </p>
+            <ul class="meta">
+              {post.data.tags.map((tag) => (
+                <li>
+                  <a href={tagUrl(tag)}>#{tag}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      </li>
+    );
+  })}
 </ol>
 
 <style>
   ol {
     display: grid;
-    gap: var(--space-xl);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: clamp(var(--space-xl), 5vw, var(--space-2xl)) var(--space-xl);
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   article {
-    max-width: var(--measure);
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-m);
   }
 
-  h2 {
+  .title {
     margin: 0;
     font-size: var(--text-h2);
 
     & a {
       text-decoration: none;
 
-      &:hover {
+      /* the whole card's the link, apart from the tags */
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+
+      &:focus-visible {
+        outline: none;
+
+        &::after {
+          border-radius: var(--radius);
+          outline: var(--outline);
+          outline-offset: var(--outline-offset);
+        }
+      }
+    }
+  }
+
+  /* a size down when they sit under a heading of their own */
+  h3.title {
+    font-size: var(--text-large);
+  }
+
+  @media (hover: hover) {
+    article:has(.title a:is(:hover, :focus-visible)) {
+      & .title a {
         text-decoration: underline;
         text-decoration-color: var(--accent);
+      }
+
+      & :global(.art img) {
+        scale: var(--hover-zoom);
+      }
+
+      &.panel {
+        background: var(--surface-hover);
       }
     }
   }
@@ -61,23 +127,60 @@ const { posts } = Astro.props;
     margin: var(--space-xs) 0 0;
   }
 
+  /* the date and reading time, then the tags on a line of their own */
   .meta {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 0 var(--space-s);
     color: var(--text-muted);
     font-size: var(--text-small);
 
     & a {
+      position: relative;
       padding-block: var(--space-2xs);
       text-decoration: none;
 
-      &:hover {
-        color: var(--text);
-        text-decoration: underline;
-        text-decoration-color: var(--accent);
+      @media (hover: hover) {
+        &:hover {
+          color: var(--text);
+          text-decoration: underline;
+          text-decoration-color: var(--accent);
+        }
       }
+    }
+  }
+
+  .panels {
+    gap: var(--space-m);
+
+    /* every panel in a row comes out the same height */
+    & li {
+      display: grid;
+    }
+
+    & article > div {
+      padding: 0 var(--space-m) var(--space-m);
+    }
+  }
+
+  .lead {
+    grid-column: 1 / -1;
+
+    @media (width >= 48rem) {
+      & article {
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+        align-items: center;
+        gap: var(--space-xl);
+      }
+    }
+
+    & .title {
+      font-size: clamp(var(--text-h2), 3vw, 2.5rem);
+    }
+
+    & .summary {
+      margin-top: var(--space-m);
+      font-size: var(--text-large);
     }
   }
 

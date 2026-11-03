@@ -6,20 +6,20 @@ import {
 } from 'astro:env/client';
 
 // all three are build-time and empty by default, so forks and previews never phone home
-const beacon = PUBLIC_CF_BEACON_TOKEN && JSON.stringify({ token: PUBLIC_CF_BEACON_TOKEN });
 ---
 
-{beacon && (
-  <script
-    is:inline
-    defer
-    src="https://static.cloudflareinsights.com/beacon.min.js"
-    data-cf-beacon={beacon}
-  />
-)}
+{PUBLIC_CF_BEACON_TOKEN && <script>
+  import { PUBLIC_CF_BEACON_TOKEN as token } from 'astro:env/client';
+  import { loadWhenSeen } from '../scripts/seen';
+
+  loadWhenSeen('https://static.cloudflareinsights.com/beacon.min.js', {
+    cfBeacon: JSON.stringify({ token }),
+  });
+</script>}
 
 {PUBLIC_PLAUSIBLE_SCRIPT && <script>
   import { PUBLIC_PLAUSIBLE_SCRIPT as src } from 'astro:env/client';
+  import { loadWhenSeen } from '../scripts/seen';
 
   declare global {
     interface Window {
@@ -27,9 +27,9 @@ const beacon = PUBLIC_CF_BEACON_TOKEN && JSON.stringify({ token: PUBLIC_CF_BEACO
     }
   }
 
-  const script = Object.assign(document.createElement('script'), { src, async: true });
-  script.onload = () => window.plausible.init({ endpoint: new URL('/api/event', src).href });
-  document.head.append(script);
+  loadWhenSeen(src!).then(() =>
+    window.plausible.init({ endpoint: new URL('/api/event', src).href }),
+  );
 </script>}
 
 {PUBLIC_SENTRY_DSN && <script>

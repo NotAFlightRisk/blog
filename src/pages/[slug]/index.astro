@@ -1,12 +1,24 @@
 ---
-import { Picture } from 'astro:assets';
+import { getImage, Picture } from 'astro:assets';
 import { render } from 'astro:content';
 import '../../styles/prose.css';
 import '../../styles/code.css';
+import PostArt from '../../components/PostArt.astro';
+import PostList from '../../components/PostList.astro';
+import Share from '../../components/Share.astro';
 import Toc from '../../components/Toc.astro';
 import Base from '../../layouts/Base.astro';
 import { formatDate, isoDate, readingTime } from '../../lib/format';
-import { absolute, getPosts, ogUrl, postUrl, rawUrl, tagUrl, type Post } from '../../lib/posts';
+import {
+  absolute,
+  cardOf,
+  getPosts,
+  ogUrl,
+  postUrl,
+  rawUrl,
+  tagUrl,
+  type Post,
+} from '../../lib/posts';
 import { neighbours, related } from '../../lib/rank';
 import { site } from '../../site';
 
@@ -23,8 +35,13 @@ const minutes = readingTime(post.body ?? '');
 const contents = headings.filter(({ depth }) => depth <= 3);
 const { newer, older } = neighbours(post, posts);
 const more = related(post, posts);
+// older and newer each get half the footer once there's room, and their art fills it
+const neighbourSizes = '(min-width: 40rem) 27rem, 100vw';
 const url = absolute(postUrl(post));
 const image = { src: ogUrl(post), alt: `${title}, on the post's share card` };
+// search results show a small copy of the card
+const card = cardOf(post);
+const thumb = card ? (await getImage({ src: card, width: 400, format: 'webp' })).src : image.src;
 
 const schema = [
   {
@@ -36,7 +53,7 @@ const schema = [
     mainEntityOfPage: url,
     datePublished: date.toISOString(),
     dateModified: (updated ?? date).toISOString(),
-    image: absolute(image.src),
+    image: { '@type': 'ImageObject', url: absolute(image.src), width: 1200, height: 630 },
     keywords: tags,
     wordCount: (post.body ?? '').split(/\s+/).filter(Boolean).length,
     inLanguage: site.lang,
@@ -58,49 +75,61 @@ const schema = [
 <Base {title} {description} {image} article={{ published: date, modified: updated, tags }} {schema}>
   <link slot="head" rel="alternate" type="text/markdown" href={rawUrl(post)} />
 
-  <article>
+  <article data-pagefind-meta={`image:${thumb}`}>
     <header>
       <h1>{title}</h1>
       <p>{description}</p>
     </header>
 
     <div class="rail">
-      {contents.length >= 3 && <Toc headings={contents} />}
-      <dl>
-        <div>
-          <dt>Published</dt>
-          <dd>
-            <time datetime={isoDate(date)}>{formatDate(date)}</time>
-          </dd>
-        </div>
-        {updated && (
+      <div class="about">
+        {contents.length >= 3 && <Toc headings={contents} />}
+        <dl>
           <div>
-            <dt>Updated</dt>
+            <dt>Published</dt>
             <dd>
-              <time datetime={isoDate(updated)}>{formatDate(updated)}</time>
+              <time datetime={isoDate(date)}>{formatDate(date)}</time>
             </dd>
           </div>
-        )}
-        <div>
-          <dt>Reading time</dt>
-          <dd>{minutes} min</dd>
-        </div>
-        <div>
-          <dt>Tags</dt>
-          <dd>
-            <ul class="tags">
-              {tags.map((tag) => (
-                <li>
-                  <a href={tagUrl(tag)}>#{tag}</a>
-                </li>
-              ))}
-            </ul>
-          </dd>
-        </div>
-      </dl>
-      <a class="raw" href={rawUrl(post)}>
-        View as Markdown
-      </a>
+          {updated && (
+            <div>
+              <dt>Updated</dt>
+              <dd>
+                <time datetime={isoDate(updated)}>{formatDate(updated)}</time>
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt>Reading time</dt>
+            <dd>{minutes} min</dd>
+          </div>
+          <div>
+            <dt>Tags</dt>
+            <dd>
+              <ul class="tags">
+                {tags.map((tag) => (
+                  <li>
+                    <a href={tagUrl(tag)}>#{tag}</a>
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </div>
+        </dl>
+      </div>
+      <div class="actions">
+        <dl>
+          <div>
+            <dt>Share</dt>
+            <dd>
+              <Share {url} {title} />
+            </dd>
+          </div>
+        </dl>
+        <a class="raw" href={rawUrl(post)}>
+          View as Markdown
+        </a>
+      </div>
     </div>
 
     <div class="prose" data-pagefind-body>
@@ -122,15 +151,21 @@ const schema = [
       {(newer || older) && (
         <nav aria-label="Next and previous posts" class="neighbours">
           {older && (
-            <a href={postUrl(older)} rel="prev">
-              <span>Older</span>
-              {older.data.title}
+            <a href={postUrl(older)} rel="prev" class="panel">
+              <PostArt post={older} sizes={neighbourSizes} />
+              <span>
+                <span class="direction">Older</span>
+                {older.data.title}
+              </span>
             </a>
           )}
           {newer && (
-            <a href={postUrl(newer)} rel="next" class="newer">
-              <span>Newer</span>
-              {newer.data.title}
+            <a href={postUrl(newer)} rel="next" class="panel newer">
+              <PostArt post={newer} sizes={neighbourSizes} />
+              <span>
+                <span class="direction">Newer</span>
+                {newer.data.title}
+              </span>
             </a>
           )}
         </nav>
@@ -138,14 +173,7 @@ const schema = [
       {more.length > 0 && (
         <section aria-labelledby="related">
           <h2 id="related">Related posts</h2>
-          <ul>
-            {more.map((other) => (
-              <li>
-                <a href={postUrl(other)}>{other.data.title}</a>
-                <time datetime={isoDate(other.data.date)}>{formatDate(other.data.date)}</time>
-              </li>
-            ))}
-          </ul>
+          <PostList posts={more} heading={3} panels />
         </section>
       )}
     </footer>
@@ -158,7 +186,7 @@ const schema = [
 <style>
   article {
     display: grid;
-    grid-template-areas: 'header' 'rail' 'prose' 'footer';
+    grid-template-areas: 'header' 'about' 'prose' 'actions' 'footer';
     gap: var(--space-xl) var(--gutter);
 
     @media (width >= 64rem) {
@@ -188,18 +216,36 @@ const schema = [
     }
   }
 
+  /* a sticky column beside the post, or on a phone, split around it so sharing comes at the end */
   .rail {
-    grid-area: rail;
-    display: grid;
-    gap: var(--space-l);
+    display: contents;
     font-size: var(--text-small);
 
     @media (width >= 64rem) {
+      grid-area: rail;
+      display: grid;
+      gap: var(--space-l);
       position: sticky;
       top: calc(var(--bar-height) + var(--space-l));
       max-height: calc(100svh - var(--bar-height) - var(--space-xl));
       overflow-y: auto;
       overscroll-behavior: contain;
+    }
+  }
+
+  .about,
+  .actions {
+    display: grid;
+    gap: var(--space-l);
+  }
+
+  @media (width < 64rem) {
+    .about {
+      grid-area: about;
+    }
+
+    .actions {
+      grid-area: actions;
     }
   }
 
@@ -238,15 +284,16 @@ const schema = [
   .raw {
     text-decoration-color: var(--accent);
 
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
+    @media (hover: hover) {
+      &:hover {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
     }
   }
 
   .raw {
     justify-self: start;
-    color: var(--text-muted);
   }
 
   .prose {
@@ -278,21 +325,29 @@ const schema = [
 
     & a {
       display: grid;
-      gap: var(--space-2xs);
-      padding: var(--space-m);
-      border-radius: var(--radius);
-      background: var(--surface);
-      box-shadow: var(--panel-shadow);
+      align-content: start;
       font-weight: var(--weight-title);
       letter-spacing: var(--tracking-title);
       text-decoration: none;
 
-      &:hover {
-        background: var(--surface-hover);
+      @media (hover: hover) {
+        &:is(:hover, :focus-visible) {
+          background: var(--surface-hover);
+
+          & :global(.art img) {
+            scale: var(--hover-zoom);
+          }
+        }
       }
     }
 
-    & span {
+    & a > span {
+      display: grid;
+      gap: var(--space-2xs);
+      padding: var(--space-m);
+    }
+
+    & .direction {
       color: var(--text-muted);
       font-size: var(--text-small);
       font-weight: normal;
@@ -305,37 +360,8 @@ const schema = [
     }
   }
 
-  section {
-    & h2 {
-      margin: 0 0 var(--space-m);
-      font-size: var(--text-large);
-    }
-
-    & ul {
-      display: grid;
-      gap: var(--space-s);
-    }
-
-    & li {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 0 var(--space-m);
-    }
-
-    & a {
-      text-decoration-color: var(--accent);
-
-      &:hover {
-        background: var(--accent);
-        color: var(--on-accent);
-      }
-    }
-
-    & time {
-      color: var(--text-muted);
-      font-size: var(--text-small);
-      font-variant-numeric: tabular-nums;
-    }
+  section h2 {
+    margin: 0 0 var(--space-l);
+    font-size: var(--text-large);
   }
 </style>

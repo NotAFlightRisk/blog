@@ -2,10 +2,12 @@
 import Intro from '../components/Intro.astro';
 import PostList from '../components/PostList.astro';
 import Base from '../layouts/Base.astro';
+import { formatMonth, isoDate } from '../lib/format';
 import { getPosts } from '../lib/posts';
 
 const posts = await getPosts();
-const years = Map.groupBy(posts, (post) => post.data.date.getUTCFullYear());
+// newest first, so the months are too, each keyed by its yyyy-mm
+const months = Map.groupBy(posts, ({ data }) => isoDate(data.date).slice(0, 7));
 const intro =
   posts.length === 1
     ? 'Just the one post so far.'
@@ -14,10 +16,12 @@ const intro =
 
 <Base title="Archive" description={`Every post on the blog, ${posts.length} so far, newest first.`}>
   <Intro title="Archive">{intro}</Intro>
-  {[...years].map(([year, list]) => (
-    <section aria-labelledby={`y${year}`}>
-      <h2 id={`y${year}`}>{year}</h2>
-      <PostList posts={list} />
+  {[...months].map(([month, list], index) => (
+    <section aria-labelledby={month}>
+      <h2 id={month}>
+        <time datetime={month}>{formatMonth(list[0].data.date)}</time>
+      </h2>
+      <PostList posts={list} heading={3} priority={index === 0} />
     </section>
   ))}
 </Base>

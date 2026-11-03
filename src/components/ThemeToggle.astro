@@ -23,14 +23,20 @@
     }
   }
 
+  function pick(theme?: string) {
+    if (theme) root.dataset.theme = theme;
+    else delete root.dataset.theme;
+    remember(theme);
+    sync();
+  }
+
   button.addEventListener('click', () => {
     const next = showing() === 'dark' ? 'light' : 'dark';
     // picking what the system would show anyway goes back to following the system
     const pinned = next === (system.matches ? 'dark' : 'light') ? undefined : next;
-    if (pinned) root.dataset.theme = pinned;
-    else delete root.dataset.theme;
-    remember(pinned);
-    sync();
+    // a fade between the two where the browser can do one
+    if (document.startViewTransition) document.startViewTransition(() => pick(pinned));
+    else pick(pinned);
   });
   system.addEventListener('change', sync);
   sync();
@@ -49,10 +55,21 @@
     }
   }
 
-  /* the dark half swaps sides when it's dark, so it always shows where you'd end up */
-  [aria-pressed='true'] path {
-    rotate: 180deg;
+  /* round its middle, whichever way it's turning */
+  path {
     transform-origin: center;
+  }
+
+  /* the dark half swaps sides when it's dark, so it always shows where you'd end up */
+  :global(:root[data-theme='dark']) path {
+    rotate: 180deg;
+  }
+
+  /* or the system's is and light's not picked, both set before the script runs, so no spin */
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) path {
+      rotate: 180deg;
+    }
   }
 
   @media (prefers-reduced-motion: no-preference) {

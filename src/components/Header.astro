@@ -1,12 +1,14 @@
 ---
 import Penguin from './Penguin.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import { peekScript } from '../lib/peek';
 import { nav, site } from '../site';
 
 const path = Astro.url.pathname;
 const links = [...nav, { label: 'Search', href: '/search/' }];
 ---
 
+<script is:inline set:html={peekScript} />
 <header>
   <p class="brand">
     <a href={site.home.url}>{site.home.name}</a>
@@ -60,6 +62,9 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
     background: var(--accent);
     color: var(--on-accent);
     box-shadow: var(--bar-shadow);
+    /* he peeks up from inside the bar, not from the page under it */
+    overflow: clip;
+    view-transition-name: bar;
 
     /* he's already yellow up here, so the highlight swaps round */
     & ::selection {
@@ -70,6 +75,20 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
     & > :global(svg) {
       align-self: end;
     }
+  }
+
+  /* he's already peeked up on an earlier page, and this is the same bar */
+  :global(:root[data-peeked]) header > :global(svg) {
+    animation: none;
+  }
+
+  /* so it skips the fade, and the new one's just there */
+  :global(::view-transition-old(bar)) {
+    display: none;
+  }
+
+  :global(::view-transition-new(bar)) {
+    animation: none;
   }
 
   .brand {
@@ -86,8 +105,10 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
     & a {
       text-decoration: none;
 
-      &:hover {
-        text-decoration: underline;
+      @media (hover: hover) {
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
 

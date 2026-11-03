@@ -75,9 +75,16 @@ const networks = [
         stroke-linejoin="round"
         aria-hidden="true"
       >
-        <path class="link" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-        <path class="link" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        <g class="link">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </g>
         <path class="tick" d="M20 6 9 17l-5-5"></path>
+        <g class="send">
+          <path d="M12 2v13"></path>
+          <path d="m16 6-4-4-4 4"></path>
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+        </g>
       </svg>
     </button>
     <span role="status" class="visually-hidden"></span>
@@ -85,13 +92,16 @@ const networks = [
 </ul>
 
 <script>
-  // a tick for a couple of seconds once it's copied, and the same news for screen readers
+  // on a phone it opens the phone's own share sheet, and anywhere else it copies the link, with a
+  // tick for a couple of seconds and the same news for screen readers
   const button = document.querySelector<HTMLButtonElement>('.share button')!;
   const status = button.nextElementSibling!;
+  const url = button.dataset.url!;
+  const native = 'share' in navigator && matchMedia('(pointer: coarse)').matches;
 
-  button.addEventListener('click', async () => {
+  async function copy() {
     try {
-      await navigator.clipboard.writeText(button.dataset.url!);
+      await navigator.clipboard.writeText(url);
       button.dataset.copied = '';
       status.textContent = 'Link copied';
     } catch {
@@ -101,8 +111,17 @@ const networks = [
       delete button.dataset.copied;
       status.textContent = '';
     }, 2000);
-  });
-  button.hidden = !navigator.clipboard;
+  }
+
+  // closing the sheet without picking anything rejects, which needs no news
+  const share = () => navigator.share({ url }).catch(() => {});
+
+  button.addEventListener('click', native ? share : copy);
+  if (native) {
+    button.dataset.native = '';
+    button.title = button.ariaLabel = 'Share';
+  }
+  button.hidden = !native && !navigator.clipboard;
 </script>
 
 <style>
@@ -138,8 +157,10 @@ const networks = [
     height: var(--icon-small);
   }
 
-  [data-copied] .link,
-  button:not([data-copied]) .tick {
+  /* the link, swapped for a tick once it's copied, or on a phone, for the share arrow */
+  :is([data-copied], [data-native]) .link,
+  button:not([data-copied]) .tick,
+  button:not([data-native]) .send {
     display: none;
   }
 </style>

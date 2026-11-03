@@ -9,7 +9,7 @@ const { headings } = Astro.props;
 // a fold on a phone and an open list in the rail, and only one of them is ever shown
 ---
 
-<nav aria-label="Contents">
+<nav class="toc" aria-label="Contents">
   <details>
     <summary>
       Contents
@@ -45,6 +45,27 @@ const { headings } = Astro.props;
   </div>
 </nav>
 
+<script>
+  // the section being read is the last whose heading's scrolled up to where a click here lands it
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+  const hrefs = [...new Set(links.map((link) => link.getAttribute('href')!))];
+  const headings = hrefs.map((href) => document.getElementById(href.slice(1))!);
+  const { scrollPaddingTop } = getComputedStyle(document.documentElement);
+  const { scrollMarginTop } = getComputedStyle(headings[0]);
+  const line = parseFloat(scrollPaddingTop) + parseFloat(scrollMarginTop) + 1;
+
+  function mark() {
+    const current =
+      hrefs[headings.findLastIndex((heading) => heading.getBoundingClientRect().top < line)];
+    for (const link of links) {
+      link.ariaCurrent = link.getAttribute('href') === current ? 'location' : null;
+    }
+  }
+
+  addEventListener('scroll', mark, { passive: true });
+  mark();
+</script>
+
 <style>
   details {
     border-radius: var(--radius);
@@ -52,7 +73,7 @@ const { headings } = Astro.props;
     box-shadow: var(--panel-shadow);
 
     & ol {
-      padding: 0 var(--space-m) var(--space-s);
+      margin: 0 var(--space-m) var(--space-s);
     }
   }
 
@@ -90,32 +111,44 @@ const { headings } = Astro.props;
     display: none;
   }
 
+  /* a track down the side, with the section being read marked on it */
   ol {
     display: grid;
     gap: var(--space-2xs);
     margin: 0;
     padding: 0;
+    border-left: var(--separator);
     list-style: none;
-  }
-
-  .sub {
-    padding-left: var(--space-m);
   }
 
   a {
     display: block;
-    padding-block: var(--space-3xs);
+    margin-left: -1px;
+    padding: var(--space-3xs) 0 var(--space-3xs) var(--space-s);
+    border-left: var(--underline) solid transparent;
     text-decoration: none;
 
     &:hover {
       text-decoration: underline;
       text-decoration-color: var(--accent);
     }
+
+    &[aria-current] {
+      border-color: var(--accent);
+    }
+  }
+
+  .sub a {
+    padding-left: var(--space-l);
   }
 
   @media (prefers-reduced-motion: no-preference) {
     svg {
       transition: rotate var(--quick) var(--ease);
+    }
+
+    a {
+      transition: border-color var(--quick) var(--ease);
     }
   }
 

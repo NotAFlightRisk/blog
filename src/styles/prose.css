@@ -86,6 +86,14 @@
     border-top: var(--separator);
   }
 
+  /* footnotes come last, a size down and under a rule */
+  & .footnotes {
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-l);
+    border-top: var(--separator);
+    font-size: var(--text-small);
+  }
+
   & :not(pre) > code {
     padding: 0.1em 0.35em;
     border-radius: var(--radius);

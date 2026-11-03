@@ -61,6 +61,8 @@ const { headings } = Astro.props;
     align-items: center;
     justify-content: space-between;
     padding: var(--space-xs) var(--space-m);
+    font-weight: var(--weight-title);
+    letter-spacing: var(--tracking-title);
     list-style: none;
     cursor: pointer;
 
@@ -78,11 +80,10 @@ const { headings } = Astro.props;
     rotate: 90deg;
   }
 
-  summary,
+  /* a label like the rest of the rail's, quiet so the headings under it stand out */
   p {
     margin: 0;
-    font-weight: var(--weight-title);
-    letter-spacing: var(--tracking-title);
+    color: var(--text-muted);
   }
 
   div {
@@ -104,11 +105,9 @@ const { headings } = Astro.props;
   a {
     display: block;
     padding-block: var(--space-3xs);
-    color: var(--text-muted);
     text-decoration: none;
 
     &:hover {
-      color: var(--text);
       text-decoration: underline;
       text-decoration-color: var(--accent);
     }
@@ -127,7 +126,7 @@ const { headings } = Astro.props;
 
     div {
       display: grid;
-      gap: var(--space-xs);
+      gap: var(--space-2xs);
     }
   }
 </style>

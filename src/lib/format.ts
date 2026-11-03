@@ -2,6 +2,14 @@ const dates = new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'U
 
 export const formatDate = (date: Date) => dates.format(date);
 
+const months = new Intl.DateTimeFormat('en-GB', {
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+export const formatMonth = (date: Date) => months.format(date);
+
 // the machine-readable half of a <time>, a plain yyyy-mm-dd
 export const isoDate = (date: Date) => date.toISOString().slice(0, 10);
 

@@ -1,0 +1,81 @@
+---
+title: Wikipedia dropped this UUID in 2014. Now it's everywhere
+description: Wikipedia's old example UUID is in 300,000 GitHub files, nearly all added since 2025. Which AI models hand it out, and the app that signed logins with it.
+date: 2026-11-03
+tags: [ai, opensource, security, uuid]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import months from './months.json';
+
+```
+550e8400-e29b-41d4-a716-446655440000
+```
+
+Recognise it? GitHub's code search reckons it's in about 303,000 files. That's twice as many as `123e4567-e89b-12d3-a456-426614174000`, the other example UUID you've probably seen, and more than any other I tried apart from the all-zeros one. A fresh random one turns up in 0. One app with 2,000 stars even used it as the key that signs its logins.
+
+It was Wikipedia's example. The [UUID article](https://en.wikipedia.org/wiki/Universally_unique_identifier) used it from 2006 until 2014, when someone swapped it for the `123e4567` one, which MDN uses too. It isn't only Wikipedia's (an [OVSDB RFC](https://www.rfc-editor.org/rfc/rfc7047) and Rust's [uuid crate](https://docs.rs/uuid) use it as well), but it's the sort of thing you'd expect to be quietly fading out by now. Wikipedia isn't helping, mind. Someone put it back on the page in 2023 for the URN example, and `123e4567` came off in 2024.
+
+## Nearly all of it is new
+
+I picked 150 repos at random that have it and went back through each file's history to the commit that added it. 147 of them added it in 2025 or 2026, and 113 this year alone.
+
+Issues and PRs show when it happened:
+
+<Chart title="GitHub issues and PRs mentioning each UUID, by month" data={months} type="line">
+  These are GitHub's issue search counts for each full string, by the month the issue or PR was opened, from January 2024 to October 2026.
+</Chart>
+
+Through 2024 it trailed `123e4567`. Then it crossed over in mid-2025, peaked in March this year at 470 a month, and has nearly halved since. Something started handing it out again.
+
+## So I asked them
+
+I gave Claude and Codex the same three requests, three times each: an example UUID, a JSON order object with a UUID id, and a Python test fixture with a hardcoded UUID. That's nine answers per model, on 3 November, with Codex running gpt-5.6-sol:
+
+| Model             | What it gave me                                      |
+| ----------------- | ---------------------------------------------------- |
+| Claude Sonnet 4.5 | `550e8400` 8 times, something else once              |
+| Claude Haiku 4.5  | `550e8400` all 9 times                               |
+| Codex             | `550e8400` for the examples, `123e4567` for tests    |
+| Claude Opus 5.5   | a made-up `3f...` one all 9 times                    |
+| Claude Sonnet 5.5 | a made-up `3f...` one 6 times, `f47ac10b...` 3 times |
+| Claude Haiku 5.5  | a made-up `3f...` one 5 times, `123e4567` 3 times    |
+
+The 4.5 models hand out Wikipedia's old one nearly every time. But the curve crossed over before either of them came out, so I'd guess the Claude 4 models had the habit too. Sonnet 4 has been retired, so I can't ask it. Of the 150 commits I dated, 22 had Claude Code's co-author line on them, against 12 of 150 for `123e4567`. That's a lean rather than proof, since Claude Code adds that line by default, so its work is easy to spot and other tools' might not be.
+
+Why that one and not `123e4567`, I can't tell you. It wasn't the more common of the two in code before 2025, so it's not just that there was more of it to learn from. Its return to Wikipedia in 2023 might have helped, but that's a guess.
+
+## Claude's moved on
+
+The newer Claude models never gave me `550e8400` at all. They mostly make one up, and they make up much the same one. 20 of their 27 answers started with `3f`, and 12 with exactly `3f2b8c1e` or `3f8a2c1e`:
+
+```
+3f2b8c1e-9a4d-4e7b-8c21-5d6f0a9b7e43
+3f2b8c1e-9a4d-4e7b-8e2a-6c5d0b1a9f47
+3f2b8c1e-7a4d-4e9b-9c15-2d6f0a8b4e71
+3f8a2c1e-7b4d-4e9a-a6c2-91d5e0b7f348
+```
+
+The start sticks, more or less, and the end wanders off. The first 18 characters of the top one, `3f2b8c1e-9a4d-4e7b`, are already in about 370 files on GitHub, across at least 124 repos. I dated 50 of those, and every one added it in 2026, 21 of them with Claude Code's co-author line.
+
+So if you find a `550e8400` in a repo you've inherited, it was probably written in the last couple of years, quite possibly by a 4.5 model or Codex, and a `3f2b8c1e-9a4d` points at a newer Claude. More of a tell than I expected a UUID to be.
+
+The other one I'd learn is `3fa85f64-5717-4562-b3fc-2c963f66afa6`, in about 40,000 files. It comes from [Swagger UI's example generator](https://github.com/swagger-api/swagger-ui/blob/main/src/core/plugins/json-schema-5-samples/fn/index.js), which fills in example requests in API docs, so if it turns up in your logs, it's usually someone sending the example from your docs as it was.
+
+## When the example is the secret
+
+[Aix-DB](https://github.com/apconw/Aix-DB), an app for asking your database questions in plain English, used this for its login tokens:
+
+```python title="common/token_decorator.py"
+os.getenv("JWT_SECRET_KEY", "550e8400-e29b-41d4-a716-446655440000")
+```
+
+From release 1.2.0 its example config suggested this as the key, and from 1.2.2 the code fell back to it whenever `JWT_SECRET_KEY` wasn't set, which its Docker Compose file didn't do. So a default install signed its tokens with a key that's in 300,000 public files, and anyone could have made their own token with the admin role in it.
+
+An [automated security PR](https://github.com/apconw/Aix-DB/pull/242) took the fallback out on 10 October, and the Compose file now refuses to start without a key. There hasn't been a release since, though, so 1.2.4 is still the latest. I found a couple more, in tiny repos and still live, so no names.
+
+Opus 5.5's own answer, when I asked it for an example UUID, came with a warning:
+
+> I made it up by hand rather than generating it, so don't use it anywhere uniqueness matters - for that, run `uuidgen`.
+
+Fair enough, coming from the family that's spreading `3f2b8c1e` round GitHub.

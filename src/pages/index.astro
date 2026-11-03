@@ -3,16 +3,11 @@ import Intro from '../components/Intro.astro';
 import PostList from '../components/PostList.astro';
 import Base from '../layouts/Base.astro';
 import { absolute, getPosts } from '../lib/posts';
-import { featured, latestDays, site } from '../site';
+import { frontPage } from '../lib/rank';
+import { featured, latest, site } from '../site';
 
 const posts = await getPosts();
-const cutoff = (posts[0]?.data.date.valueOf() ?? 0) - latestDays * 24 * 60 * 60 * 1000;
-const recent = posts.filter(({ data }) => data.date.valueOf() > cutoff);
-const picks = posts
-  .slice(recent.length)
-  .filter(({ data }) => data.featured)
-  .slice(0, featured);
-const shown = [...recent, ...picks];
+const shown = frontPage(posts, latest, featured);
 const url = absolute('/');
 const schema = [
   { '@type': 'WebSite', name: site.name, url, inLanguage: site.lang },

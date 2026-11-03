@@ -17,9 +17,9 @@ export const site = {
   color: '#febc20',
 };
 
-// the front page gets a week of the newest posts plus the featured ones, the rest live in the archive
-export const latestDays = 7;
-export const featured = 10;
+// the front page shows the newest posts, then featured ones, and the archive has the rest
+export const latest = 7;
+export const featured = 6;
 
 export const nav = [
   { label: 'Archive', href: '/archive/' },

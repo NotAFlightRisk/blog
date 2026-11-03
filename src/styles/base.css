@@ -43,6 +43,12 @@ h4 {
   text-wrap: balance;
 }
 
+/* no paragraph or list item left with one word on its last line */
+p,
+li {
+  text-wrap: pretty;
+}
+
 a {
   color: inherit;
   text-decoration-thickness: var(--underline);

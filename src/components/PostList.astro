@@ -43,10 +43,14 @@ const sizes = {
             <p class="meta">
               <time datetime={isoDate(post.data.date)}>{formatDate(post.data.date)}</time>
               <span>{readingTime(post.body ?? '')} min read</span>
-              {post.data.tags.map((tag) => (
-                <a href={tagUrl(tag)}>#{tag}</a>
-              ))}
             </p>
+            <ul class="meta">
+              {post.data.tags.map((tag) => (
+                <li>
+                  <a href={tagUrl(tag)}>#{tag}</a>
+                </li>
+              ))}
+            </ul>
           </div>
         </article>
       </li>
@@ -121,10 +125,10 @@ const sizes = {
     margin: var(--space-xs) 0 0;
   }
 
+  /* the date and reading time, then the tags on a line of their own */
   .meta {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
     gap: 0 var(--space-s);
     color: var(--text-muted);
     font-size: var(--text-small);

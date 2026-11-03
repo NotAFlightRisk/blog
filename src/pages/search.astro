@@ -156,9 +156,11 @@ import Base from '../layouts/Base.astro';
     letter-spacing: var(--tracking-title);
     text-decoration-color: var(--accent);
 
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
+    @media (hover: hover) {
+      &:hover {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
     }
 
     /* the whole result's the link */

@@ -79,8 +79,10 @@ const marks = {
       font-weight: var(--weight-strong);
     }
 
-    & tbody tr:hover {
-      background: var(--surface);
+    @media (hover: hover) {
+      & tbody tr:hover {
+        background: var(--surface);
+      }
     }
 
     & td {

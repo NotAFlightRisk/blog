@@ -137,9 +137,11 @@ const { headings } = Astro.props;
     border-left: var(--underline) solid transparent;
     text-decoration: none;
 
-    &:hover {
-      text-decoration: underline;
-      text-decoration-color: var(--accent);
+    @media (hover: hover) {
+      &:hover {
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+      }
     }
 
     &[aria-current] {

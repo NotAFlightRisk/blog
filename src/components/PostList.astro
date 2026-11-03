@@ -106,18 +106,20 @@ const sizes = {
     font-size: var(--text-large);
   }
 
-  article:has(.title a:is(:hover, :focus-visible)) {
-    & .title a {
-      text-decoration: underline;
-      text-decoration-color: var(--accent);
-    }
+  @media (hover: hover) {
+    article:has(.title a:is(:hover, :focus-visible)) {
+      & .title a {
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+      }
 
-    & :global(.art img) {
-      scale: var(--hover-zoom);
-    }
+      & :global(.art img) {
+        scale: var(--hover-zoom);
+      }
 
-    &.panel {
-      background: var(--surface-hover);
+      &.panel {
+        background: var(--surface-hover);
+      }
     }
   }
 
@@ -138,10 +140,12 @@ const sizes = {
       padding-block: var(--space-2xs);
       text-decoration: none;
 
-      &:hover {
-        color: var(--text);
-        text-decoration: underline;
-        text-decoration-color: var(--accent);
+      @media (hover: hover) {
+        &:hover {
+          color: var(--text);
+          text-decoration: underline;
+          text-decoration-color: var(--accent);
+        }
       }
     }
   }

@@ -284,9 +284,11 @@ const schema = [
   .raw {
     text-decoration-color: var(--accent);
 
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
+    @media (hover: hover) {
+      &:hover {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
     }
   }
 
@@ -328,11 +330,13 @@ const schema = [
       letter-spacing: var(--tracking-title);
       text-decoration: none;
 
-      &:is(:hover, :focus-visible) {
-        background: var(--surface-hover);
+      @media (hover: hover) {
+        &:is(:hover, :focus-visible) {
+          background: var(--surface-hover);
 
-        & :global(.art img) {
-          scale: var(--hover-zoom);
+          & :global(.art img) {
+            scale: var(--hover-zoom);
+          }
         }
       }
     }

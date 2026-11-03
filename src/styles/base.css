@@ -102,8 +102,11 @@ pre {
   text-decoration: none;
   cursor: pointer;
 
-  &:hover {
-    box-shadow: var(--button-shadow);
+  /* hover effects only where something can hover, or a tap would leave them stuck on */
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: var(--button-shadow);
+    }
   }
 
   &:active {
@@ -119,9 +122,11 @@ pre {
     background: var(--surface);
     box-shadow: var(--panel-shadow);
 
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
+    @media (hover: hover) {
+      &:hover {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
     }
   }
 }

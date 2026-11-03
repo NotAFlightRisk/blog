@@ -49,9 +49,11 @@
     color: var(--link);
     text-decoration-color: var(--accent);
 
-    &:hover {
-      background: var(--accent);
-      color: var(--on-accent);
+    @media (hover: hover) {
+      &:hover {
+        background: var(--accent);
+        color: var(--on-accent);
+      }
     }
   }
 

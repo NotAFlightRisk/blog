@@ -65,13 +65,24 @@ const { headings } = Astro.props;
 </script>
 
 <style>
+  /* slides open to the list's height, with room round it so the clip never cuts a focus ring */
   details {
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: var(--panel-shadow);
+    interpolate-size: allow-keywords;
+
+    &::details-content {
+      block-size: 0;
+      overflow: hidden;
+    }
+
+    &[open]::details-content {
+      block-size: auto;
+    }
 
     & ol {
-      margin: 0 var(--space-m) var(--space-s);
+      margin: var(--space-xs) var(--space-m) var(--space-s);
     }
   }
 
@@ -147,6 +158,12 @@ const { headings } = Astro.props;
 
     a {
       transition: border-color var(--quick) var(--ease);
+    }
+
+    details::details-content {
+      transition:
+        block-size var(--settle) var(--ease),
+        content-visibility var(--settle) allow-discrete;
     }
   }
 

@@ -71,6 +71,10 @@
     color: var(--text);
     opacity: 0;
 
+    @media (prefers-reduced-motion: no-preference) {
+      transition: opacity var(--quick) var(--ease);
+    }
+
     &[data-copied] {
       background: var(--tip);
       color: var(--on-accent);

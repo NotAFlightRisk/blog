@@ -23,14 +23,20 @@
     }
   }
 
+  function pick(theme?: string) {
+    if (theme) root.dataset.theme = theme;
+    else delete root.dataset.theme;
+    remember(theme);
+    sync();
+  }
+
   button.addEventListener('click', () => {
     const next = showing() === 'dark' ? 'light' : 'dark';
     // picking what the system would show anyway goes back to following the system
     const pinned = next === (system.matches ? 'dark' : 'light') ? undefined : next;
-    if (pinned) root.dataset.theme = pinned;
-    else delete root.dataset.theme;
-    remember(pinned);
-    sync();
+    // a fade between the two where the browser can do one
+    if (document.startViewTransition) document.startViewTransition(() => pick(pinned));
+    else pick(pinned);
   });
   system.addEventListener('change', sync);
   sync();

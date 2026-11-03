@@ -148,6 +148,11 @@ pre {
   white-space: nowrap;
 }
 
+/* pages fade into each other, with the bar holding still on top */
+@view-transition {
+  navigation: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -156,5 +161,12 @@ pre {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* page and theme fades run on a layer of their own, out of reach of the rule above */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

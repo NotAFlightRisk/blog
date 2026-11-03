@@ -60,6 +60,7 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
     background: var(--accent);
     color: var(--on-accent);
     box-shadow: var(--bar-shadow);
+    view-transition-name: bar;
 
     /* he's already yellow up here, so the highlight swaps round */
     & ::selection {
@@ -70,6 +71,15 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
     & > :global(svg) {
       align-self: end;
     }
+  }
+
+  /* it's just there while the page under it fades, so he can peek up like on any other page */
+  :global(::view-transition-old(bar)) {
+    display: none;
+  }
+
+  :global(::view-transition-new(bar)) {
+    animation: none;
   }
 
   .brand {

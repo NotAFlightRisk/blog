@@ -1,0 +1,145 @@
+---
+import Bluesky from '../icons/bluesky.svg';
+import HackerNews from '../icons/hacker-news.svg';
+import LinkedIn from '../icons/linkedin.svg';
+import Mastodon from '../icons/mastodon.svg';
+import Reddit from '../icons/reddit.svg';
+
+interface Props {
+  url: string;
+  title: string;
+}
+
+const { url, title } = Astro.props;
+const query = (params: Record<string, string>) => new URLSearchParams(params);
+// just the link, plus the title where the site won't take one without it
+const networks = [
+  {
+    name: 'Bluesky',
+    Icon: Bluesky,
+    href: `https://bsky.app/intent/compose?${query({ text: url })}`,
+  },
+  // Mastodon has no one home, so Share₂Fedi asks which server first
+  {
+    name: 'Mastodon',
+    Icon: Mastodon,
+    href: `https://s2f.kytta.dev/?${query({ text: url })}`,
+  },
+  {
+    name: 'LinkedIn',
+    Icon: LinkedIn,
+    href: `https://www.linkedin.com/sharing/share-offsite/?${query({ url })}`,
+  },
+  {
+    name: 'Hacker News',
+    Icon: HackerNews,
+    href: `https://news.ycombinator.com/submitlink?${query({ u: url, t: title })}`,
+  },
+  {
+    name: 'Reddit',
+    Icon: Reddit,
+    href: `https://www.reddit.com/submit?${query({ url, title })}`,
+  },
+];
+---
+
+<ul class="share">
+  {networks.map(({ name, Icon, href }) => (
+    <li>
+      <a
+        class="button raised"
+        {href}
+        target="_blank"
+        aria-label={`Share on ${name}`}
+        title={`Share on ${name}`}
+      >
+        <Icon aria-hidden="true" />
+      </a>
+    </li>
+  ))}
+  <li>
+    <button
+      class="button raised"
+      type="button"
+      data-url={url}
+      aria-label="Copy link"
+      title="Copy link"
+      hidden
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path class="link" d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+        <path class="link" d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        <path class="tick" d="M20 6 9 17l-5-5"></path>
+      </svg>
+    </button>
+    <span role="status" class="visually-hidden"></span>
+  </li>
+</ul>
+
+<script>
+  // a tick for a couple of seconds once it's copied, and the same news for screen readers
+  const button = document.querySelector<HTMLButtonElement>('.share button')!;
+  const status = button.nextElementSibling!;
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(button.dataset.url!);
+      button.dataset.copied = '';
+      status.textContent = 'Link copied';
+    } catch {
+      status.textContent = "Couldn't copy the link";
+    }
+    setTimeout(() => {
+      delete button.dataset.copied;
+      status.textContent = '';
+    }, 2000);
+  });
+  button.hidden = !navigator.clipboard;
+</script>
+
+<style>
+  /* the site's raised buttons, squared up and shrunk to share the rail between them */
+  ul {
+    display: grid;
+    grid-auto-columns: minmax(0, var(--target));
+    grid-auto-flow: column;
+    gap: var(--space-2xs);
+  }
+
+  .button {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 1;
+    padding: 0;
+
+    /* inside the square, since the rail would clip it at either end */
+    &:focus-visible {
+      outline-offset: calc(var(--outline-offset) * -1);
+    }
+
+    /* keeps its spot until the script's ready */
+    &[hidden] {
+      visibility: hidden;
+    }
+  }
+
+  svg {
+    width: var(--icon-small);
+    height: var(--icon-small);
+  }
+
+  [data-copied] .link,
+  button:not([data-copied]) .tick {
+    display: none;
+  }
+</style>

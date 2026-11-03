@@ -5,6 +5,7 @@ import '../../styles/prose.css';
 import '../../styles/code.css';
 import PostArt from '../../components/PostArt.astro';
 import PostList from '../../components/PostList.astro';
+import Share from '../../components/Share.astro';
 import Toc from '../../components/Toc.astro';
 import Base from '../../layouts/Base.astro';
 import { formatDate, isoDate, readingTime } from '../../lib/format';
@@ -81,42 +82,54 @@ const schema = [
     </header>
 
     <div class="rail">
-      {contents.length >= 3 && <Toc headings={contents} />}
-      <dl>
-        <div>
-          <dt>Published</dt>
-          <dd>
-            <time datetime={isoDate(date)}>{formatDate(date)}</time>
-          </dd>
-        </div>
-        {updated && (
+      <div class="about">
+        {contents.length >= 3 && <Toc headings={contents} />}
+        <dl>
           <div>
-            <dt>Updated</dt>
+            <dt>Published</dt>
             <dd>
-              <time datetime={isoDate(updated)}>{formatDate(updated)}</time>
+              <time datetime={isoDate(date)}>{formatDate(date)}</time>
             </dd>
           </div>
-        )}
-        <div>
-          <dt>Reading time</dt>
-          <dd>{minutes} min</dd>
-        </div>
-        <div>
-          <dt>Tags</dt>
-          <dd>
-            <ul class="tags">
-              {tags.map((tag) => (
-                <li>
-                  <a href={tagUrl(tag)}>#{tag}</a>
-                </li>
-              ))}
-            </ul>
-          </dd>
-        </div>
-      </dl>
-      <a class="raw" href={rawUrl(post)}>
-        View as Markdown
-      </a>
+          {updated && (
+            <div>
+              <dt>Updated</dt>
+              <dd>
+                <time datetime={isoDate(updated)}>{formatDate(updated)}</time>
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt>Reading time</dt>
+            <dd>{minutes} min</dd>
+          </div>
+          <div>
+            <dt>Tags</dt>
+            <dd>
+              <ul class="tags">
+                {tags.map((tag) => (
+                  <li>
+                    <a href={tagUrl(tag)}>#{tag}</a>
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </div>
+        </dl>
+      </div>
+      <div class="actions">
+        <dl>
+          <div>
+            <dt>Share</dt>
+            <dd>
+              <Share {url} {title} />
+            </dd>
+          </div>
+        </dl>
+        <a class="raw" href={rawUrl(post)}>
+          View as Markdown
+        </a>
+      </div>
     </div>
 
     <div class="prose" data-pagefind-body>
@@ -173,7 +186,7 @@ const schema = [
 <style>
   article {
     display: grid;
-    grid-template-areas: 'header' 'rail' 'prose' 'footer';
+    grid-template-areas: 'header' 'about' 'prose' 'actions' 'footer';
     gap: var(--space-xl) var(--gutter);
 
     @media (width >= 64rem) {
@@ -203,18 +216,36 @@ const schema = [
     }
   }
 
+  /* a sticky column beside the post, or on a phone, split around it so sharing comes at the end */
   .rail {
-    grid-area: rail;
-    display: grid;
-    gap: var(--space-l);
+    display: contents;
     font-size: var(--text-small);
 
     @media (width >= 64rem) {
+      grid-area: rail;
+      display: grid;
+      gap: var(--space-l);
       position: sticky;
       top: calc(var(--bar-height) + var(--space-l));
       max-height: calc(100svh - var(--bar-height) - var(--space-xl));
       overflow-y: auto;
       overscroll-behavior: contain;
+    }
+  }
+
+  .about,
+  .actions {
+    display: grid;
+    gap: var(--space-l);
+  }
+
+  @media (width < 64rem) {
+    .about {
+      grid-area: about;
+    }
+
+    .actions {
+      grid-area: actions;
     }
   }
 

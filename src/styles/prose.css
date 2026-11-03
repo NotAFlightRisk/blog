@@ -17,7 +17,6 @@
 
   & :is(h2, h3, h4) {
     margin: var(--space-2xl) 0 var(--space-s);
-    scroll-margin-top: calc(var(--bar-height) + var(--space-l));
 
     /* the whole heading links to itself, and a hash turns up when you go looking */
     & a {

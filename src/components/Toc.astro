@@ -50,9 +50,7 @@ const { headings } = Astro.props;
   const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
   const hrefs = [...new Set(links.map((link) => link.getAttribute('href')!))];
   const headings = hrefs.map((href) => document.getElementById(href.slice(1))!);
-  const { scrollPaddingTop } = getComputedStyle(document.documentElement);
-  const { scrollMarginTop } = getComputedStyle(headings[0]);
-  const line = parseFloat(scrollPaddingTop) + parseFloat(scrollMarginTop) + 1;
+  const line = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) + 1;
 
   function mark() {
     const current =

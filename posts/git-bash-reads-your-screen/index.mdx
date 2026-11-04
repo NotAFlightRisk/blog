@@ -1,94 +1,81 @@
 ---
-title: Git Bash still answers the escape code that reads your screen
-description: An old DEC escape code lets a server read your terminal one cell at a time. Git Bash's window, the stable WezTerm and Debian's xterm still answer it.
+title: Can the server you SSH into read your screen?
+description: If you SSH from Git Bash, WezTerm or Debian's xterm, the server can read what's on your screen, even a file you'd already closed. Here's how to check yours.
 date: 2026-11-04
 tags: [security, ssh, windows, privacy]
 ---
 
 import Figure from '../../src/components/mdx/Figure.astro';
 import Matrix from '../../src/components/mdx/Matrix.astro';
-import Quote from '../../src/components/mdx/Quote.astro';
+import Stats from '../../src/components/mdx/Stats.astro';
+import Timeline from '../../src/components/mdx/Timeline.astro';
 import shot from './mintty.png';
 import terminals from './terminals.json';
 
-There's an escape code from DEC's VT420 that lets a program read your terminal's screen, one character at a time. Most terminals stopped answering it years ago. Git Bash's window never has, and neither have WezTerm's stable release or the xterm in Debian and Ubuntu 24.04.
+If you're using Git Bash, WezTerm or the xterm that comes with Debian or Ubuntu 24.04, then yes, it can. Any server you SSH into can read what was on your screen before you connected, and the last file you had open in nano or vim, without you typing a thing.
 
-So if you SSH somewhere from one of those, the box at the other end can read what was on your screen before you connected. That only matters for boxes you don't fully trust, like a shared server or one that's been broken into, but they're exactly where you don't want your laptop's `.env` turning up. Here's Git Bash, with a Debian server at the other end reading back the `.env` I'd just catted, and a file I'd closed in nano before that:
+Here's a Debian server doing it to Git Bash. The secrets are fake, and everything under the first `ssh` line is what the server read back:
 
 <Figure
   src={shot}
   alt="A Git Bash window. It shows cat .env printing a database password and a session secret, then ssh deploy@build-box. Below that, the same lines again, read back by the server, then a .pgpass file from nano with another password."
 >
-  Everything down to the first `ssh` line is staged with `printf`, and the secrets are fake. The
-  rest is what the server read back off the screen and printed.
+  Git Bash's own window on Windows, SSHing into a Debian box on 4 November.
 </Figure>
 
-## One cell at a time
+<Stats>
 
-The code is DECRQCRA, "request checksum of rectangular area". A program prints `ESC [ id ; page ; top ; left ; bottom ; right * y`, and the terminal adds up the characters in that rectangle and sends the total back. Terminals mostly have it for test suites: draw something, ask for the checksum, check it came out right.
+- **6.3m** downloads of the Git for Windows installer since 28 September, and Git Bash opens in this window unless you pick otherwise
+- **77s** for a 50-line bash script to read a whole screen over SSH
+- **0** settings in Git Bash's window that turn it off
 
-Make the rectangle a single cell, though, and the total is just that one character. Git Bash's window is mintty, and mintty sends the total back negated. This is what came back for the top-left cell above:
+</Stats>
 
-```text
-ESC P 1 !~ FF9C ESC \
-```
+## What's going on
 
-`FF9C` is minus `0x64`, which is `d`, the start of `dev@laptop`.
+Terminals understand special codes that programs print to change colours or move the cursor. One of them, from DEC's old VT420 terminals, asks the terminal to add up the characters in a box on the screen and send back the total. It's meant for test suites, so they can check the terminal drew things properly.
 
-Ask about every cell and you've got the screen. The question goes down the SSH connection like any other output, and your terminal types its answer into the same place your keystrokes go, so ssh carries it back up. My script for it is about 40 lines of bash. It turns echo off at the server's end, so nothing shows while it reads, and it took 77 seconds to get through all 1,920 cells of an 80 by 24 window. Bold and underlined letters come back slightly off unless you allow for them, but plain ASCII comes through exactly.
+But if the box is one character big, the total is just that character. So a program can ask about each spot on the screen in turn and rebuild the whole thing. Over SSH, the question travels down to your terminal like any other output, and the terminal's reply goes back up as though you'd typed it.
 
-It can't reach your scrollback, mind.
+nano and vim also draw on a second, hidden screen, which stays in memory after you quit, and `clear` doesn't wipe it. The server can switch to that screen and read it too, which is how it got the `.pgpass` in the picture. You'd see your old file come back up while it's being read, and that's the only sign.
 
-## The file you closed
+## How it got here
 
-nano and vim draw on a second screen, the alternate screen, and switch back to the normal one when you quit. What they drew is still there afterwards, in all three terminals that answer. So the script flips over to the alternate screen with `ESC [ ? 47 h`, which doesn't clear it, and reads that too. The `clear` I'd run after closing nano didn't touch it:
+<Timeline>
 
-```text
-  GNU nano 8.6        ~/.pgpass
+- **2018** xterm puts the code on its list of "dangerous" features that are switched off. Debian builds xterm with an older list of its own, so it's still on in Debian 12, Debian 13 and Ubuntu 24.04.
+- **2019** WezTerm, and then mintty (the window Git Bash opens in), add the code so they can pass a terminal test suite.
+- **2023** [dgl writes up this exact attack](https://dgl.cx/2023/09/ansi-terminal-security): reading someone's screen as they SSH in.
+- **2024** WezTerm's last stable release comes out, with the code still on. Homebrew, Scoop and Chocolatey still install that one.
+- **2026** WezTerm [switches it off](https://github.com/wezterm/wezterm/pull/7701) in March, but only in nightly builds. Git Bash still does it.
 
-prod-db.internal:5432:*:admin:correct-horse-battery-staple
-```
+</Timeline>
 
-That half isn't silent. Your old nano screen is back up while it's being read, so you'd probably notice.
+## Why it matters
 
-## Who still answers
-
-<Matrix title="Does it answer DECRQCRA out of the box?" data={terminals}>
-  The setting is whatever switches it on or off. The three that answer, I ran over SSH on 4
-  November. The rest are from each project's source.
-</Matrix>
-
-Upstream [xterm](https://invisible-island.net/xterm/manpage/xterm.html#VT100-Widget-Resources:disallowedWindowOps), the one everybody copies, puts the checksum on a short list of "dangerous" operations it refuses unless you say otherwise. Debian doesn't use that list. Its xterm package compiles in an older one of its own, which doesn't mention the checksum, so it's allowed. That's Debian 12, Debian 13 and Ubuntu 24.04, and Ubuntu 24.04's xterm gave up the same screen over SSH, nano and all. Debian's xterm has [refused every window operation](https://sources.debian.org/src/xterm/412-1/debian/changelog/) since last November, so Ubuntu 26.04 and Debian testing are fine.
-
-Windows Terminal has it [behind a setting](https://github.com/microsoft/terminal/blob/main/doc/cascadia/profiles.schema.json), and [compiles it out](https://github.com/microsoft/terminal/blob/main/src/features.xml) of the console window built into Windows, because "conhost has no way to turn it off". iTerm2 asks you before it answers. Ghostty only added it in [1.4](https://ghostty.org/docs/install/release-notes/1-4-0), last week, and its config says why it's off:
-
-<Quote
-  by="Ghostty 1.4's config"
-  href="https://github.com/ghostty-org/ghostty/blob/v1.4.0/src/config/Config.zig#L3073-L3086"
->
-  This is disabled by default because a program can ask for the checksum of one cell at a time and
-  so read back everything on the screen, including the output of other programs.
-</Quote>
-
-WezTerm turned it off in March, in [#7701](https://github.com/wezterm/wezterm/pull/7701), but hasn't made a release since February 2024. Homebrew, Scoop and Chocolatey all still install that one, and it answers. On Homebrew it's had 6,349 installs in the last 90 days, to nightly's 1,359.
-
-## Built to pass a test
-
-mintty and WezTerm got it the same way. esctest, a test suite for terminals, checks what a terminal drew by asking for checksums, so to pass it you had to answer. WezTerm [added it](https://github.com/wezterm/wezterm/commit/6cbb3ba43) for esctest in March 2019, dropped esctest five days later, and kept the checksum. mintty added it that July, "supporting esctest suite", says [its changelog](https://github.com/mintty/mintty/blob/master/wiki/Changelog.md).
-
-It's not exactly a secret. In March 2023, in a [Windows Terminal issue](https://github.com/microsoft/terminal/issues/14974), j4james listed mintty and WezTerm among the terminals that answer by default. That September, [dgl's write-up](https://dgl.cx/2023/09/ansi-terminal-security) on terminal escape bugs described this exact attack, reading the screen before someone SSHes out, and reckoned the few terminals that support it "either prompt the user or have it disabled". Two of the CVEs in that write-up were mintty's, and the release that fixed the second one also fixed a DECRQCRA bug. It stayed on.
+It's only a problem with servers you don't fully trust. But that's a long list: a shared box, a client's server, or anything that's been broken into, where an attacker can just wait for the next person to log in. And what they get comes from your laptop, not the server: the tokens, passwords and config files you had on screen before you connected.
 
 ## Checking yours
 
-Paste this into bash. It clears the screen, prints an X, and asks the terminal what's in the top-left cell:
+Here's who does it:
+
+<Matrix title="Can the server read your screen?" data={terminals}>
+  I tested the first three over SSH on 4 November. The rest are from each project's source code.
+</Matrix>
+
+To check yours, paste this into bash. It clears the screen, prints an X, and asks the terminal what's in the top-left corner:
 
 ```sh
 clear; echo X; s=$(stty -g); stty -echo -icanon; printf '\e[1;1;1;1;1;1*y'; read -rs -t 1 -d '\' r; stty "$s"; echo "${r:5:4}"
 ```
 
-`FFA8` or `0058` means it read the X back. Nothing, or `0000`, means it didn't.
+If it prints `FFA8` or `0058`, your terminal just read the X back, and a server could do the same. If it prints nothing or `0000`, you're fine.
 
-For Git Bash, run it in Windows Terminal instead of its own window. The Git for Windows installer can add a profile for it if you tick the box, and Windows Terminal's default answer is always `0000`. Otherwise, open a fresh Git Bash window before you SSH anywhere you don't trust, since `clear` doesn't touch the alternate screen. On WezTerm, nightly has the fix. On Debian's or Ubuntu's xterm, add Debian's newer setting to `~/.Xresources` and run `xrdb -merge ~/.Xresources`:
+If yours read it back:
+
+- In Git Bash, use it inside Windows Terminal instead of its own window (the installer can add a profile for it). Otherwise, open a fresh window before you SSH anywhere you don't trust, because `clear` doesn't reach that hidden screen.
+- On WezTerm, switch to a nightly build.
+- On Debian's or Ubuntu's xterm, add this line to `~/.Xresources` and run `xrdb -merge ~/.Xresources`:
 
 ```text title="~/.Xresources"
 XTerm*disallowedWindowOps: *

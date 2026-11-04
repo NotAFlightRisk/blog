@@ -1,29 +1,12 @@
 [
-  {
-    "Terminal": "mintty 3.8.3 (Git Bash, MSYS2, Cygwin, WSLtty)",
-    "Answers?": "Yes",
-    "Setting": "None"
-  },
-  { "Terminal": "WezTerm 20240203, the stable release", "Answers?": "Yes", "Setting": "None" },
-  {
-    "Terminal": "xterm in Debian 12 and 13, Ubuntu 24.04",
-    "Answers?": "Yes",
-    "Setting": "disallowedWindowOps"
-  },
-  {
-    "Terminal": "WezTerm nightly",
-    "Answers?": "No",
-    "Setting": "enable_checksum_rectangular_area"
-  },
-  { "Terminal": "xterm anywhere else", "Answers?": "No", "Setting": "disallowedWindowOps" },
-  { "Terminal": "Windows Terminal", "Answers?": "No", "Setting": "allowDECRQCRA" },
-  { "Terminal": "iTerm2", "Answers?": "No", "Setting": "disableDECRQCRA" },
-  { "Terminal": "Ghostty 1.4", "Answers?": "No", "Setting": "vt-xt-checksum-report" },
-  { "Terminal": "Konsole", "Answers?": "No", "Setting": "Only at build time" },
-  {
-    "Terminal": "GNOME Terminal and others on VTE",
-    "Answers?": "No",
-    "Setting": "Only in debug builds"
-  },
-  { "Terminal": "kitty, Alacritty, foot", "Answers?": "No", "Setting": "Never added it" }
+  { "Terminal": "Git Bash (mintty), also MSYS2, Cygwin and WSLtty", "Can it?": "Yes" },
+  { "Terminal": "WezTerm 20240203, the stable release", "Can it?": "Yes" },
+  { "Terminal": "xterm on Debian 12 and 13, Ubuntu 24.04", "Can it?": "Yes" },
+  { "Terminal": "WezTerm nightly", "Can it?": "No" },
+  { "Terminal": "xterm anywhere else", "Can it?": "No" },
+  { "Terminal": "Windows Terminal", "Can it?": "No" },
+  { "Terminal": "iTerm2", "Can it?": "Only if you say yes" },
+  { "Terminal": "Ghostty", "Can it?": "No" },
+  { "Terminal": "Konsole, GNOME Terminal", "Can it?": "No" },
+  { "Terminal": "kitty, Alacritty, foot", "Can it?": "No" }
 ]

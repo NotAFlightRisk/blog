@@ -1,0 +1,12 @@
+[
+  { "Terminal": "Git Bash (mintty), also MSYS2, Cygwin and WSLtty", "Can it?": "Yes" },
+  { "Terminal": "WezTerm 20240203, the stable release", "Can it?": "Yes" },
+  { "Terminal": "xterm on Debian 12 and 13, Ubuntu 24.04", "Can it?": "Yes" },
+  { "Terminal": "WezTerm nightly", "Can it?": "No" },
+  { "Terminal": "xterm anywhere else", "Can it?": "No" },
+  { "Terminal": "Windows Terminal", "Can it?": "No" },
+  { "Terminal": "iTerm2", "Can it?": "Only if you say yes" },
+  { "Terminal": "Ghostty", "Can it?": "No" },
+  { "Terminal": "Konsole, GNOME Terminal", "Can it?": "No" },
+  { "Terminal": "kitty, Alacritty, foot", "Can it?": "No" }
+]

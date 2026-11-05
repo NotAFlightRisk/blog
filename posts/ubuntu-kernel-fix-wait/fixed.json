@@ -1,0 +1,44 @@
+[
+ {
+  "Waited": "day 0",
+  "Ubuntu 24.04": 0,
+  "Debian 13": 68,
+  "Debian 12": 31
+ },
+ {
+  "Waited": "2 weeks",
+  "Ubuntu 24.04": 2,
+  "Debian 13": 81,
+  "Debian 12": 57
+ },
+ {
+  "Waited": "4 weeks",
+  "Ubuntu 24.04": 9,
+  "Debian 13": 85,
+  "Debian 12": 62
+ },
+ {
+  "Waited": "6 weeks",
+  "Ubuntu 24.04": 14,
+  "Debian 13": 90,
+  "Debian 12": 74
+ },
+ {
+  "Waited": "8 weeks",
+  "Ubuntu 24.04": 34,
+  "Debian 13": 91,
+  "Debian 12": 76
+ },
+ {
+  "Waited": "10 weeks",
+  "Ubuntu 24.04": 37,
+  "Debian 13": 91,
+  "Debian 12": 81
+ },
+ {
+  "Waited": "12 weeks",
+  "Ubuntu 24.04": 64,
+  "Debian 13": 92,
+  "Debian 12": 81
+ }
+]

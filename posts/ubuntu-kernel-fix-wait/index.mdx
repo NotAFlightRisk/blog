@@ -1,0 +1,58 @@
+---
+title: Ubuntu 24.04 gets kernel fixes two months after Debian
+description: Ubuntu 24.04 took a median 64 days to ship kernel CVE fixes this year, and Debian 13 often had them before the CVE was public. Here's where the weeks go.
+date: 2026-11-05
+tags: [linux, security, ubuntu, debian]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Timeline from '../../src/components/mdx/Timeline.astro';
+import fixed from './fixed.json';
+
+Ubuntu 24.04 still hasn't got the fix for [CVE-2026-98432](https://ubuntu.com/security/CVE-2026-98432), a bug in how IPv4 hands over a new TCP connection, which Canonical rates critical and says can lead to remote code execution. It went public on 15 October. Debian 13 shipped the fix the next day. On 24.04 it's listed as pending, in a kernel that's been in `-proposed` since 26 October.
+
+It got a couple of angry blog posts, [chalmovsky's](https://chalmovsky.com/posts/wtf-ubuntu) (1,600 points [on Hacker News](https://news.ycombinator.com/item?id=50337608)) and [Ariadne's](https://aria.rip/canonical_cve_response/), both about this one CVE. It's not a one-off. I took all 7,823 CVEs the kernel's CVE team has published since 1 March, and for each one found when the fix reached Ubuntu 24.04's security updates (from its security notices) and Debian's (from its security tracker, dated by when the fixed kernel turned up in Debian's security archive).
+
+<Chart title="Kernel CVEs fixed, by how long after they went public" data={fixed} type="line" unit="%">
+  CVEs published from March to July 2026, so each has had at least three months. Each line is the share of the CVEs affecting that release which it had fixed by then.
+</Chart>
+
+For CVEs from March to July, Debian 13 had already fixed 68% by the day they went public. That's because the kernel's CVE team [only automatically assigns a CVE once the fix is in a stable kernel](https://docs.kernel.org/process/cve.html), and Debian 13 ships those stable kernels, so the fix is often out before the CVE has a number. Ubuntu 24.04 had fixed hardly any by then, and only 14% after six weeks.
+
+Across everything since March, Ubuntu 24.04's median wait is 64 days, counting the CVEs it's fixed so far. On the 2,574 CVEs both have fixed, Debian 13 got there first on 2,558, by a median of 74 days.
+
+The bad ones don't jump the queue, either. CVEs Canonical itself rates high or critical took a bit longer than the rest. 24.04's default kernel is the slowest Ubuntu one I checked, but not by much: 22.04, 26.04 and the 7.0 HWE kernel you can run on 24.04 have medians of 47 to 53 days.
+
+## Where the weeks go
+
+Ubuntu 24.04 runs Linux 6.8, which upstream stopped looking after in May 2024. So Canonical maintains it itself, by taking the fixes going into the upstream 6.12 and 6.6 longterm kernels and porting them back in batches, each one tracked as a Launchpad ticket. From March to September, the newest upstream release in each batch was a median 55 days old by the time Canonical opened that ticket. The batch then goes through Canonical's own build-and-test cycle, which took another 20 to 60 days per kernel.
+
+The old 6.8 base isn't the whole story, though. 22.04 is on 5.15, which upstream still maintains, and Canonical opens a ticket for each 5.15 release within days of it coming out. 22.04 still waits a median of 53 days, so the cycle after the ticket is slow too. Its 5.15.0-198 kernel went into `-proposed` on 7 September and reached the security updates on 5 October.
+
+Here's one batch, the one that brought 6.12.101's fixes to 24.04:
+
+<Timeline>
+
+- **3 August** 6.12.101 comes out upstream.
+- **6 August** Debian 13, which runs 6.12, ships it as a security update.
+- **23 September** Seven weeks later, Canonical opens [the ticket](https://bugs.launchpad.net/bugs/2168026) to port it (and 6.6.148) to 24.04.
+- **30 September** The kernel with it, 6.8.0-147, goes into `-proposed`.
+- **13 October** It reaches 24.04's security updates, 71 days after upstream.
+
+</Timeline>
+
+The fixes arrive in lumps, too. The 13 October update alone brought 1,039 kernel CVEs to 24.04 for the first time, and it's still the newest default kernel 24.04 gets from `apt`.
+
+Debian doesn't queue them. Roughly every two weeks Debian 13 ships the latest upstream 6.12 release, usually within days of it coming out. Debian 12, on the 6.1 longterm kernel, is slower (a median of 11 days) but nowhere near two months.
+
+## It's been worse
+
+The kernel CVEs from August to November last year that 24.04 has fixed took a median of 160 days, so this year's a big improvement. Canonical [moved to a two-week kernel cycle](https://discourse.ubuntu.com/t/going-from-4-to-2-accelerating-the-linux-kernel-release-process/88248) on 28 September, and October's kernel looks different. 6.8.0-149 ports everything up to 6.12.113, which was only five days old when Canonical opened its ticket.
+
+That doesn't clear the backlog, though. The 1,566 kernel CVEs that 149 fixes for the first time on the default kernel had been public for a median of 39 days by the time it reached `-proposed`, and they're still waiting.
+
+So if you run 24.04 on something exposed, don't take `apt upgrade` saying there's nothing to do as meaning you're covered. The CVE's page on [ubuntu.com/security](https://ubuntu.com/security/cves) says whether your kernel's actually got the fix, and sometimes there's a stopgap. 98432's is an nftables rule that drops incoming IPv4 TCP packets carrying IP options, which Canonical says cuts the risk without closing it.
+
+There's a quicker kernel on 24.04 right now, too. The 7.0 HWE one (`linux-generic-hwe-24.04`) got an update on 2 November with fixes for over 2,300 kernel CVEs published since 8 September, which the default 6.8 kernel is still waiting for. 98432 is pending on that one as well, mind. And if you want kernel fixes the week they're out, you want a distro that ships upstream's releases as they come, like Debian 13.
+
+I'll run all this again in December, when the CVEs from after the switch have had two months. If the kernel after 149 keeps that five-day queue, half of this post will be out of date, which I'd be fine with.

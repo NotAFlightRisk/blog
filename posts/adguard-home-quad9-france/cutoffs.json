@@ -1,0 +1,8 @@
+[
+  { "If Quad9": "Ignores you", "Does the fallback answer?": "Only after 15 s" },
+  { "If Quad9": "Won't connect", "Does the fallback answer?": true },
+  { "If Quad9": "Hangs mid-handshake", "Does the fallback answer?": "Only after 5 s" },
+  { "If Quad9": "Says 403 Forbidden", "Does the fallback answer?": true },
+  { "If Quad9": "Answers REFUSED", "Does the fallback answer?": false },
+  { "If Quad9": "Answers SERVFAIL", "Does the fallback answer?": false }
+]

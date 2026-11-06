@@ -1,0 +1,60 @@
+---
+title: AdGuard Home's fallback may not catch Quad9 leaving France
+description: Out of the box AdGuard Home only asks Quad9, which stops serving France on 24 November. If Quad9 answers REFUSED, the fallback may never get asked.
+date: 2026-11-06
+tags: [dns, self-hosting, privacy, security]
+---
+
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import cutoffs from './cutoffs.json';
+
+Install AdGuard Home, click through the setup wizard without touching the DNS page, and this is what ends up in `AdGuardHome.yaml`:
+
+```yaml title="AdGuardHome.yaml"
+upstream_dns:
+  - https://dns10.quad9.net/dns-query
+bootstrap_dns:
+  - 9.9.9.10
+  - 149.112.112.10
+  - 2620:fe::10
+  - 2620:fe::fe:10
+fallback_dns: []
+```
+
+Every lookup goes to Quad9 over HTTPS. So do the bootstrap lookups, the ones AdGuard Home makes to find out where `dns10.quad9.net` is. It's been that way since v0.101 in March 2020. If you grepped your configs for `9.9.9.9` after Quad9 [said it's leaving France on 24 November](https://quad9.net/news/blog/au-revoir-france/), you won't have found it, as that's Quad9's filtering service and AdGuard Home uses the unfiltered one on `9.9.9.10`.
+
+One of AdGuard's own team [opened an issue about it](https://github.com/AdguardTeam/AdGuardHome/issues/8686) on 3 November and it's pinned, but v0.107.80 came out the same day and the 1.0 beta two days later, both still on Quad9. A new default would only reach new installs anyway, since yours has the address written into its config. GitHub's code search finds `dns10.quad9.net` in 132 of the 592 `AdGuardHome.yaml` files people have pushed there, so about one in five of those still mention it.
+
+Quad9 hasn't said how it'll turn French users away. Its CTO [thinks](https://news.ycombinator.com/item?id=50200111) it'll probably go by geoIP, with the details "yet to be entirely decided", which means "in France" is really "on an IP address Quad9 reckons is French".
+
+The tempting fix is to leave Quad9 in and add a fallback from someone else, so you're covered either way. I wanted to know if that works, so I ran AdGuard Home with its own default config on my machine, swapped Quad9 for fakes on `127.0.0.1` that turn it away in six different ways, and asked it for names with `dig`.
+
+<Matrix title="AdGuard Home with a fallback, once Quad9's cut it off" data={cutoffs}>
+  AdGuard Home v0.107.79 with the wizard's config plus a fallback, tested 6 November. v0.107.80
+  ships the same defaults.
+</Matrix>
+
+Without the fallback, none of them get an answer through. With it, the fallback catches anything that looks like a broken connection, though when Quad9 just goes quiet it takes 5 or 15 seconds to answer, by which point `dig` and glibc have both given up on their first try.
+
+What the fallback never catches is Quad9 actually answering, with REFUSED or SERVFAIL. To AdGuard Home that's a lookup that worked, so it passes the answer straight on to whoever asked and never tries anyone else. That's not just a France thing. People ran into it [in 2024](https://github.com/AdguardTeam/AdGuardHome/issues/7292), when Cloudflare Gateway was handing out SERVFAILs and their fallbacks stayed quiet.
+
+Which of those Quad9 sends depends on how it does the blocking. It runs [dnsdist](https://www.dnsdist.org/) in front of its resolvers ([per its talk on NANOG](https://seclists.org/nanog/2025/Aug/74)), and when dnsdist's access list turns someone away over HTTPS, it closes the connection (or, set up differently, [sends an HTTP 403](https://github.com/PowerDNS/pdns/blob/master/pdns/dnsdistdist/dnsdist-nghttp2-in.cc)). Plain DNS queries it just drops without a word. The fallback catches all of those. But a dnsdist rule can just as easily answer REFUSED, and the fallback won't catch that.
+
+Putting a second upstream next to Quad9 instead isn't much better. AdGuard Home's default mode picks one of them for each lookup, so some lookups still go to Quad9 and come back REFUSED. In my runs of ten it was anywhere from one to six, depending on which server was quicker. Parallel mode, which asks both and takes the first answer, still got seven. dnsmasq, given the same two servers, answered every one.
+
+## When the fallback does kick in
+
+When I made the fake Quad9 refuse everything, including the lookup for its own name, a freshly started AdGuard Home did use the fallback. It couldn't get an address for `dns10.quad9.net`, which counts as an error, so the fallback answered.
+
+One that was already running didn't. It had the address and an open connection, so it kept asking Quad9 and passing on the REFUSED. Even when I made the fake close the connection after every answer, it just reconnected to the address it already had, for as long as I watched.
+
+It only switched once something made it look `dns10.quad9.net` up again: a restart, clicking Apply on the DNS settings page (even with nothing changed), or one of its lookups timing out after the address it had saved expired, which for the real `dns10.quad9.net` takes up to 20 minutes. If Quad9 turns French addresses away everywhere, that lookup fails too, so a restart sorts it out. But if Quad9 keeps answering the lookup for its own name and only refuses the real ones, I couldn't get the fallback to take over at all.
+
+## Taking Quad9 out
+
+If there's any chance Quad9 thinks you're in France, take it out rather than putting something next to it. In Settings, then DNS settings:
+
+- Replace the upstream with a resolver you trust that isn't Quad9, written as an IP address, like `https://1.1.1.1/dns-query`.
+- Replace the bootstrap servers with that provider's IP addresses too. Don't just empty the list, as AdGuard Home fills an empty one back in with Quad9.
+- Check for Quad9 in any per-client upstreams, any `[/example.com/]` lines and the upstreams file if you use one.
+- Then add a fallback if you like, for the day your new upstream has a wobble, again as an IP address. Just don't count on it if that wobble is a SERVFAIL.

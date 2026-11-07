@@ -1,5 +1,15 @@
 const alerts = { note: 'NOTE', tip: 'TIP', warning: 'WARNING', danger: 'CAUTION' };
-const charts = ['Chart', 'Waffle', 'Breakdown', 'Dots', 'Funnel', 'Heatmap', 'Scatter', 'Matrix'];
+const charts = [
+  'Chart',
+  'Waffle',
+  'Breakdown',
+  'Dots',
+  'Funnel',
+  'Heatmap',
+  'Scatter',
+  'Matrix',
+  'Accounts',
+];
 
 // a prop's value, whether it's a "string" or an {expression}, minus any .src on the end
 const prop = (props: string, name: string) =>

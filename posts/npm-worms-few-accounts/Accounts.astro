@@ -1,0 +1,92 @@
+---
+import ChartFrame from '../../src/components/ChartFrame.astro';
+import Legend from '../../src/components/Legend.astro';
+
+interface Props {
+  title: string;
+  // one row per outbreak, with how many packages each account published, biggest first
+  data: { outbreak: string; when: string; accounts: number[] }[];
+}
+
+const { title, data } = Astro.props;
+const sum = (counts: number[]) => counts.reduce((total, count) => total + count, 0);
+const biggest = Math.max(...data.map(({ accounts }) => sum(accounts)));
+const rows = data.map(({ outbreak, when, accounts }) => ({
+  outbreak,
+  when,
+  accounts,
+  packages: sum(accounts),
+  topFive: Math.round((100 * sum(accounts.slice(0, 5))) / sum(accounts)),
+}));
+const table = rows.map((row) => ({
+  Outbreak: `${row.outbreak}, ${row.when}`,
+  Accounts: row.accounts.length,
+  Packages: row.packages,
+  'Top five': `${row.topFive}%`,
+}));
+---
+
+<ChartFrame {title} {table}>
+  <slot slot="caption" />
+  <ol class="outbreaks" role="list">
+    {rows.map((row) => (
+      <li>
+        <span class="label">
+          <strong>{row.outbreak}</strong>
+          <span class="count">
+            {row.when}, {row.accounts.length} accounts, {row.packages} packages
+          </span>
+        </span>
+        <span class="bar" style={`--share: ${row.packages / biggest}`} aria-hidden="true">
+          {row.accounts.map((count, index) => (
+            <span class:list={{ top: index < 5 }} style={`--count: ${count}`} />
+          ))}
+        </span>
+      </li>
+    ))}
+  </ol>
+  <Legend items={[{ name: 'The five busiest accounts' }, { name: 'Everyone else' }]} />
+</ChartFrame>
+
+<style>
+  .outbreaks {
+    display: grid;
+    gap: var(--space-s);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    & li {
+      display: grid;
+      gap: var(--space-3xs);
+      margin: 0;
+    }
+  }
+
+  .label {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--space-xs);
+  }
+
+  .count {
+    color: var(--text-muted);
+  }
+
+  .bar {
+    display: flex;
+    gap: 1px;
+    width: calc(var(--share) * 100%);
+    height: var(--space-m);
+
+    & span {
+      flex: var(--count) 1 0;
+      min-width: 1px;
+      background: var(--series-2);
+
+      &.top {
+        background: var(--series-1);
+      }
+    }
+  }
+</style>

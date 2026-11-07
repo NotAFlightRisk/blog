@@ -1,0 +1,86 @@
+[
+  {
+    "Hour (UTC)": "03:00",
+    "New accounts": 3
+  },
+  {
+    "Hour (UTC)": "04:00",
+    "New accounts": 5
+  },
+  {
+    "Hour (UTC)": "05:00",
+    "New accounts": 8
+  },
+  {
+    "Hour (UTC)": "06:00",
+    "New accounts": 4
+  },
+  {
+    "Hour (UTC)": "07:00",
+    "New accounts": 6
+  },
+  {
+    "Hour (UTC)": "08:00",
+    "New accounts": 3
+  },
+  {
+    "Hour (UTC)": "09:00",
+    "New accounts": 13
+  },
+  {
+    "Hour (UTC)": "10:00",
+    "New accounts": 13
+  },
+  {
+    "Hour (UTC)": "11:00",
+    "New accounts": 17
+  },
+  {
+    "Hour (UTC)": "12:00",
+    "New accounts": 7
+  },
+  {
+    "Hour (UTC)": "13:00",
+    "New accounts": 3
+  },
+  {
+    "Hour (UTC)": "14:00",
+    "New accounts": 2
+  },
+  {
+    "Hour (UTC)": "15:00",
+    "New accounts": 5
+  },
+  {
+    "Hour (UTC)": "16:00",
+    "New accounts": 9
+  },
+  {
+    "Hour (UTC)": "17:00",
+    "New accounts": 3
+  },
+  {
+    "Hour (UTC)": "18:00",
+    "New accounts": 0
+  },
+  {
+    "Hour (UTC)": "19:00",
+    "New accounts": 0
+  },
+  {
+    "Hour (UTC)": "20:00",
+    "New accounts": 0
+  },
+  {
+    "Hour (UTC)": "21:00",
+    "New accounts": 0
+  },
+  {
+    "Hour (UTC)": "22:00",
+    "New accounts": 0
+  },
+  {
+    "Hour (UTC)": "23:00",
+    "New accounts": 0
+  }
+]

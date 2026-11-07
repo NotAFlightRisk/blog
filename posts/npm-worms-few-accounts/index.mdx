@@ -1,0 +1,88 @@
+---
+title: npm's worms ride a few big accounts, not your dependencies
+description: I counted who published every package in npm's six worm outbreaks. Most came down to a handful of big accounts, and hardly any spread down the dependency tree.
+date: 2026-11-07
+tags: [security, npm, javascript, opensource]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Accounts from './Accounts.astro';
+import accounts from './accounts.json';
+import hours from './hours.json';
+
+At 10:41 UTC on 4 August, one npm account published poisoned versions of 132 packages. It took two and a half seconds. Another company's scope had lost 140 the same way two minutes earlier, in three.
+
+That was ChainDrop, the worm that [started with keyv](https://www.elastic.co/security-labs/threat-command/shai-hulud-chaindrop-npm-supply-chain), and the latest of the six big npm worm outbreaks since the first Shai-Hulud in September last year. They all work in roughly the same way. A poisoned package runs a script when you install it, finds an npm token on your machine or in your CI, and uses it to publish poisoned versions of your packages, so whoever installs one of those is next. The write-ups count the damage in hundreds of packages, which makes it sound like it's tearing through everyone.
+
+I wanted to know who actually published them.
+
+<Accounts
+  title="Poisoned npm packages in each outbreak, by the account that published them"
+  data={accounts}
+>
+  Each block is one account, as wide as the number of packages it poisoned. Packages created less
+  than 30 days before their bad version are left out, since those are mostly the attackers' own
+  throwaways. Mini Shai-Hulud's bar starts from its return in May.
+</Accounts>
+
+That's about 2,000 packages from 175 accounts. Apart from Shai-Hulud 2, each outbreak involved between 5 and 26 accounts, and in four of the six the five busiest accounts put out 94% or more of the packages.
+
+npm keeps a version's publish time even after it's been pulled, so I grouped the packages by who maintains them and counted each group as one account. [ecosyste.ms](https://packages.ecosyste.ms) kept a record of who actually published about a third of the bad versions, 230 packages across nearly 70 groups, and every group came back with one publisher. Where there's no record, a group with several maintainers could hide a few more accounts, but even counting every one of them separately, it's 263 accounts rather than 175.
+
+## The worm takes whatever the account can publish
+
+One account is worth 132 packages because the worm publishes everything the stolen token can reach, up to a limit its author picked. The first two asked npm for the account's packages by searching for `maintainer:` and its name. The first Shai-Hulud [asked for 20](https://www.stepsecurity.io/blog/ctrl-tinycolor-and-40-npm-packages-compromised), Shai-Hulud 2 [asked for 100](https://securitylabs.datadoghq.com/articles/shai-hulud-2.0-npm-worm/), and ChainDrop [goes for every package](https://www.elastic.co/security-labs/threat-command/shai-hulud-chaindrop-npm-supply-chain) the account can publish.
+
+You can see the limits in the counts. The first Shai-Hulud's busiest account poisoned exactly 20 packages within a few minutes, then nine more later that day, and the next four did between 15 and 22 at a time. Shai-Hulud 2's busiest did 98 in ten minutes, and five more after that. ChainDrop's two biggest did 140 and 132, all at once.
+
+With a cap of 100, Shai-Hulud 2 had to reach a lot of accounts to get big, and it did. Without one, an account that looks after a few hundred packages is an outbreak on its own.
+
+You can run the same search the first two worms did, and it doesn't need a login:
+
+```sh
+curl -s 'https://registry.npmjs.org/-/v1/search?text=maintainer:YOUR_NAME&size=250' | jq .total
+```
+
+Mine says 1, which is the one upside of not having written much.
+
+## The day Shai-Hulud 2 spread
+
+Shai-Hulud 2 is the one that behaved like the worm you'd picture. It started with AsyncAPI's packages at 03:10 UTC on Monday 24 November 2025, with PostHog's and Postman's among the first after it, and reached 101 accounts by 17:54.
+
+<Chart title="New accounts publishing Shai-Hulud 2, by hour" data={hours} type="columns">
+  24 November 2025, in UTC. Each account counts once, in the hour it published its first poisoned
+  package.
+</Chart>
+
+The first packages were all gone by lunchtime. PostHog had deleted its by 9:30, Postman by 11:30, and npm pulled AsyncAPI's at 11:46 ([Wiz collected the times](https://www.wiz.io/blog/shai-hulud-2-0-aftermath-ongoing-supply-chain-attack)). But 9:00 till noon was still the busiest stretch for new accounts. By then it was in other people's packages too, like the account that put out 98 of them just after ten.
+
+After 17:54, nothing. Nobody's said why. Datadog saw the same cut-off and [guessed that npm may have stepped in](https://securitylabs.datadoghq.com/articles/shai-hulud-2.0-npm-worm/), which is as good a guess as any.
+
+## It didn't go down the dependency tree
+
+This is the bit that surprised me. You'd picture the worm working its way down the dependency tree: my package depends on a poisoned one, I install it, my token goes, and my packages are next.
+
+So for every account after the first in each outbreak, I took the last clean release it published before its first bad one, and checked whether that depended on anything that was already poisoned, in a version range that would've picked up the bad release. 139 accounts had a clean release to check. If that's how the worm travelled, most of them should've had one.
+
+Two did. As a placebo, I ran the same check on the same 139 against packages that only went bad later, which can't have caused anything, and got four. For Shai-Hulud 2 I also went a level further down, to the dependencies of those dependencies, and found two more, against none for the placebo. That's chance.
+
+So whatever got these people, it wasn't the packages they publish depending on a poisoned one. My guess is it was something else they installed, like a dev tool, a CLI installed globally, or an app that never goes on npm, none of which shows up in the published dependency tree. Either way, whether your package depends on something poisoned doesn't tell you if you're next.
+
+## This year's look like fresh starts
+
+The 2026 outbreaks don't come in one burst. Mini Shai-Hulud hit four SAP packages on 29 April, went quiet, then came back on 11 May with TanStack's and reached 14 accounts in about five hours. A week after that, a single account published 310 AntV packages in six seconds, which [SafeDep](https://safedep.io/mini-shai-hulud-strikes-again-314-npm-packages-compromised/) says the attacker did with a stolen token. Miasma came in three waves, the last three weeks after the first. Each wave starts with one big account, which looks more like someone kicking it off again than the worm finding its own way there.
+
+## Trusted publishing didn't stop it
+
+TanStack's 42 packages went out in five seconds, published from GitHub Actions through npm's trusted publishing, which swaps a stored npm token for a short-lived one the release workflow gets each time it runs. According to [TanStack's postmortem](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), no npm token was stolen. The attacker poisoned the Actions cache from a pull request, and when the release workflow next ran, the payload read the workflow's token out of the runner's memory. Miasma's biggest account, 49 packages, also published through trusted publishing, going by ecosyste.ms's records.
+
+So trusted publishing gets rid of stored npm tokens, like the one in `~/.npmrc`, which is what the first two worms lived on. But anyone who can run code in your release workflow can still publish as you, and everything that workflow can publish goes out at once.
+
+## What makes you a dead end
+
+Two settings make you a dead end for some of these. ChainDrop only spread when the stolen token [could publish without 2FA](https://www.elastic.co/security-labs/threat-command/shai-hulud-chaindrop-npm-supply-chain), so a token that can't skip 2FA was no use to it. And Shai-Hulud 2 and ChainDrop both started from a `preinstall` script, which npm 12 no longer runs for your dependencies until you say so. I tried it with npm 12.0.2 and a package whose `preinstall` just creates a file. The file never turned up:
+
+```
+npm warn install-scripts 1 package had install scripts blocked because they are not covered by allowScripts:
+npm warn install-scripts   hooky@1.0.0 (preinstall: touch ./RAN)
+```

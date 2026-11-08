@@ -1,0 +1,64 @@
+---
+title: Why the Wayback keeps saving Anubis's bot check
+description: Test an Anubis site with the Wayback's save button and it's fine. But volunteer crawlers feed the Wayback too, and its newest copy is often the bot check.
+date: 2026-11-08
+tags: [opensource, self-hosting, archiving, ai]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Figure from '../../src/components/mdx/Figure.astro';
+import collectors from './collectors.json';
+import haiku from './haiku.png';
+
+Haiku's bug tracker is fine in the Wayback Machine, according to [a check on Anubis's issue tracker](https://github.com/TecharoHQ/anubis/issues/1994). Someone tried 22 sites that use Anubis in the Wayback at the start of October, and ticked off the 16 that came out as the real page, Haiku's included. Here's the newest copy the Wayback has of it, from ten days after that:
+
+<Figure src={haiku} alt="The Wayback Machine's toolbar for dev.haiku-os.org, showing 418 captures up to 11 October 2026, above Anubis's page: 'Making sure you're not a bot!' and its cartoon mascot holding a magnifying glass">
+  The Wayback's newest copy of [dev.haiku-os.org](https://web.archive.org/web/20261011031612/https://dev.haiku-os.org/), as of 8 November.
+</Figure>
+
+[Anubis](https://github.com/TecharoHQ/anubis) is the proof-of-work page a lot of open source sites put up in 2025 to keep AI scrapers off: GNOME's GitLab, FFmpeg, the Arch wiki, Haiku and plenty more. Its default settings let the Internet Archive straight through, and the check above was done the way everyone does it, with the Wayback's save button. So why's that copy a wall?
+
+## It wasn't the Internet Archive's crawler
+
+Click "About this capture" on that copy's banner and it says who collected it: [ArchiveTeam](https://wiki.archiveteam.org/), the volunteer group that runs its own crawlers on volunteers' machines and hands what they grab to the Internet Archive. It all goes in the Wayback, next to the Archive's own copies, and you can't tell them apart unless you click.
+
+Anubis lets the Internet Archive in by its IP addresses. This is the whole rule:
+
+```yaml title="data/crawlers/internet-archive.yaml"
+- name: internet-archive
+  action: ALLOW
+  remote_addresses:
+    ["207.241.224.0/20", "208.70.24.0/21", "2620:0:9c0::/48"]
+```
+
+ArchiveTeam's crawlers don't come from those addresses. Their URLs project runs on volunteers' own connections and sends a browser's user agent. Since this spring it [passes itself off as Firefox](https://github.com/ArchiveTeam/urls-grab/blob/master/pipeline.py), down to the way it sets up the TLS connection:
+
+```python title="urls-grab/pipeline.py"
+'--impersonate', 'firefox148-h1',
+```
+
+Anubis's [default policy](https://github.com/TecharoHQ/anubis/blob/main/data/botPolicies.yaml) gives anything that says it's a browser a proof-of-work challenge, which needs JavaScript to solve. The crawler doesn't run JavaScript, so it saves the challenge page as the page. It came back with a 200, so the Wayback files it as a good copy, and the calendar marks the day blue like any other.
+
+## The save button always gets in
+
+That's why the check in the issue came out so well. Save Page Now is the Internet Archive's own crawler, from the Archive's own addresses, so it's on the allow list. ArchiveTeam's [own wiki page on Anubis](https://wiki.archiveteam.org/index.php/Anubis) says as much, "IA SPN is not blocked". So when someone running Anubis checks whether the archive can get in, it can. The broken copies people have reported on Anubis's tracker ([#34](https://github.com/TecharoHQ/anubis/issues/34), [#1781](https://github.com/TecharoHQ/anubis/issues/1781)) got put down to the Archive's addresses being missing from that rule, or out of date, and nobody there has mentioned ArchiveTeam.
+
+## Who gets the wall
+
+I went through the sites on Anubis's [list of known users](https://anubis.techaro.lol/docs/user/known-instances), front pages plus a few deep ones, and opened up to five Wayback copies of each from June 2025 on. Of 345 copies, 140 were Anubis. That gives every address the same five, though, and the busier ones get walled less, so across everything the Wayback holds for them it's more like a quarter. Here's who collected them:
+
+<Chart title="Wayback copies that are an Anubis page, by who collected them" data={collectors} unit="%">
+  Copies from June 2025 to November 2026. ArchiveTeam's URLs project 83 of 100, ArchiveBot 33 of 43, Common Crawl 16 of 33, the Internet Archive's own crawlers 8 of 169.
+</Chart>
+
+It isn't down to which sites each one happened to visit. Taking just the 50 addresses that have copies from both ArchiveTeam's crawlers and the Archive's, ArchiveTeam's were the wall 95 times in 121, and the Archive's twice in 98. And it's still happening. Since July, 17 of the 18 ArchiveTeam copies I opened were the wall.
+
+Common Crawl gets walled a lot too, and half of those are Anubis's "Oh noes!" page, the one it shows when a rule turns you away, so I think some of those sites block it on purpose.
+
+An undated Wayback link, the sort people paste around, opens the newest copy, and for 21 of the addresses that was the wall. I followed an undated link to each of them today, and 11 still land right on it, among them FFmpeg's git, FreeBSD's Subversion browser and the [Azur Lane wiki](https://web.archive.org/web/20261009164430/https://azurlane.koumakan.jp/), another one the October check had ticked. The rest have something newer now, like a redirect, or the Wayback wouldn't answer me.
+
+## Is there a fix?
+
+Not a clean one that I can see. The URLs project looks exactly like Firefox, so there's nothing for a rule to match. ArchiveBot, ArchiveTeam's crawler for whole sites, does say who it is. Its user agent starts `ArchiveTeam ArchiveBot/` and goes on `and not Mozilla/5.0`, which Anubis's browser rule catches, because it's looking for the word `Mozilla`. You could let that user agent through, but so could any scraper that copies it. ArchiveTeam [talked to Anubis's author](https://irclogs.archivete.am/archiveteam-bs/2025-07-17) about signed crawler identity last year, which would sort it properly, but [it isn't there yet](https://github.com/TecharoHQ/anubis/issues/744).
+
+If you run Anubis, look your site up in the Wayback and check who collected the last few copies. And if you're digging through the Wayback for a project's history since 2025, a copy titled "Making sure you're not a bot!" doesn't mean the site was down. Step back a day or two and find one the Internet Archive collected.

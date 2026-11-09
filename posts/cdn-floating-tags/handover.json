@@ -1,0 +1,42 @@
+[
+  {
+    "package": "GrowthBook",
+    "share": 94
+  },
+  {
+    "package": "Alpine",
+    "share": 62
+  },
+  {
+    "package": "Chart.js",
+    "share": 54
+  },
+  {
+    "package": "hls.js",
+    "share": 52
+  },
+  {
+    "package": "marked",
+    "share": 47
+  },
+  {
+    "package": "Vue",
+    "share": 12
+  },
+  {
+    "package": "Swiper",
+    "share": 3
+  },
+  {
+    "package": "three.js",
+    "share": 2
+  },
+  {
+    "package": "KaTeX",
+    "share": 1
+  },
+  {
+    "package": "Video.js",
+    "share": 1
+  }
+]

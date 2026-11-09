@@ -1,0 +1,95 @@
+---
+title: jsDelivr handed out the hijacked axios 940,000 times
+description: Every write-up said CDN users were safe from the axios hijack, and they were. The bad version still reached nearly a million script tags.
+date: 2026-11-09
+tags: [security, javascript, npm, opensource]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Quote from '../../src/components/mdx/Quote.astro';
+import axios from './axios.json';
+import handover from './handover.json';
+
+```
+cdn.jsdelivr.net/npm/axios@1
+```
+
+Put that in a script tag and the `@1` means "whatever the newest 1.x is right now". For about three hours on 31 March, the newest 1.x was 1.14.1, the version an attacker published from the lead maintainer's npm account. jsDelivr's public stats count 941,960 requests for it, and 98.5% of them were for `dist/axios.min.js`, the browser build.
+
+None of that did any harm. The malware was in a new dependency, `plain-crypto-js`, which dropped a remote access trojan when you ran `npm install` ([Snyk has the details](https://snyk.io/blog/axios-npm-package-compromised-supply-chain-attack-delivers-cross-platform)). A script tag doesn't install anything, so the browser build was clean, and the advice at the time said so:
+
+<Quote by="iblue.team" href="https://www.iblue.team/incident-response-1/axios-npm-supply-chain-attack.md">
+  If you are loading axios via a CDN such as unpkg, none of this executes.
+</Quote>
+
+Which is true, but only because the attacker was after developers' laptops. Their release still went out to all those script tags, it just had nothing in it for them.
+
+## The ones that did go after browsers
+
+Two earlier hijacks did aim their malware at browsers, and reached a tiny fraction of that.
+
+| Hijack                        | Aimed at browsers? | Requests for the bad versions |
+| ----------------------------- | ------------------ | ----------------------------: |
+| lottie-player, Oct 2024       | Yes                |                         3,965 |
+| chalk, debug and co, Sep 2025 | Yes                |                           884 |
+| axios, Mar 2026               | No                 |                       941,960 |
+
+[chalk, debug and the rest](https://www.aikido.dev/blog/npm-debug-and-chalk-packages-compromised) carried exactly the right sort of malware for a web page, code that swapped crypto wallet addresses, but almost nobody loads chalk from a CDN. [lottie-player](https://github.com/LottieFiles/lottie-player/issues/254) is an animation player that people really do drop into pages with a script tag, and about 125,000 requests a day followed its newest version. Its three bad versions asked visitors to connect their crypto wallets, were replaced the same day, and still got nearly 4,000 requests. [At least one person lost 10 bitcoin](https://decrypt.co/289284/animation-tool-lottie-player-hit-by-supply-chain-attack-causes-723k-bitcoin-theft).
+
+Put lottie's payload on axios's crowd for three hours and it's a very different write-up.
+
+## How it got there so fast
+
+The release before the hijack shows how quickly that `@1` moves. axios 1.14.0 came out at 19:01 UTC on 27 March. Through that week, 1.13.6 had been getting 17 to 20 million jsDelivr requests a day. The day after, it got 750,000.
+
+<Chart type="line" title="Daily jsDelivr requests for two axios versions, in millions" data={axios} unit="M">
+  1.14.0 came out on the evening of 27 March. The hijacked 1.14.1 was out for three hours on 31
+  March, too few requests to see at this scale.
+</Chart>
+
+So about 17 million of axios's 25 million daily jsDelivr requests take whatever's newest, and they all move over within a day. Three hours of that would be about two million, and 1.14.1 got under half. I'm not sure why. My guess is jsDelivr's edge servers, which hang on to what `@1` means for up to 12 hours (`s-maxage=43200`), so plenty of them never noticed 1.14.1 before it was gone.
+
+That cache works the other way round in your visitors' browsers. They're told they can keep the answer for a week (`max-age=604800`), so anyone who caught a bad release could keep running it for days after npm pulled it.
+
+Nobody has to do anything daft to end up floating. hls.js's README says `hls.js@1`, Alpine's starts you on `alpinejs@3.x.x` (it does say to pin for production, further down), and the first example on Chart.js's getting started page is `cdn.jsdelivr.net/npm/chart.js`, with no version at all. Copy the snippet and you're on the newest release forever.
+
+## Pinning yours
+
+Put the exact version in the URL, and an `integrity` hash so the browser refuses the file if it ever changes. jsDelivr's page for each package will copy you the tag with the hash already in:
+
+```html
+<script
+  src="https://cdn.jsdelivr.net/npm/axios@1.21.0/dist/axios.min.js"
+  integrity="sha384-p5EwRuz37ylAY9QrjGGIs9ngKVaIwppUFSourks9EIRp1CzoIDWoQkXrHxaAUhEB"
+  crossorigin="anonymous"
+></script>
+```
+
+An `integrity` hash on a floating URL doesn't pin anything. The next release changes the file, the hash stops matching, and the browser won't run it. That beats running a hijacked release, but you'll hear about it from your users first. Or serve the file yourself, which is what a bundler's been doing for you all along.
+
+To find the floating ones in a page you've already got:
+
+```sh
+curl -s https://your.site \
+  | grep -oE '(cdn\.jsdelivr\.net/npm|unpkg\.com)/[^"]+' \
+  | grep -vE '@[0-9]+\.[0-9]+\.[0-9]+'
+```
+
+Anything it prints doesn't name an exact version. It only sees tags in the HTML though, not ones a script adds later, so open the Network tab, filter on `jsdelivr`, and click about a bit. If the URL's got `@1`, `@latest` or no `@` at all, somebody else picks what runs there.
+
+## The ones you can't pin
+
+Of jsDelivr's 200 busiest npm packages, 71 put out a new release in the last month, and at least 22 of those had half their jsDelivr traffic on it within two days.
+
+<Chart title="Share of jsDelivr requests on a package's newest release, two days in" data={handover} unit="%" />
+
+Swiper, three.js, KaTeX and Video.js barely move, so most of their users seem to pin. hls.js is the big one. About 140 million requests a day sit on its newest release, nearly ten times what axios's floaters get these days, and they aren't all hobby pages: urlscan.io has [public scans of Amazon product pages](https://urlscan.io/search/#filename%3A%22hls.js%401%22%20AND%20page.domain%3Aamazon.com) fetching `hls.js@1`.
+
+A lot of the other fast movers are companies' own browser SDKs, there to be loaded straight off jsDelivr by a snippet the company gives you. GrowthBook's feature flags are at 94% after two days, Zonos's checkout at nearly all of it, SheerID's ID checks at 84%. Meta's Conversions API helper, at 85% of 90 million requests a day, says why in its README:
+
+<Quote by="Meta's capi-param-builder" href="https://github.com/facebook/capi-param-builder/tree/main/client_js">
+  The unversioned URL follows the latest npm release so integrations receive SDK updates
+  automatically.
+</Quote>
+
+Which is handy. It also means whoever gets into their npm account gets a script tag on your site.

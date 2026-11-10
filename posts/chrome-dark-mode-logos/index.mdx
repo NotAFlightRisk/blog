@@ -1,0 +1,90 @@
+---
+title: Chrome's dark mode stops flipping logos at 65 pixels
+description: Chrome's forced dark mode measures each picture, counts its greys and asks a tiny neural net. That's how Uber's logo turns white and OpenAI's stays a white box.
+date: 2026-11-10
+tags: [css, webdev, chrome, browsers]
+---
+
+import Figure from '../../src/components/mdx/Figure.astro';
+import Quote from '../../src/components/mdx/Quote.astro';
+import logos from './logos.png';
+import svg from './svg.png';
+
+Here's Chrome's forced dark mode drawing six favicons, first at 64 pixels and then at 65.
+
+<Figure
+  src={logos}
+  alt="Six favicons on a dark page, each shown three times. Normal, on white: Uber, Medium and X are white on black tiles, Apple, OpenAI and Wikipedia are black on white. Dark at 64px: Uber and Medium have turned into black on white tiles, Apple is now white on black, X, OpenAI and Wikipedia are unchanged. Dark at 65px: all six are unchanged."
+>
+  Chromium 156 with forced dark mode on. The "Normal" row is how they look on a white page, kept out
+  of dark mode, so the see-through corners show white there and dark below.
+</Figure>
+
+At 64 it turned Uber's and Medium's black tiles white, gave Apple a dark version, and left OpenAI and Wikipedia as bright white squares on a dark page. At 65 it didn't touch any of them.
+
+Forced dark is the "Auto Dark Mode for Web Contents" flag on desktop, and the "Apply dark theme to sites, when possible" box in Chrome's theme settings on Android. It repaints light pages dark unless the site says it has a dark mode of its own. Hardly anyone has it on, about one Chrome page load in 1,850 by [Chrome's own count](https://chromestatus.com/metrics/feature/timeline/popularity/3579). But Safari announced [its own version](https://webkit.org/blog/18541/) last week, and I wanted to know how a browser decides which of your pictures to flip.
+
+## It gets a ruler out first
+
+Chrome only considers flipping a picture if it's drawn at [64 CSS pixels or less](https://github.com/chromium/chromium/blob/main/third_party/blink/renderer/core/paint/paint_auto_dark_mode.cc) each way. Anything bigger counts as a photo and is left alone, whatever's in it. Screen resolution and page zoom are taken back out first, so 64 is 64 on a phone or a 4K monitor. It does go by the size in the layout rather than what you see, though, so a 40px icon blown up with `transform: scale(2)` is 80 pixels on screen and still flips. (The one side door is for images 8 pixels thin or less, which Chrome treats as separator lines and considers at any size.)
+
+The 64 is new. Until Chrome 151 in July, a picture counted as an icon if it took up no more than 13% of the screen each way, so on a 1080p monitor anything up to about 250 by 140 pixels was fair game, and less on a smaller screen. The [change that replaced it](https://github.com/chromium/chromium/commit/2c0b79c57c1726f359bcd87137474e854b1aeb38) is pretty frank about why:
+
+<Quote
+  by="Chromium commit 2c0b79c"
+  href="https://github.com/chromium/chromium/commit/2c0b79c57c1726f359bcd87137474e854b1aeb38"
+>
+  The previous ratio-based threshold scaled with the screen size and device scale factor, so the
+  same image could be classified differently depending on the display it was shown on.
+</Quote>
+
+## Then it counts the greys
+
+A picture that gets past the ruler goes to [a classifier](https://github.com/chromium/chromium/blob/main/third_party/blink/renderer/platform/graphics/dark_mode_image_classifier.cc) that samples up to 1,000 of its pixels. Pictures that are mostly strong colour are left alone, which is why Google, Spotify, Slack and ten other logos I tried that are mostly colour didn't flip. Grey ones get sorted into 16 shades of grey, and Chrome counts how many shades turn up. Fewer than 13 and it flips the picture, unless it's light marks on a see-through background. 13 or more and it can't make its mind up, so it asks a neural net.
+
+I copied the classifier into Python, the net's weights and all, and it agrees with Chrome on all 35 pictures I'd tried. Here's how the grey favicons went, with the shades as my copy counted them:
+
+| Favicon   | Shades of grey | Decided by | Flipped |
+| --------- | -------------: | ---------- | ------- |
+| Vercel    |              8 | Count      | Yes     |
+| Medium    |             11 | Count      | Yes     |
+| Apple     |             12 | Count      | Yes     |
+| Uber      |             12 | Count      | Yes     |
+| X         |             13 | Net        | No      |
+| Notion    |             13 | Net        | No      |
+| Wikipedia |             13 | Net        | No      |
+| OpenAI    |             15 | Net        | No      |
+
+Uber's and X's are the same idea, a white mark on a black tile. The smoothing round Uber's letters comes to 12 shades, and X's diagonals make 13. One more shade, and it's the net's problem.
+
+The [net itself](https://github.com/chromium/chromium/blob/main/third_party/blink/renderer/platform/graphics/darkmode/darkmode_classifier.cc) is four inputs, ten neurons and one output, 61 numbers in all, compiled straight into Chrome as a block of hex. Its inputs are whether the picture's in colour, how many shades it found, how much of it is see-through, and how much is background. When I ran it over a spread of made-up inputs, that last one decided most of the answers. Chrome works that out by going through the picture from the top left and counting see-through patches until it hits a solid one, so a solid square favicon has no background at all, and the net said no to every one of them. OpenAI's logo is all curves, which means lots of greys, which means it stays a white square.
+
+So Chrome turned two black tiles white and left two white squares white. It did get Apple's right.
+
+## Keeping out of it
+
+If your site has a dark mode of its own, say so, and Chrome leaves the whole page alone:
+
+```css
+:root {
+  color-scheme: light dark;
+}
+```
+
+The `<meta name="color-scheme" content="light dark">` tag does the same. That only helps if you've actually written dark styles, mind, since the browser hands you a dark background and expects you to do the rest. It also only worked when Chrome's own theme was dark. With a light theme and the flag on, it flipped the logo anyway. For one picture that should never change, `color-scheme: only light` on the `img` keeps it as it is. Plain `color-scheme: light`, without the `only`, didn't.
+
+## Your header logo can take the big one with it
+
+SVG files in an `<img>` get the same ruler, so a big SVG logo on its own is left alone. But if the same file has already been drawn small further up the page, say as the logo in your header, the big copy gets whatever the small one got. Here's a black circle on a white square, drawn at 32 pixels and then at 120, once as a PNG and once as an SVG:
+
+<Figure
+  src={svg}
+  alt="Two columns on a dark page, PNG and SVG, each a small square above a big one. PNG: the small one has flipped to a white circle on black, the big one is a black circle on a white square as normal. SVG: both the small and the big one are plain white squares, with no circle."
+>
+  The same logo as a PNG and as an SVG file, each drawn at 32px and then 120px, in Chromium 156 with
+  forced dark mode on.
+</Figure>
+
+The PNG copies are judged one at a time, so only the small one flips. The SVG's circle and its square both turn white at 32 pixels, and the 120 pixel one goes the same way, so the logo's just gone, twice. Swap the order round so the big one's drawn first and neither changes. `color-scheme: only light` on the big copy saves it, too.
+
+Which is a bit awkward, as WebKit's advice for getting your site ready for Safari's version is to swap your bitmap logos for SVG.

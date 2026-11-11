@@ -9,7 +9,7 @@ Mattermost's [mobile FAQ](https://docs.mattermost.com/deployment-guide/mobile/mo
 
 > Default server settings have message contents turned off.
 
-Here's what a brand-new Mattermost 12.1 server sent when alice DMed bob, who has the Android app. Trimmed, but nothing's changed:
+Here's what a brand-new Mattermost 12.1 server sent when alice DMed bob, who has the Android app. (it's trimmed, but nothing's changed)
 
 ```json
 {
@@ -22,7 +22,7 @@ Here's what a brand-new Mattermost 12.1 server sent when alice DMed bob, who has
 }
 ```
 
-That goes to `push-test.mattermost.com`, Mattermost's free Test Push Notification Service (TPNS), which passes it to Google's Firebase for Android phones or Apple's push service for iPhones, and they put it on bob's lock screen. An @mention in a channel went the same way, as "@alice: @bob the wifi password is now otter-pancake-91".
+That goes to `push-test.mattermost.com`, Mattermost's free Test Push Notification Service (TPNS), which passes it to Google's Firebase for Android phones or Apple's push service for iPhones, and they then put it on bob's lock screen. An @mention in a channel works the same way, as "@alice: @bob the wifi password is now otter-pancake-91".
 
 I ran the server in Docker on a network with no way out. The only setting I touched was the relay's address, so the push came to a little listener of mine instead, and everything else was how the server came. The hop from the relay to Google or Apple is from the [relay's source](https://github.com/mattermost/mattermost-push-proxy), which copies `message` straight into what it sends them.
 
@@ -56,7 +56,7 @@ The connection to the relay is HTTPS, but the relay itself gets the message as p
 
 Then Google or Apple, who get the text, who sent it and the channel name. In December 2023 [Senator Wyden said](https://www.reuters.com/technology/cybersecurity/governments-spying-apple-google-users-through-push-notifications-us-senator-2023-12-06/) foreign governments had been asking both of them for push notification data.
 
-## The others leave it out
+## The other messaging apps don't do this
 
 Push always goes via Google or Apple, but what's in it is up to the server and the app. Here's what each one sends by default:
 

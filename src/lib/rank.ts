@@ -6,16 +6,6 @@ export function neighbours<T extends Ranked>(post: T, posts: T[]) {
   return { newer: posts[at - 1], older: posts[at + 1] };
 }
 
-// the newest few, then featured ones from before them, so none shows up twice
-export function frontPage<T extends { data: { featured: boolean } }>(
-  posts: T[],
-  latest: number,
-  featured: number,
-) {
-  const picks = posts.slice(latest).filter(({ data }) => data.featured);
-  return [...posts.slice(0, latest), ...picks.slice(0, featured)];
-}
-
 // most tags in common wins, and a tie goes to whichever was written closest in time
 export function related<T extends Ranked>(post: T, posts: T[], count = 3) {
   const shared = (other: T) => other.data.tags.filter((tag) => post.data.tags.includes(tag)).length;

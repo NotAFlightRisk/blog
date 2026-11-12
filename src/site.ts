@@ -17,9 +17,8 @@ export const site = {
   color: '#febc20',
 };
 
-// the front page shows the newest posts, then featured ones, and the archive has the rest
-export const latest = 7;
-export const featured = 6;
+// how many of the newest posts go on the front page
+export const latest = 50;
 
 export const nav = [
   { label: 'Archive', href: '/archive/' },

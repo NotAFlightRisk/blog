@@ -3,6 +3,7 @@ title: Linux thinks Ireland is on daylight saving all winter
 description: Irish law makes summer time the standard, so Linux calls an Irish winter daylight saving. And the usual Python UTC offset snippet gets Ireland wrong all year.
 date: 2026-11-12
 tags: [python, linux, timezones]
+featured: true
 ---
 
 Ireland's clocks do exactly what the UK's do: GMT in winter, an hour ahead in summer. Ask most computers, though, and Ireland's on daylight saving time right now, in November.

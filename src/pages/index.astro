@@ -3,11 +3,10 @@ import Intro from '../components/Intro.astro';
 import PostList from '../components/PostList.astro';
 import Base from '../layouts/Base.astro';
 import { absolute, getPosts } from '../lib/posts';
-import { frontPage } from '../lib/rank';
-import { featured, latest, site } from '../site';
+import { latest, site } from '../site';
 
 const posts = await getPosts();
-const shown = frontPage(posts, latest, featured);
+const shown = posts.slice(0, latest);
 const url = absolute('/');
 const schema = [
   { '@type': 'WebSite', name: site.name, url, inLanguage: site.lang },
@@ -27,7 +26,7 @@ const schema = [
   <Intro title="Blog">
     {site.description}. Follow along with <a href="/rss.xml">RSS</a>.
   </Intro>
-  {posts.length ? <PostList posts={shown} lead priority /> : <p>Nothing here yet. Noot.</p>}
+  {posts.length ? <PostList posts={shown} featured priority /> : <p>Nothing here yet. Noot.</p>}
   {posts.length > shown.length && (
     <p class="more">
       <a class="button raised" href="/archive/">

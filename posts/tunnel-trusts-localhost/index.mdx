@@ -1,0 +1,103 @@
+---
+title: Your reverse proxy makes the internet look like localhost
+description: If you put Transmission, Syncthing or Ollama behind a reverse proxy, internet requests can appear to come from 127.0.0.1 and bypass local-only protections.
+date: 2026-11-13
+tags: [security, self-hosting, networking]
+---
+
+import Collapse from './collapse.astro';
+
+You've got Transmission or Ollama on your home server, bound to `127.0.0.1` so nothing else on the network can touch it. Now you want it from your phone, so you put Cloudflare Tunnel or an nginx reverse proxy in front. Feels like another layer between the internet and the app.
+
+It's the opposite. The proxy runs on the same box, and when it forwards a request it opens a fresh connection to `127.0.0.1`. The app never sees your phone, or the internet. It sees a connection from loopback, the one address it was told only this machine could use. "Only this machine can reach it" quietly became "anyone who can reach the proxy can reach it", and the proxy is on the internet.
+
+<Collapse />
+
+I put three of them behind a Caddy proxy on the same box, all on their shipped defaults, and sent requests from outside with no password. Versions are from Alpine's packages on 13 November: Transmission 4.1.4, Syncthing 2.1.7, Ollama 0.17.7.
+
+## They see it coming, then tell you to turn it off
+
+Here's the bit that makes this worth a post. These apps aren't naive about loopback trust. All three ship a defence against exactly this, built for a related attack called DNS rebinding, where a web page you're visiting quietly points a name at `127.0.0.1` and talks to your local services through your browser. The defence is to check the `Host` header and refuse anything that isn't `localhost` or on a whitelist.
+
+So out of the box, through a proxy that forwards your real hostname, all three say no:
+
+```
+Transmission  421 Misdirected Request
+Syncthing     403 Host check error
+Ollama        403
+```
+
+Transmission's 421 even explains itself, and points you at the fix:
+
+```
+421: Misdirected Request. Transmission received your request, but the
+hostname was unrecognized. To fix this, choose one of the following options:
+ - Enable password authentication, then any hostname is allowed.
+ - Add the hostname you want to use to the whitelist in settings.
+   [...]
+This requirement has been added to help prevent DNS Rebinding attacks.
+```
+
+Fair enough. So you go and read the reverse-proxy guide. Ollama's FAQ tells you to set `Host` to `localhost:11434` for nginx, ngrok and Cloudflare. For Syncthing it's the top answer in a [years-old docs issue](https://github.com/syncthing/docs/issues/380). Either way it's the natural fix, because otherwise the app blocks your shiny new proxy. One line in the config:
+
+```nginx
+proxy_set_header Host localhost;
+```
+
+And that's the Host-check gone. Every request now arrives claiming to be `localhost`, from `127.0.0.1`, with no password. Here's what each one hands over.
+
+## Transmission: the whole RPC, read and write
+
+Transmission's RPC is the interface Tavis Ormandy [turned into remote code execution in 2018](https://nvd.nist.gov/vuln/detail/CVE-2018-5702) through DNS rebinding. Out of the box it wants no password (`rpc-authentication-required` is `false`), just the Host-check you've now removed.
+
+The first request back a 409 with a session id. That looks like a login, but it isn't - it's an anti-CSRF nonce, handed to anyone who asks. Send it straight back and the RPC answers:
+
+```
+$ curl proxy/transmission/rpc -d '{"method":"session-get"}'
+409 Conflict   X-Transmission-Session-Id: gn2cIH...
+
+$ curl proxy/transmission/rpc -H 'X-Transmission-Session-Id: gn2cIH...' \
+    -d '{"method":"session-get"}'
+{"result":"success","arguments":{"version":"4.1.4",
+ "download-dir":"/root/Downloads", ...}}
+```
+
+That's read. `session-set` works the same way, so an outside request can change where Transmission writes files too - the first half of Ormandy's trick. No credentials anywhere.
+
+## Syncthing: the admin API, and its master key
+
+Syncthing ships with no GUI password. Its REST API wants a CSRF token for writes, but it hands one out to anyone who loads the page, since the page has no password either. Grab the token, then read the config:
+
+```
+$ curl proxy/rest/system/config
+{"gui":{"user":"","password":"","apiKey":"..."}, "devices":[...]}
+```
+
+No user, no password, and `apiKey` right there in the response. That key is Syncthing's all-access credential - with it you can rewrite the whole config, add your own device, redirect folders. Even if you later set a GUI password, the key you leaked still works.
+
+## Ollama: your models, and the GPU behind them
+
+Ollama's the plainest. With the `Host` rewrite its API just answers:
+
+```
+$ curl proxy/api/tags
+{"models":[ ... ]}
+```
+
+`/api/tags` lists your models. There's no auth in front of any of it, so `/api/pull`, `/api/delete` and `/api/generate` answer the same way - an outsider can pull a model onto your disk, delete the ones you have, or run prompts on your GPU. Ollama's had no auth of its own for most of its life, on the assumption it's only ever reachable from the machine it runs on. Which was true until you tunnelled it.
+
+## Not everything falls over
+
+qBittorrent 5.3.0 is the counter-example. Through the same proxy it returns `403 Forbidden`, because it now prints a random one-time WebUI password on first start and its old "bypass auth for localhost" toggle ships off. So this isn't a law of reverse proxies - it's three apps whose "localhost is safe" assumption the proxy quietly breaks, and one that stopped making it.
+
+The difference is just whether the app has real auth that doesn't lean on where the request came from. A password, an API key you actually have to send, a token at the edge - any of those and the proxy's loopback address buys an attacker nothing.
+
+And it's not a lab toy. GPUStack, a server for running models across GPUs, had the same bug: any request from loopback was handed admin, and a same-box reverse proxy made every outside request look like loopback. It was [exploited in the wild and added to CISA's known-exploited list last week](https://github.com/gpustack/gpustack/security/advisories/GHSA-gj9m-f8ph-pmhr). Same shape, a bigger blast radius.
+
+So before you tunnel anything, the one rule: a tunnel is not a password.
+
+- Turn on the app's own auth, or put a password or SSO layer at the proxy, before it's reachable.
+- Never "fix" a `Host`-check error by whitelisting your public hostname or rewriting `Host` to `localhost` without also setting auth. That error is the rebinding defence doing its job.
+- Check any "trusted networks", "bypass for local addresses" or "no auth on localhost" toggle. Behind a same-box proxy, local means everyone.
+
+What gets me is the shape of it. These apps saw loopback abuse coming and shipped a defence against it, and then the standard way to get them working behind a proxy is the one thing that switches it back off.

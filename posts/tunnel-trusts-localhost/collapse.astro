@@ -1,0 +1,97 @@
+---
+const sources = [
+  { ip: '203.0.113.9', who: 'your phone' },
+  { ip: '198.51.100.2', who: 'a laptop' },
+  { ip: '192.0.2.44', who: 'someone else' },
+];
+---
+
+<figure class="collapse">
+  <svg viewBox="0 0 720 260" role="img" aria-labelledby="collapse-title">
+    <title id="collapse-title">
+      Three visitors with different public IP addresses all reach a reverse proxy, which
+      opens a connection to the app from 127.0.0.1, so the app sees every one of them as
+      loopback.
+    </title>
+
+    {sources.map((s, i) => {
+      const y = 36 + i * 80;
+      return (
+        <>
+          <rect class="box src" x="8" y={y} width="178" height="52" rx="6" />
+          <text class="ip" x="97" y={y + 24} text-anchor="middle">{s.ip}</text>
+          <text class="who" x="97" y={y + 42} text-anchor="middle">{s.who}</text>
+          <line class="wire" x1="186" y1={y + 26} x2="250" y2="130" />
+        </>
+      );
+    })}
+
+    <rect class="box proxy" x="250" y="100" width="150" height="60" rx="6" />
+    <text class="label" x="325" y="126" text-anchor="middle">reverse proxy</text>
+    <text class="sub" x="325" y="146" text-anchor="middle">same server</text>
+
+    <line class="wire loop" x1="400" y1="130" x2="520" y2="130" marker-end="url(#arrow)" />
+    <text class="loop-label" x="456" y="118" text-anchor="middle">127.0.0.1</text>
+
+    <rect class="box app" x="520" y="92" width="192" height="76" rx="6" />
+    <text class="label" x="616" y="124" text-anchor="middle">your app</text>
+    <text class="sub" x="616" y="146" text-anchor="middle">trusts 127.0.0.1</text>
+
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" />
+      </marker>
+    </defs>
+  </svg>
+
+  <style>
+    .collapse {
+      margin: var(--space-xl) 0;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      font-family: var(--font-mono);
+    }
+    .box {
+      fill: var(--surface);
+      stroke: var(--border);
+      stroke-width: 1.5;
+    }
+    .app {
+      stroke: var(--accent);
+      stroke-width: 2;
+    }
+    .ip {
+      fill: var(--text);
+      font-size: 14px;
+    }
+    .who,
+    .sub {
+      fill: var(--text-muted);
+      font-size: 12px;
+    }
+    .label {
+      fill: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .wire {
+      stroke: var(--text-muted);
+      stroke-width: 1.5;
+      fill: none;
+    }
+    .loop {
+      stroke: var(--accent);
+      stroke-width: 2.5;
+    }
+    .loop-label {
+      fill: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    #arrow path {
+      fill: var(--accent);
+    }
+  </style>
+</figure>

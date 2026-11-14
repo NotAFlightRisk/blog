@@ -30,7 +30,7 @@
     "@fontsource/bricolage-grotesque": "^5.3.0",
     "@sentry/browser": "^11.10.0",
     "@shikijs/transformers": "^4.6.0",
-    "astro": "^7.4.5",
+    "astro": "^7.4.12",
     "rehype-autolink-headings": "^7.1.0",
     "satori": "^0.63.2",
     "sharp": "^0.35.5"

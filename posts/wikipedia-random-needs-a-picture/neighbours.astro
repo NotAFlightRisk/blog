@@ -1,0 +1,122 @@
+---
+// Isodaphne albolineata and the 11 pages either side of it, in page_random order
+const pages = [
+  ...Array(7).fill('none'),
+  'picture',
+  'dab',
+  'picture',
+  'dab',
+  'none target',
+  ...Array(4).fill('picture'),
+  'none',
+  'none',
+  ...Array(5).fill('picture'),
+];
+const tile = 28;
+const step = 32;
+const left = 12;
+const x = (index: number) => left + index * step;
+const centre = x(11) + tile / 2;
+const windows = Array.from({ length: 12 }, (_, start) => start);
+const legend = [
+  { kind: 'picture', label: 'has a picture', x: 12, y: 254 },
+  { kind: 'none', label: 'no picture', x: 330, y: 254 },
+  { kind: 'dab', label: 'disambiguation page', x: 12, y: 296 },
+];
+---
+
+<figure class="neighbours">
+  <svg viewBox="0 0 760 320" role="img" aria-labelledby="neighbours-title">
+    <title id="neighbours-title">
+      A row of 23 pages in Wikipedia's random order, with Isodaphne albolineata, a page with no
+      picture, in the middle. Below it are the 12 possible runs of 12 pages that include it.
+      Every one of those runs also has at least one page with a picture, so the picture always
+      wins and Isodaphne albolineata never does.
+    </title>
+
+    <text class="name" x={centre} y="28" text-anchor="middle">
+      Isodaphne albolineata
+    </text>
+    <line class="pointer" x1={centre} y1="36" x2={centre} y2="48" />
+
+    {pages.map((kind, index) => (
+      <rect class={`page ${kind}`} x={x(index)} y="52" width={tile} height={tile} rx="4" />
+    ))}
+
+    {windows.map((start) => (
+      <line
+        class="window"
+        x1={x(start) + 2}
+        x2={x(start + 11) + tile - 2}
+        y1={102 + start * 10}
+        y2={102 + start * 10}
+      />
+    ))}
+
+    <g class="legend">
+      {legend.map((item) => (
+        <>
+          <rect
+            class={`page ${item.kind}`}
+            x={item.x}
+            y={item.y - 20}
+            width="24"
+            height="24"
+            rx="4"
+          />
+          <text x={item.x + 36} y={item.y}>
+            {item.label}
+          </text>
+        </>
+      ))}
+      <line class="window" x1="330" y1={288} x2="370" y2={288} />
+      <text x="382" y="296">
+        one run of 12
+      </text>
+    </g>
+  </svg>
+
+  <style>
+    .neighbours {
+      margin: var(--space-xl) 0;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      font-family: var(--font-mono);
+    }
+    .page {
+      stroke: none;
+    }
+    .picture {
+      fill: var(--series-1);
+    }
+    .none {
+      fill: var(--series-3);
+    }
+    .dab {
+      fill: var(--series-4);
+    }
+    .target {
+      stroke: var(--text);
+      stroke-width: 3;
+    }
+    .name {
+      fill: var(--text);
+      font-size: 26px;
+      font-weight: 600;
+    }
+    .pointer,
+    .window {
+      stroke: var(--text-muted);
+      stroke-width: 2;
+    }
+    .window {
+      stroke-linecap: round;
+    }
+    .legend text {
+      fill: var(--text-muted);
+      font-size: 22px;
+    }
+  </style>
+</figure>

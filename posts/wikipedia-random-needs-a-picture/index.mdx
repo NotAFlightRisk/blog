@@ -1,0 +1,92 @@
+---
+title: Wikipedia's app picks a random article, if it has a picture
+description: The Wikipedia apps pick the best-looking of 12 neighbouring articles, so nearly all of the 3.4 million without a picture have no chance of coming up.
+date: 2026-11-14
+tags: [wikipedia, opensource, api]
+---
+
+import Waffle from '../../src/components/mdx/Waffle.astro';
+import Neighbours from './neighbours.astro';
+import pages from './data.json';
+
+In June, a tester at the Wikimedia Foundation was checking the Random article card in the Android app's new For You feed. The spec says the card uses the article's picture as its background, and falls back to a gradient when there isn't one. So they kept pressing random, looking for an article with no picture. They never found one, and wrote on [the ticket](https://phabricator.wikimedia.org/T419755):
+
+> Just like AC3 I was clicking a number of times but did not come across one. Is there a random article that would display one?
+
+The only reply said the Randomizer screen behind the card's shuffle button was another ticket's job, so they may not even have been on the card. Nobody said whether such an article exists. It's a fair question, since about half of English Wikipedia's articles have no picture, and on either screen the answer is: barely. On October's database dumps, about 3.4 million articles have no picture, and more than 99.5% of those can't turn up as the app's random article at all.
+
+## Best of twelve
+
+The apps get their random article from `/api/rest_v1/page/random/summary`, which is answered by a small service called [wikifeeds](https://github.com/wikimedia/mediawiki-services-wikifeeds). Here's how it picks, from [`lib/random.js`](https://github.com/wikimedia/mediawiki-services-wikifeeds/blob/master/lib/random.js), trimmed:
+
+```js
+// ask MediaWiki for 12 random articles, then score each one
+if (page.pageprops && (page.pageprops.page_image || page.pageprops.page_image_free)) {
+  score += 2.0;
+}
+if (page.description) {
+  score += 1.0;
+}
+if (isDisambiguationPage || isListPage) {
+  score -= 10.0;
+}
+```
+
+Then it picks at random from whichever scored highest. A comment in the same file says "requesting about 12 items seems to consistently produce a really 'good' result", and it does. Just under half of articles have a picture, so the odds of 12 random ones having none between them are roughly 1 in 2,600. Articles with no picture would be long shots, but they'd all get the odd go.
+
+## The twelve are next-door neighbours
+
+Except the 12 aren't 12 separate random draws. Every Wikipedia page gets a random number between 0 and 1 when it's created, and asking the API for random pages picks one random starting point, then hands back the next 12 pages in that order. The [API's help](https://en.wikipedia.org/w/api.php?action=help&modules=query%2Brandom) says so: "Pages are listed in a fixed sequence, only the starting point is random."
+
+Here's the exact call wikifeeds makes, which I ran today, with the score each page gets, best first (all 12 have a description, so that's a point each):
+
+```
+3  picture  Dell Comics
+3  picture  Deepak Thakur
+3  picture  Euphorbia maculata
+3  picture  Harry Walker (politician)
+3  picture  James L. Dozier
+3  picture  John Lindsay Stewart
+3  picture  Julie (EP)
+3  picture  Paroedura karstophila
+3  picture  Wortham, Suffolk
+1  -        Audiard
+1  -        Chabet el Ameur
+1  -        Isodaphne albolineata
+```
+
+Nine have a picture, so one of those nine wins. Isodaphne albolineata, a sea snail, loses. And it'll lose every time, because whichever starting point lands it in the 12, its neighbours come along too. There are only 12 runs of 12 it can ever be part of, and every one of them has a page with a picture in it.
+
+<Neighbours />
+
+That's the story for nearly every article with no picture. Draw 12 separately and the odds get shared out thinly across all of them. Draw 12 neighbours and the same small slice goes to the few that happen to sit in a stretch with no picture, and everything else gets nothing. I worked out every article's odds from October's dumps, which have each page's random number and whether it has a picture:
+
+<Waffle title="English Wikipedia's 7.25 million pages, October 2026" data={pages}>
+  The no-picture pages that can come up at all are too few to fill a single square.
+</Waffle>
+
+It doesn't wash out over time, either. The random numbers stay put, so the same pages lose on every call. Of the pages with no chance on August's numbers, only 0.1% had gained one by October.
+
+The live API agrees. I asked it 200 times on 10 November and another 41 today, and every article it handed back has a picture.
+
+## The ones that do get through
+
+There are only about 1,300 places in the whole order where 12 or more pages in a row have no picture. The longest run is 22 pages, and it holds Roy Essandoh, who turned up at Wycombe Wanderers because of an advert on Ceefax (the BBC's old teletext pages), then scored the winner in an FA Cup quarter-final. He's in there with Muirisc, a legendary ruler in what's now County Mayo, and the article on the Browser Object Model. Essandoh's last in the run, right before a page with a picture, so he gets about a hundredth of a fair chance.
+
+## Who gets this version of random
+
+The website's Special:Random doesn't do any of this. It takes the first page after a random number, picture or not. It has [its own skew](https://colinmorris.github.io/blog/unpopular-wiki-articles) from uneven gaps between the numbers, but nothing like this.
+
+The apps do. Android's Random card and the iOS random button (and its new Random widget) both call `page/random/summary`. Android's Randomizer screen has its own picky version that's even worse: it can only ever show about 0.1% of the articles with no picture.
+
+So does anything else that asked wikifeeds for a random article. GitHub's code search finds `page/random/summary` in about 1,200 files, including trivia games, Discord bots and MCP servers that hand an AI a random Wikipedia page. All of them get the best-looking of 12 neighbours. The endpoint was made in 2016 to fill the app's feed with something that looks nice, and it's still good at that. It's just not a random article.
+
+If you want one that is, ask MediaWiki for a single page:
+
+```sh
+curl -G https://en.wikipedia.org/w/api.php \
+  -d action=query -d list=random -d rnnamespace=0 \
+  -d rnlimit=1 -d format=json
+```
+
+As for the tester's question: yes, there's one. Arthur C. Cope, the chemist behind the Cope rearrangement, has no photo on Wikipedia, and he's in one of the four luckiest spots in the order for an article without one. He comes up about once every 5.8 million calls, which is slightly better odds than a fair draw would give him.

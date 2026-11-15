@@ -1,0 +1,91 @@
+---
+title: Android tells your headphones it's an iPhone
+description: If your headphones' battery only ever reads 100, 90, 80 on Android or Linux, it's Apple's 0-to-9 scale, and your phone answers as an iPhone to get it.
+date: 2026-11-15
+tags: [android, bluetooth, linux, opensource]
+---
+
+import Quote from '../../src/components/mdx/Quote.astro';
+import Scale from './scale.astro';
+
+Somewhere in the Bluetooth code that ships with Android is [this line](https://android.googlesource.com/platform/packages/modules/Bluetooth/+/refs/heads/main/android/app/src/com/android/bluetooth/hfp/HeadsetStateMachine.java):
+
+```java title="HeadsetStateMachine.java"
+// feature = 2 indicates that we support battery level reporting only
+mNativeInterface.atResponseString(device, "+XAPL=iPhone," + String.valueOf(2));
+```
+
+That's your phone telling your headphones it's an iPhone. Android's been saying it since 8.1 in 2017, ChromeOS says it too, and so do PipeWire and PulseAudio on Linux. It's also why plenty of headphones show their battery in tens on all of them, and why "10%" can mean they're nearly dead.
+
+## Apple's way of asking
+
+Calls on Bluetooth headphones go over the Hands-Free Profile, which is mostly old modem-style text commands going back and forth. Apple added a few of its own in its [Accessory Design Guidelines](https://developer.apple.com/accessories/Accessory-Design-Guidelines.pdf). Headphones that want their battery shown on an iPhone send `AT+XAPL` with their vendor ID, product ID and firmware version, then a number saying which of Apple's features they support. The guidelines give exactly one reply to that: `+XAPL=iPhone,` and the features the phone supports.
+
+Then the headphones send their battery level with `AT+IPHONEACCEV`. Here's a pair of Mpow Flame S doing both, from an [HCI snoop log](https://github.com/TheWeirdDev/Bluetooth_Headset_Battery_Level/issues/21) someone pulled off their phone:
+
+```
+Rcvd AT+XAPL=0000-0000-0100,7
+Rcvd AT+IPHONEACCEV=2,1,5,2,0
+```
+
+The first number in the second line says two pairs follow. Key 1 is the battery, which is a 5, and key 2 is the dock state, which is 0 for not docked.
+
+The phone in that log was on Android 7.1, before Android learned the iPhone line, and it just said `OK`. The Mpow sent its battery anyway, so not every pair of headphones waits to be told. But for plenty of them Apple's command is the only way they report their battery at all, and Apple's spec only has the one answer, so that's the answer everyone gives.
+
+Headphones play along from their end too. [One set of earbud firmware on GitHub](https://github.com/gdgly/test1/blob/master/Earbuds1/apps/applications/earbud/tws/battery_status_notify.c) opens with `AT+XAPL=05AC-1702-0100,7`, and `05AC` is Apple's USB vendor ID. On a connection to an Android phone, both ends are claiming to be Apple.
+
+## A digit from 0 to 9
+
+That 5 isn't a percentage. Apple's guidelines say the battery level is "a string value between '0' and '9'", and that's all they say. Nothing about what a 0 means, or how to turn it into a percentage.
+
+Android, ChromeOS's Floss, PipeWire and PulseAudio all do the same sum with it anyway: add one, times by ten. A 5 is 60%, a 9 is 100% and a 0 is 10%. Floss is nicely upfront about where its `(n + 1) * 10` came from:
+
+<Quote by="Floss, ChromeOS's Bluetooth stack" href="https://android.googlesource.com/platform/packages/modules/Bluetooth/+/refs/heads/main/system/gd/rust/linux/utils/src/at_command_parser.rs">
+  The guidelines do not specify that this maps to [10, 100] but that is how other Bluetooth stacks interpret it so we do so as well.
+</Quote>
+
+At least one stack did try a straight 0-to-100 scale. hsphfpd, a prototype Linux headset daemon, showed a 7 as 77%, until someone whose phone said 80% [sent in a fix](https://github.com/pali/hsphfpd-prototype/pull/3) in 2020, as "reporting 0% battery level wouldn't be very useful".
+
+That's where the tens come from. Headphones that only use Apple's command can show ten values, and 0% isn't one of them.
+
+## What's a 10%, then?
+
+That's down to whoever wrote the headphones' firmware, since Apple doesn't say. Here's how that same earbud firmware picks its digit (`0x30` is the character `0`):
+
+```c title="battery_status_notify.c"
+data[BATTERY_POS] = ((percent - 1) / 10) + 0x30;
+```
+
+Anything from 1% to 10% goes out as a 0, and your phone shows it as 10%.
+
+<Scale />
+
+Other firmware will round its own way, but none of them can tell your phone it's on 3%.
+
+## There's been a proper one since 2014
+
+The Bluetooth SIG added a battery indicator to the Hands-Free Profile in [version 1.7](https://www.bluetooth.com/specifications/specs/hands-free-profile-1-7/). Headphones send `AT+BIEV=2,` and then a percentage from 0 to 100, and Android, Floss, PipeWire and PulseAudio all show it as it is.
+
+Headphones just don't seem to send it as often. In the GitHub and PipeWire issues I could find where someone had pasted the commands, Apple's outnumbered it more than two to one, though that's a small pile and nearly all of it from Linux users.
+
+Some send both. Here's what the developer of a GNOME battery extension [got from their own earbuds](https://github.com/maniacx/Bluetooth-Battery-Meter/issues/21) with `btmon`:
+
+```
+$ sudo btmon | grep -A1 -E "IPHONEACCEV|BIEV|XEVENT=BATTERY"
+        41 54 2b 42 49 45 56 3d 32 2c 37 31 0d 40        AT+BIEV=2,71.@
+--
+        41 54 2b 49 50 48 4f 4e 45 41 43 43 45 56 3d 32  AT+IPHONEACCEV=2
+        2c 31 2c 37 2c 32 2c 30 0d 40                    ,1,7,2,0.@
+```
+
+That's 71% and 80% for the same battery. It's a handy command, too, if you want to see what your own headphones send on Linux.
+
+On Android up to 16, whichever arrives last is what you see. Android 17 [switches on a flag](https://android.googlesource.com/platform/build/release/+/refs/heads/android17-release/aconfig/cp2a/com.android.bluetooth.flags/enable_battery_level_update_only_through_hf_indicator_flag_values.textproto) that ignores Apple's command once the headphones say they support the proper one. It still answers as an iPhone, though.
+
+If your headphones show something like 87%, they're using this, or Bluetooth's Battery Service, which Android reads first when it's there, or the maker's own app.
+
+## Apple's moved on
+
+The [newest version of Apple's guidelines](https://developer.apple.com/accessories/Accessory-Design-Guidelines.pdf), from October, has a section on that Battery Service, supported from iOS 26. The iPhone reads it over the same Bluetooth link the headphones already use for calls, and the guidelines tell headphones that support it not to bother with the Hands-Free battery indicator, as the iPhone will ignore it.
+
+`AT+IPHONEACCEV` is still in there too, on the page before.

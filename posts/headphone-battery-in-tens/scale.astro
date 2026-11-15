@@ -1,0 +1,97 @@
+---
+// one firmware's buckets, top cell is a 9, bottom one's the 0
+const digits = Array.from({ length: 10 }, (_, index) => 9 - index);
+const top = 76;
+const step = 54;
+const y = (row: number) => top + row * step;
+---
+
+<figure class="scale">
+  <svg viewBox="0 0 640 640" role="img" aria-labelledby="scale-title">
+    <title id="scale-title">
+      A battery split into ten cells, one for each digit from 0 to 9. On the left is the real
+      charge each digit covers in one earbud firmware: 1 to 10% sends a 0, 11 to 20% a 1, and so
+      on up to 91 to 100%, which sends a 9. On the right is what the phone shows: the digit plus
+      one, times ten. So the bottom cell, anything from 1 to 10%, shows as 10%.
+    </title>
+
+    <text class="heading" x="236" y="30" text-anchor="end">real charge</text>
+    <text class="heading" x="320" y="30" text-anchor="middle">sent</text>
+    <text class="heading" x="404" y="30">on screen</text>
+
+    <rect class="nub" x="296" y="56" width="48" height="14" rx="3" />
+    <rect class="body" x="256" y="68" width="128" height={step * 10 + 4} rx="10" />
+
+    {digits.map((digit, row) => (
+      <g class:list={['cell', { bottom: digit === 0 }]}>
+        <rect x="264" y={y(row)} width="112" height={step - 8} rx="5" />
+        <text class="range" x="236" y={y(row) + 32} text-anchor="end">
+          {digit * 10 + 1}-{(digit + 1) * 10}%
+        </text>
+        <text class="digit" x="320" y={y(row) + 33} text-anchor="middle">
+          {digit}
+        </text>
+        <text class="shown" x="404" y={y(row) + 32}>
+          {(digit + 1) * 10}%
+        </text>
+      </g>
+    ))}
+  </svg>
+
+  <style>
+    .scale {
+      margin: var(--space-xl) auto;
+      max-width: 32rem;
+    }
+    svg {
+      width: 100%;
+      height: auto;
+      font-family: var(--font-mono);
+    }
+    .heading {
+      fill: var(--text-muted);
+      font-size: 22px;
+    }
+    .nub,
+    .body {
+      fill: none;
+      stroke: var(--text);
+      stroke-width: 4;
+    }
+    .nub {
+      fill: var(--text);
+    }
+    .cell {
+      rect {
+        fill: var(--surface);
+        stroke: var(--border);
+        stroke-width: 2;
+      }
+      text {
+        font-size: 26px;
+      }
+      .range {
+        fill: var(--text-muted);
+      }
+      .digit,
+      .shown {
+        fill: var(--text);
+        font-weight: var(--weight-strong);
+      }
+    }
+    .bottom {
+      rect {
+        fill: var(--accent);
+        stroke: none;
+      }
+      .digit {
+        fill: var(--on-accent);
+      }
+      .range,
+      .shown {
+        fill: var(--text);
+        font-weight: var(--weight-strong);
+      }
+    }
+  </style>
+</figure>

@@ -131,6 +131,32 @@ pre {
   }
 }
 
+/* a row of square icon buttons, six to a row so stacked rows line up whatever their count */
+.icon-buttons {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, var(--target)));
+  gap: var(--space-2xs);
+
+  & .button {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 1;
+    padding: 0;
+
+    /* inside the square, since the rail would clip it at either end */
+    &:focus-visible {
+      outline-offset: calc(var(--outline-offset) * -1);
+    }
+  }
+
+  & svg {
+    width: var(--icon-small);
+    height: var(--icon-small);
+  }
+}
+
 /* a raised box for a link to another post, with the post's art across the top */
 .panel {
   border-radius: var(--radius);

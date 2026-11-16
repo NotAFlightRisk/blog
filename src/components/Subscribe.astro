@@ -1,0 +1,28 @@
+---
+import Dev from '../icons/dev.svg';
+import Rss from '../icons/rss.svg';
+import { readers, subscribeEvent } from '../lib/readers';
+import { site } from '../site';
+
+const feeds = [{ name: 'RSS', Icon: Rss, href: site.feed }, ...readers];
+const links = [
+  ...feeds.map((feed) => ({ ...feed, label: `Subscribe with ${feed.name}` })),
+  { name: 'DEV', Icon: Dev, href: site.author.dev, label: 'Follow on DEV' },
+];
+---
+
+<ul class="icon-buttons">
+  {links.map(({ name, Icon, href, label }) => (
+    <li>
+      <a
+        class:list={['button raised', subscribeEvent(name)]}
+        {href}
+        target="_blank"
+        aria-label={label}
+        title={label}
+      >
+        <Icon aria-hidden="true" />
+      </a>
+    </li>
+  ))}
+</ul>

@@ -3,9 +3,11 @@ import { getImage, Picture } from 'astro:assets';
 import { render } from 'astro:content';
 import '../../styles/prose.css';
 import '../../styles/code.css';
+import Follow from '../../components/Follow.astro';
 import PostArt from '../../components/PostArt.astro';
 import PostList from '../../components/PostList.astro';
 import Share from '../../components/Share.astro';
+import Subscribe from '../../components/Subscribe.astro';
 import Toc from '../../components/Toc.astro';
 import Base from '../../layouts/Base.astro';
 import { formatDate, isoDate, readingTime } from '../../lib/format';
@@ -125,6 +127,12 @@ const schema = [
               <Share {url} {title} />
             </dd>
           </div>
+          <div>
+            <dt>Subscribe</dt>
+            <dd>
+              <Subscribe />
+            </dd>
+          </div>
         </dl>
         <a class="raw" href={rawUrl(post)}>
           View as Markdown
@@ -148,6 +156,7 @@ const schema = [
     </div>
 
     <footer>
+      <Follow />
       {(newer || older) && (
         <nav aria-label="Next and previous posts" class="neighbours">
           {older && (

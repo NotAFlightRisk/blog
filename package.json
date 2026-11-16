@@ -7,7 +7,7 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.23.4"
   },
   "scripts": {
     "dev": "astro dev",
@@ -16,6 +16,7 @@
     "check": "astro check",
     "charts": "node scripts/chart-images.ts",
     "crosspost": "node scripts/crosspost.ts",
+    "indexnow": "node scripts/indexnow.ts",
     "og": "node scripts/og-cards.ts",
     "test": "node --test \"src/**/*.test.ts\"",
     "format": "prettier --write src scripts astro.config.ts vercel.json .github/workflows",

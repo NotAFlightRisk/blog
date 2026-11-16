@@ -1,0 +1,39 @@
+---
+import Rss from '../icons/rss.svg';
+---
+
+<aside>
+  <p>Get the next post in your feed reader, no email needed.</p>
+  <a class="button" href="/subscribe/">
+    <Rss aria-hidden="true" />
+    Subscribe
+  </a>
+</aside>
+
+<style>
+  aside {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s) var(--space-m);
+    padding: var(--space-m);
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--on-accent);
+
+    & ::selection {
+      background: var(--on-accent);
+      color: var(--accent);
+    }
+  }
+
+  p {
+    margin: 0;
+    font-weight: var(--weight-strong);
+  }
+
+  svg {
+    width: var(--icon-small);
+  }
+</style>

@@ -2,23 +2,15 @@
 import Intro from '../components/Intro.astro';
 import Base from '../layouts/Base.astro';
 import { absolute } from '../lib/posts';
+import { readers } from '../lib/readers';
 import { site } from '../site';
 
 const feed = absolute(site.feed);
-const query = (params: Record<string, string>) => new URLSearchParams(params);
-const readers = [
-  {
-    name: 'Feedly',
-    href: `https://feedly.com/i/subscription/${encodeURIComponent(`feed/${feed}`)}`,
-  },
-  { name: 'Inoreader', href: `https://www.inoreader.com/?${query({ add_feed: feed })}` },
-  { name: 'NewsBlur', href: `https://www.newsblur.com/?${query({ url: feed })}` },
-];
 ---
 
 <Base
   title="Subscribe"
-  description="Follow the blog with RSS. Paste the feed into any reader, or add it to Feedly, Inoreader or NewsBlur in one click."
+  description="Follow the blog with RSS. Paste the feed into any reader, or add it to Feedly, Inoreader, NewsBlur or Feedbin in one click."
 >
   <Intro title="Subscribe">
     Get every new post in full, in whatever feed reader you like. No email address needed.
@@ -38,9 +30,10 @@ const readers = [
   <section aria-labelledby="readers">
     <h2 id="readers">Or add it in one click</h2>
     <ul>
-      {readers.map(({ name, href }) => (
+      {readers.map(({ name, Icon, href }) => (
         <li>
           <a class="button raised" {href} target="_blank">
+            <Icon aria-hidden="true" />
             {name}
           </a>
         </li>
@@ -128,6 +121,10 @@ const readers = [
 
   ul a {
     font-size: var(--text-base);
+  }
+
+  svg {
+    width: var(--icon-small);
   }
 
   p {

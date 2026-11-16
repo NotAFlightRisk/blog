@@ -7,6 +7,7 @@ import Follow from '../../components/Follow.astro';
 import PostArt from '../../components/PostArt.astro';
 import PostList from '../../components/PostList.astro';
 import Share from '../../components/Share.astro';
+import Subscribe from '../../components/Subscribe.astro';
 import Toc from '../../components/Toc.astro';
 import Base from '../../layouts/Base.astro';
 import { formatDate, isoDate, readingTime } from '../../lib/format';
@@ -124,6 +125,12 @@ const schema = [
             <dt>Share</dt>
             <dd>
               <Share {url} {title} />
+            </dd>
+          </div>
+          <div>
+            <dt>Subscribe</dt>
+            <dd>
+              <Subscribe />
             </dd>
           </div>
         </dl>

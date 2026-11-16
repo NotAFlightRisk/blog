@@ -1,0 +1,23 @@
+---
+import Rss from '../icons/rss.svg';
+import { readers } from '../lib/readers';
+import { site } from '../site';
+
+const links = [{ name: 'RSS', Icon: Rss, href: site.feed }, ...readers];
+---
+
+<ul class="icon-buttons">
+  {links.map(({ name, Icon, href }) => (
+    <li>
+      <a
+        class="button raised"
+        {href}
+        target="_blank"
+        aria-label={`Subscribe with ${name}`}
+        title={`Subscribe with ${name}`}
+      >
+        <Icon aria-hidden="true" />
+      </a>
+    </li>
+  ))}
+</ul>

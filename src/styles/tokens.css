@@ -110,3 +110,18 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 }
+
+/* paper's always light and white, set a little smaller, with the page margins as the gutter */
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+    print-color-adjust: exact;
+
+    --bg: var(--surface);
+    --font-mono: var(--font-print-mono);
+    --text-base: 11pt;
+    --text-title: 28pt;
+    --gutter: 0;
+  }
+}

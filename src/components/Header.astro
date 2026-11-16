@@ -66,6 +66,10 @@ const links = [...nav, { label: 'Search', href: '/search/' }];
     overflow: clip;
     view-transition-name: bar;
 
+    @media print {
+      display: none;
+    }
+
     /* he's already yellow up here, so the highlight swaps round */
     & ::selection {
       background: var(--on-accent);

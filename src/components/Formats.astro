@@ -1,0 +1,32 @@
+---
+import Markdown from '../icons/markdown.svg';
+import Pdf from '../icons/pdf.svg';
+import { pdfUrl, rawUrl, type Post } from '../lib/posts';
+
+interface Props {
+  post: Post;
+}
+
+const { post } = Astro.props;
+const formats = [
+  { name: 'Markdown', Icon: Markdown, href: rawUrl(post), type: 'text/markdown' },
+  { name: 'PDF', Icon: Pdf, href: pdfUrl(post), type: 'application/pdf' },
+];
+---
+
+<ul class="icon-buttons">
+  {formats.map(({ name, Icon, href, type }) => (
+    <li>
+      <a
+        class="button raised"
+        {href}
+        {type}
+        target="_blank"
+        aria-label={`View as ${name}`}
+        title={`View as ${name}`}
+      >
+        <Icon aria-hidden="true" />
+      </a>
+    </li>
+  ))}
+</ul>

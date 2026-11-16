@@ -77,8 +77,14 @@ const keys = Object.keys(table?.[0] ?? {});
     cursor: pointer;
   }
 
-  details table {
-    margin-top: var(--space-s);
+  details {
+    @media print {
+      display: none;
+    }
+
+    & table {
+      margin-top: var(--space-s);
+    }
   }
 
   .number {

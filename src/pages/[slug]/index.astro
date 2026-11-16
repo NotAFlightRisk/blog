@@ -4,6 +4,7 @@ import { render } from 'astro:content';
 import '../../styles/prose.css';
 import '../../styles/code.css';
 import Follow from '../../components/Follow.astro';
+import Formats from '../../components/Formats.astro';
 import PostArt from '../../components/PostArt.astro';
 import PostList from '../../components/PostList.astro';
 import Share from '../../components/Share.astro';
@@ -16,6 +17,7 @@ import {
   cardOf,
   getPosts,
   ogUrl,
+  pdfUrl,
   postUrl,
   rawUrl,
   tagUrl,
@@ -76,6 +78,7 @@ const schema = [
 
 <Base {title} {description} {image} article={{ published: date, modified: updated, tags }} {schema}>
   <link slot="head" rel="alternate" type="text/markdown" href={rawUrl(post)} />
+  <link slot="head" rel="alternate" type="application/pdf" href={pdfUrl(post)} />
 
   <article data-pagefind-meta={`image:${thumb}`}>
     <header>
@@ -133,10 +136,13 @@ const schema = [
               <Subscribe />
             </dd>
           </div>
+          <div>
+            <dt>Other formats</dt>
+            <dd>
+              <Formats {post} />
+            </dd>
+          </div>
         </dl>
-        <a class="raw" href={rawUrl(post)}>
-          View as Markdown
-        </a>
       </div>
     </div>
 
@@ -286,23 +292,15 @@ const schema = [
     & a {
       display: inline-block;
       padding-block: var(--space-2xs);
-    }
-  }
+      text-decoration-color: var(--accent);
 
-  .tags a,
-  .raw {
-    text-decoration-color: var(--accent);
-
-    @media (hover: hover) {
-      &:hover {
-        background: var(--accent);
-        color: var(--on-accent);
+      @media (hover: hover) {
+        &:hover {
+          background: var(--accent);
+          color: var(--on-accent);
+        }
       }
     }
-  }
-
-  .raw {
-    justify-self: start;
   }
 
   .prose {
@@ -372,5 +370,13 @@ const schema = [
   section h2 {
     margin: 0 0 var(--space-l);
     font-size: var(--text-large);
+  }
+
+  /* paper can't share, subscribe or click through to the next post */
+  @media print {
+    .actions,
+    footer {
+      display: none;
+    }
   }
 </style>

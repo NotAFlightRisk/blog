@@ -50,6 +50,10 @@ const elsewhere = [
     padding: var(--space-xs) var(--space-m);
     background: var(--surface);
     font-size: var(--text-small);
+
+    @media print {
+      display: none;
+    }
   }
 
   ul {

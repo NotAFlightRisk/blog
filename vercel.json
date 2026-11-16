@@ -22,6 +22,10 @@
       ]
     },
     {
+      "source": "/:slug.pdf",
+      "headers": [{ "key": "Link", "value": "<https://blog.peng.ly/:slug/>; rel=\"canonical\"" }]
+    },
+    {
       "source": "/llms(.*).txt",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     },

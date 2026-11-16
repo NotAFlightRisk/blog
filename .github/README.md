@@ -11,7 +11,7 @@
 
 ## About
 
-The writing bit of [peng.ly](https://peng.ly). It's a static [Astro](https://astro.build) site with hardly any JavaScript (the theme toggle, plus search, copy buttons and the contents' place marker where they're used), and every post also comes as full-text RSS, plain Markdown and an [llms.txt](https://blog.peng.ly/llms.txt) entry. There's a JSON list of the lot at [`/api/posts.json`](https://blog.peng.ly/api/posts.json) too, which is what peng.ly reads.
+The writing bit of [peng.ly](https://peng.ly). It's a static [Astro](https://astro.build) site with hardly any JavaScript (the theme toggle, plus search, copy buttons and the contents' place marker where they're used), and every post also comes as full-text RSS, plain Markdown, a PDF and an [llms.txt](https://blog.peng.ly/llms.txt) entry. There's a JSON list of the lot at [`/api/posts.json`](https://blog.peng.ly/api/posts.json) too, which is what peng.ly reads.
 
 ---
 
@@ -30,7 +30,7 @@ tags: [meta, astro]
 
 `updated`, `draft`, `featured` and `cover` are optional, and an `.mdx` post can use the callouts, figures, videos, charts, stats, timelines and the rest in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong. The home page shows the 50 newest posts (the count lives in `src/site.ts`), and any marked `featured: true` get a whole row to themselves.
 
-Feed readers can't draw the charts, so the RSS feed swaps each one for a picture. After adding or changing a chart, run `npm run charts` (it wants `npx playwright install chromium` the first time) and commit the PNGs it drops in the post's `charts/` folder. CI fails if a post's charts and pictures don't add up.
+Feed readers can't draw the charts, so the RSS feed swaps each one for a picture. After adding or changing a chart, run `npm run charts` and commit the PNGs it drops in the post's `charts/` folder. CI fails if a post's charts and pictures don't add up.
 
 Links to a post show a yellow card with its title and the penguin, drawn at build time. To give a post its own instead, design it in `posts/<slug>/og.html` and run `npm run og -- <slug>`, which turns it into the `og.png` next to it. Only the PNG gets committed, the HTML's ignored. The page gets the site's colours, font and a `.penguin` to drop in, so the HTML's just the card itself. The site and DEV then use that picture, and so do the post lists and search results. They all fall back to the drawn card when it's missing or isn't 1200x630.
 
@@ -47,7 +47,7 @@ npm install
 npm run dev
 ```
 
-That's on [localhost:4321](http://localhost:4321), drafts included. `npm run build` puts the finished site in `dist/`, and `npm run check` and `npm test` are what CI runs.
+That's on [localhost:4321](http://localhost:4321), drafts included. `npm run build` puts the finished site in `dist/`, and `npm run check` and `npm test` are what CI runs. The build prints the PDF copies with a Chromium that only comes for x64 Linux, so anywhere else it borrows your Google Chrome.
 
 ---
 

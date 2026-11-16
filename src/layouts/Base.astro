@@ -39,6 +39,7 @@ const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': schem
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline set:html={themeScript} />
     <Font cssVariable="--font-sans" preload />
+    <Font cssVariable="--font-print-mono" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta name="robots" content={noindex ? 'noindex' : 'max-image-preview:large'} />
@@ -106,6 +107,10 @@ const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': schem
 
     &:focus-visible {
       translate: none;
+    }
+
+    @media print {
+      display: none;
     }
   }
 

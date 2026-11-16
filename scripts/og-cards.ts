@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { chromium } from 'playwright';
 import { penguinSvg } from '../src/lib/penguin.ts';
 import { site } from '../src/site.ts';
+import { launch } from './browser.ts';
 
 // draws a post's posts/<slug>/og.html into the og.png beside it, the picture its links share.
 // The card only has to be its own markup and styles, since it lands on a page that already has
@@ -39,7 +39,7 @@ const shell = (card: string) => `<!doctype html>
 </style>
 ${card}`;
 
-const browser = await chromium.launch();
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 // anything the card links to comes from the repo, so it can use the post's own pictures
 await page.route(`${origin}/**`, (route) => {

@@ -11,6 +11,8 @@ export const site = {
   },
   repo: 'https://github.com/NotAFlightRisk/blog',
   feed: '/rss.xml',
+  // public on purpose, search engines fetch it back from /<key>.txt to check it's us
+  indexnow: '28ea5ead22ef65098bb32a3b1d701fec',
   description: "Occasional posts about code, security, and whatever else I've been poking at",
   tagline: 'Writing about code, security and the odd penguin',
   lang: 'en-GB',

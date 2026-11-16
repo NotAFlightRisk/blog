@@ -43,7 +43,7 @@ const networks = [
 ];
 ---
 
-<ul class="share">
+<ul class="share icon-buttons">
   {networks.map(({ name, Icon, href }) => (
     <li>
       <a
@@ -125,36 +125,9 @@ const networks = [
 </script>
 
 <style>
-  /* the site's raised buttons, squared up and shrunk to share the rail between them */
-  ul {
-    display: grid;
-    grid-auto-columns: minmax(0, var(--target));
-    grid-auto-flow: column;
-    gap: var(--space-2xs);
-  }
-
-  .button {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    min-height: 0;
-    aspect-ratio: 1;
-    padding: 0;
-
-    /* inside the square, since the rail would clip it at either end */
-    &:focus-visible {
-      outline-offset: calc(var(--outline-offset) * -1);
-    }
-
-    /* keeps its spot until the script's ready */
-    &[hidden] {
-      visibility: hidden;
-    }
-  }
-
-  svg {
-    width: var(--icon-small);
-    height: var(--icon-small);
+  /* keeps its spot until the script's ready */
+  .button[hidden] {
+    visibility: hidden;
   }
 
   /* the link, swapped for a tick once it's copied, or on a phone, for the share arrow */

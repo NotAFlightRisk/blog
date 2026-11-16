@@ -4,6 +4,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "trailingSlash": true,
+  "redirects": [
+    { "source": "/(feed|rss)/", "destination": "/rss.xml", "permanent": true },
+    { "source": "/(feed|atom|index).xml", "destination": "/rss.xml", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/_astro/(.*)",

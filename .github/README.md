@@ -47,7 +47,7 @@ npm install
 npm run dev
 ```
 
-That's on [localhost:4321](http://localhost:4321), drafts included. `npm run build` puts the finished site in `dist/`, and `npm run check` and `npm test` are what CI runs. The build prints the PDF copies with a Chromium that only comes for x64 Linux, so anywhere else it borrows your Google Chrome.
+That's on [localhost:4321](http://localhost:4321), drafts included. `npm run build` puts the finished site in `dist/`, and `npm run check` and `npm test` are what CI runs. The build prints the PDF copies with a Chromium that only comes for x64 Linux, so anywhere else it borrows your Google Chrome. It only reprints the posts that changed, and one that won't print gets left out rather than failing the build (CI's link check flags it instead).
 
 ---
 

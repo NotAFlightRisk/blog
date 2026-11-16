@@ -1,6 +1,6 @@
 ---
 import Rss from '../icons/rss.svg';
-import { readers } from '../lib/readers';
+import { readers, subscribeEvent } from '../lib/readers';
 import { site } from '../site';
 
 const links = [{ name: 'RSS', Icon: Rss, href: site.feed }, ...readers];
@@ -10,7 +10,7 @@ const links = [{ name: 'RSS', Icon: Rss, href: site.feed }, ...readers];
   {links.map(({ name, Icon, href }) => (
     <li>
       <a
-        class="button raised"
+        class:list={['button raised', subscribeEvent(name)]}
         {href}
         target="_blank"
         aria-label={`Subscribe with ${name}`}

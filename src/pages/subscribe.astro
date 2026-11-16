@@ -2,7 +2,7 @@
 import Intro from '../components/Intro.astro';
 import Base from '../layouts/Base.astro';
 import { absolute } from '../lib/posts';
-import { readers } from '../lib/readers';
+import { readers, subscribeEvent } from '../lib/readers';
 import { site } from '../site';
 
 const feed = absolute(site.feed);
@@ -20,7 +20,12 @@ const feed = absolute(site.feed);
     <h2 id="paste">Paste this into your reader</h2>
     <div class="feed panel">
       <code>{feed}</code>
-      <button class="button" type="button" aria-label="Copy the feed address" hidden>
+      <button
+        class:list={['button', subscribeEvent('Copy')]}
+        type="button"
+        aria-label="Copy the feed address"
+        hidden
+      >
         Copy
       </button>
       <span role="status" class="visually-hidden"></span>
@@ -32,7 +37,7 @@ const feed = absolute(site.feed);
     <ul>
       {readers.map(({ name, Icon, href }) => (
         <li>
-          <a class="button raised" {href} target="_blank">
+          <a class:list={['button raised', subscribeEvent(name)]} {href} target="_blank">
             <Icon aria-hidden="true" />
             {name}
           </a>

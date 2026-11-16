@@ -23,3 +23,7 @@ export const readers = [
   { name: 'NewsBlur', Icon: NewsBlur, href: `https://www.newsblur.com/?${query({ url: feed })}` },
   { name: 'Feedbin', Icon: Feedbin, href: `https://feedbin.com/?${query({ subscribe: feed })}` },
 ];
+
+// Plausible picks these classes up as a Subscribe event, with how it was done as a property
+export const subscribeEvent = (via: string) =>
+  `plausible-event-name=Subscribe plausible-event-via=${via.replaceAll(' ', '+')}`;

@@ -10,7 +10,8 @@ export async function GET() {
     `# ${site.name}`,
     `> ${site.description}, by ${site.author.name} (${site.home.url}).`,
     'Every post is also plain Markdown at its own address with `.md` on the end, and ' +
-      `${absolute('/llms-full.txt')} has the lot in one file.`,
+      `${absolute('/llms-full.txt')} has the lot in one file. New posts turn up in the RSS ` +
+      `feed at ${absolute(site.feed)}.`,
     `## Posts\n\n${posts.join('\n')}`,
   ];
   return new Response(`${body.join('\n\n')}\n`);

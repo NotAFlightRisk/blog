@@ -1,12 +1,14 @@
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, envField, fontProviders } from 'astro/config';
-import { postDates } from './src/lib/lastmod';
 import { markdown } from './src/lib/markdown';
+import { lonelyTags, postDates, readPosts } from './src/lib/sitemap';
 import { site } from './src/site';
 
 const optional = { context: 'client', access: 'public', optional: true } as const;
-const dates = postDates();
+const posts = readPosts();
+const dates = postDates(posts);
+const lonely = new Set(lonelyTags(posts).map((tag) => `${site.url}/tags/${tag}/`));
 
 export default defineConfig({
   site: site.url,
@@ -17,7 +19,7 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: (page) => !/\/(404|500|search)\/$/.test(page),
+      filter: (page) => !/\/(404|500|search)\/$/.test(page) && !lonely.has(page),
       serialize: (item) => ({
         ...item,
         lastmod: dates.get(new URL(item.url).pathname.slice(1, -1)),

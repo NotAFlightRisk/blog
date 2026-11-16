@@ -9,6 +9,7 @@
     { "source": "/(feed|atom|index).xml", "destination": "/rss.xml", "permanent": true },
     { "source": "/tags/open-source/", "destination": "/tags/opensource/", "permanent": true }
   ],
+  "rewrites": [{ "source": "/:slug.pdf", "destination": "/:slug/" }],
   "headers": [
     {
       "source": "/_astro/(.*)",
@@ -20,6 +21,10 @@
         { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
         { "key": "Link", "value": "<https://blog.peng.ly/:slug/>; rel=\"canonical\"" }
       ]
+    },
+    {
+      "source": "/:slug.pdf",
+      "headers": [{ "key": "Link", "value": "<https://blog.peng.ly/:slug/>; rel=\"canonical\"" }]
     },
     {
       "source": "/llms(.*).txt",

@@ -65,6 +65,12 @@ const { headings } = Astro.props;
 </script>
 
 <style>
+  .toc {
+    @media print {
+      display: none;
+    }
+  }
+
   /* slides open to the list's height, with room round it so the clip never cuts a focus ring */
   details {
     border-radius: var(--radius);

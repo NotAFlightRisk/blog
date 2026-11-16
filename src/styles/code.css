@@ -92,4 +92,19 @@
       opacity: 1;
     }
   }
+
+  /* paper can't scroll sideways, or copy */
+  @media print {
+    & pre.astro-code {
+      white-space: pre-wrap;
+
+      & code {
+        min-width: 0;
+      }
+    }
+
+    & .copy {
+      display: none;
+    }
+  }
 }

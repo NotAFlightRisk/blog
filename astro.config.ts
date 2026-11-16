@@ -44,6 +44,24 @@ export default defineConfig({
         ],
       },
     },
+    // code on paper, so a PDF looks the same whichever machine printed it
+    {
+      provider: fontProviders.local(),
+      name: 'JetBrains Mono',
+      cssVariable: '--font-print-mono',
+      fallbacks: ['monospace'],
+      options: {
+        variants: [
+          {
+            src: [
+              '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2',
+            ],
+            weight: '100 800',
+            style: 'normal',
+          },
+        ],
+      },
+    },
   ],
   env: {
     schema: {

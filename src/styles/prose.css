@@ -135,4 +135,15 @@
     box-shadow: var(--button-shadow);
     font-size: 0.85em;
   }
+
+  /* headings stay with what they're about, and nothing gets sawn in half across pages */
+  @media print {
+    & :is(h2, h3, h4) {
+      break-after: avoid;
+    }
+
+    & :is(figure, pre, blockquote, tr, .callout) {
+      break-inside: avoid;
+    }
+  }
 }

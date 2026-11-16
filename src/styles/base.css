@@ -185,6 +185,11 @@ pre {
   white-space: nowrap;
 }
 
+/* a bit of paper round the edges when it's printed */
+@page {
+  margin: 18mm 16mm;
+}
+
 /* pages fade into each other, with the bar holding still on top */
 @view-transition {
   navigation: auto;

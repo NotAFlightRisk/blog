@@ -13,6 +13,7 @@ export async function getPosts() {
 
 export const postUrl = (post: Post) => `/${post.id}/`;
 export const rawUrl = (post: Post) => `/${post.id}.md`;
+export const pdfUrl = (post: Post) => `/${post.id}.pdf`;
 // a post's own share card at posts/<slug>/og.png, when it has one the right size
 const cards = import.meta.glob<ImageMetadata>('/posts/*/og.png', {
   import: 'default',
@@ -38,11 +39,11 @@ export function byTag(posts: Post[]) {
   );
 }
 
-// the post as plain Markdown, with its files pointed at the repo so they still load
+// the post as plain Markdown, with its charts as pictures and its files loaded from the repo
 export function markdownOf(post: Post) {
   const { title, description, date, tags } = post.data;
   const files = `${site.repo.replace('github.com', 'raw.githubusercontent.com')}/main/posts/${post.id}/`;
-  const body = plainMarkdown(post.body ?? '', files);
+  const body = plainMarkdown(post.body ?? '', files, (chart) => absolute(chartUrl(post, chart)));
   const meta = `${formatDate(date)} · ${tags.map((tag) => `#${tag}`).join(' ')}`;
   return `# ${title}\n\n> ${description}\n\n${meta} · ${absolute(postUrl(post))}\n\n${body}\n`;
 }

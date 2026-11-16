@@ -9,6 +9,7 @@ export const site = {
     github: 'https://github.com/NotAFlightRisk',
   },
   repo: 'https://github.com/NotAFlightRisk/blog',
+  feed: '/rss.xml',
   description: "Occasional posts about code, security, and whatever else I've been poking at",
   tagline: 'Writing about code, security and the odd penguin',
   lang: 'en-GB',

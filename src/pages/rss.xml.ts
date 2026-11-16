@@ -17,13 +17,15 @@ function chartPicture(figure: string, src: string) {
   return `<img src="${src}" alt="${title}">${numbers}`;
 }
 
-// the whole post, tidied for feed readers: no scripts or responsive extras, every link absolute
+// the whole post, tidied for feed readers: no scripts, responsive extras or styles that lean on
+// the site's tokens, and every link absolute
 async function html(post: Post) {
   const { Content } = await render(post);
   let chart = 0;
   return (await container.renderToString(Content))
     .replace(/<script[\s\S]*?<\/script>/g, '')
     .replace(/\s(?:srcset|sizes|data-astro-cid-\w+|data-pagefind-ignore)(?:="[^"]*")?/g, '')
+    .replace(/\sstyle="[^"]*var\(--[^"]*"/g, '')
     .replace(/<figure class="chart">[\s\S]*?<\/figure>/g, (figure) =>
       chartPicture(figure, chartUrl(post, ++chart)),
     )
@@ -31,14 +33,20 @@ async function html(post: Post) {
     .replace(/(href|src)="\/(?!\/)/g, `$1="${site.url}/`);
 }
 
+const feedSize = 20;
+
 export async function GET() {
-  const posts = await getPosts();
+  const posts = (await getPosts()).slice(0, feedSize);
   return rss({
     title: site.name,
     description: site.description,
     site: site.url,
     trailingSlash: true,
-    customData: `<language>${site.lang.toLowerCase()}</language>`,
+    xmlns: { atom: 'http://www.w3.org/2005/Atom', dc: 'http://purl.org/dc/elements/1.1/' },
+    customData: [
+      `<language>${site.lang.toLowerCase()}</language>`,
+      `<atom:link href="${absolute(site.feed)}" rel="self" type="application/rss+xml"/>`,
+    ].join(''),
     items: await Promise.all(
       posts.map(async (post) => ({
         title: post.data.title,
@@ -46,6 +54,7 @@ export async function GET() {
         pubDate: post.data.date,
         link: postUrl(post),
         categories: post.data.tags,
+        customData: `<dc:creator>${site.author.name}</dc:creator>`,
         content: await html(post),
       })),
     ),

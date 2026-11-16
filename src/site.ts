@@ -7,6 +7,7 @@ export const site = {
     handle: 'NotAFlightRisk',
     url: 'https://peng.ly/about',
     github: 'https://github.com/NotAFlightRisk',
+    dev: 'https://dev.to/notaflightrisk',
   },
   repo: 'https://github.com/NotAFlightRisk/blog',
   feed: '/rss.xml',

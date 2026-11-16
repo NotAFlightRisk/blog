@@ -118,7 +118,8 @@
     color-scheme: light;
     print-color-adjust: exact;
 
-    --bg: var(--surface);
+    --bg: #fff;
+    --surface: #f2f4f7;
     --font-mono: var(--font-print-mono);
     --text-base: 11pt;
     --text-title: 28pt;

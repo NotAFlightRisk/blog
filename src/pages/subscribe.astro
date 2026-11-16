@@ -1,0 +1,137 @@
+---
+import Intro from '../components/Intro.astro';
+import Base from '../layouts/Base.astro';
+import { absolute } from '../lib/posts';
+import { site } from '../site';
+
+const feed = absolute(site.feed);
+const query = (params: Record<string, string>) => new URLSearchParams(params);
+const readers = [
+  {
+    name: 'Feedly',
+    href: `https://feedly.com/i/subscription/${encodeURIComponent(`feed/${feed}`)}`,
+  },
+  { name: 'Inoreader', href: `https://www.inoreader.com/?${query({ add_feed: feed })}` },
+  { name: 'NewsBlur', href: `https://www.newsblur.com/?${query({ url: feed })}` },
+];
+---
+
+<Base
+  title="Subscribe"
+  description="Follow the blog with RSS. Paste the feed into any reader, or add it to Feedly, Inoreader or NewsBlur in one click."
+>
+  <Intro title="Subscribe">
+    Get every new post in full, in whatever feed reader you like. No email address needed.
+  </Intro>
+
+  <section aria-labelledby="paste">
+    <h2 id="paste">Paste this into your reader</h2>
+    <div class="feed panel">
+      <code>{feed}</code>
+      <button class="button" type="button" aria-label="Copy the feed address" hidden>
+        Copy
+      </button>
+      <span role="status" class="visually-hidden"></span>
+    </div>
+  </section>
+
+  <section aria-labelledby="readers">
+    <h2 id="readers">Or add it in one click</h2>
+    <ul>
+      {readers.map(({ name, href }) => (
+        <li>
+          <a class="button raised" {href} target="_blank">
+            {name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section aria-labelledby="new">
+    <h2 id="new">New to RSS?</h2>
+    <p>
+      A feed reader keeps an eye on the sites you follow and shows you what's new, in order, with
+      nothing deciding what you get to see. Never used one? Feedly's the easy start - it's free in a
+      browser or on your phone, and the button above adds this blog to it.
+    </p>
+  </section>
+</Base>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('.feed button')!;
+  const code = button.previousElementSibling!;
+  const status = button.nextElementSibling!;
+
+  function say(label: string, news: string) {
+    button.textContent = label;
+    status.textContent = news;
+    setTimeout(() => {
+      button.textContent = 'Copy';
+      status.textContent = '';
+    }, 2000);
+  }
+
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(code.textContent!);
+      say('Copied', 'Feed address copied');
+    } catch {
+      // no clipboard, so select it and let the keyboard do the rest
+      getSelection()?.selectAllChildren(code);
+      say('Selected', 'Feed address selected, ready to copy');
+    }
+  });
+  button.hidden = false;
+</script>
+
+<style>
+  section + section {
+    margin-top: var(--space-2xl);
+  }
+
+  h2 {
+    margin: 0 0 var(--space-m);
+    font-size: var(--text-large);
+  }
+
+  .feed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s) var(--space-m);
+    max-width: var(--measure);
+    padding: var(--space-xs) var(--space-xs) var(--space-xs) var(--space-m);
+
+    & code {
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+
+    & .button {
+      background: var(--accent);
+      color: var(--on-accent);
+
+      /* keeps its spot until the script's ready */
+      &[hidden] {
+        visibility: hidden;
+      }
+    }
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+  }
+
+  ul a {
+    font-size: var(--text-base);
+  }
+
+  p {
+    max-width: var(--measure);
+    margin: 0;
+  }
+</style>

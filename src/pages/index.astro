@@ -24,7 +24,7 @@ const schema = [
 
 <Base {schema}>
   <Intro title="Blog">
-    {site.description}. Follow along with <a href="/rss.xml">RSS</a>.
+    {site.description}. Follow along with <a href="/subscribe/">RSS</a>.
   </Intro>
   {posts.length ? <PostList posts={shown} featured priority /> : <p>Nothing here yet. Noot.</p>}
   {posts.length > shown.length && (

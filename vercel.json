@@ -9,6 +9,7 @@
     { "source": "/(feed|atom|index).xml", "destination": "/rss.xml", "permanent": true },
     { "source": "/tags/open-source/", "destination": "/tags/opensource/", "permanent": true }
   ],
+  "rewrites": [{ "source": "/:slug.pdf", "destination": "/:slug/" }],
   "headers": [
     {
       "source": "/_astro/(.*)",

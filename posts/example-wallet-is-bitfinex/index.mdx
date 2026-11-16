@@ -1,0 +1,87 @@
+---
+title: AI's favourite example wallet has $975m in it
+description: Ask an AI for an example Ethereum address and you might get Bitfinex's cold wallet. Claude's 4.5 models garble it, and the broken copies are spreading.
+date: 2026-11-16
+tags: [ai, security, ethereum, opensource]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import years from './years.json';
+
+```ts
+// Example recipient address (Bitfinex, for demonstration only)
+const exampleRecipient = '0x742d35Cc6634C0532925a3b844Bc454e4438f44e';
+```
+
+That's a [suggestion from GitHub's Copilot](https://github.com/sei-protocol/sei-js/pull/290#discussion_r2299608500), reviewing a PR on Sei's app starter template last August. The template had a placeholder there, `0x742d35cc6634C0532925a3b8D8C9C6c0C6c0C6c0`, and Copilot thought the `C6c0C6c0C6c0` on the end looked a bit fake, so it offered something more realistic. It even put the owner in the comment.
+
+That's Bitfinex's cold wallet, and as of today it holds 535,280 ETH, about $975 million. Nobody took Copilot up on it, so the template still has the fake one. Which, if you look at how it starts, is a mangled copy of Bitfinex's.
+
+## It's on Bitfinex's own list
+
+Bitfinex publishes [the addresses it uses](https://github.com/bitfinexcom/pub/blob/main/wallets.txt), and this one's listed as its "ETH/ERC20 cold wallet", and its Polygon and Avalanche cold wallet too. Chain watchers have known whose it is for years, and Etherscan labels it "Bitfinex 2".
+
+Back in 2018 it turned up in code because it was one of the busiest addresses on the chain, so it made a good test for a balance lookup. On GitHub it was in an issue or PR a handful of times a year until 2023. Then it was 38 in 2024, 64 in 2025 and 100 so far this year, and it's in about 9,200 files. I'd guess that's mostly the models handing it out, which is the bit I could test.
+
+## A model can't make one of these up
+
+Look at the capital letters. They aren't random. [EIP-55](https://eips.ethereum.org/EIPS/eip-55) uses them as a checksum: you hash the lowercase address with keccak-256, and each letter gets a capital wherever the matching digit of the hash is 8 or more. Get one character wrong and the capitals almost certainly won't match, so the libraries refuse it. (An all-lowercase address skips the check, so that's the one to watch.)
+
+Nobody can work out a keccak hash in their head, and a language model can't either. So a mixed-case address from a model that passes the check is one it's seen before.
+
+So I asked some. Five requests, three times each: an example address, an ethers.js script that sends 0.01 ETH, a web3.py balance check, a Jest fixture for a wallet app, and a placeholder for a README.
+
+| Model             | What it gave me                                  |
+| ----------------- | ------------------------------------------------ |
+| GPT-OSS 20B       | Bitfinex's in 5 of 15                            |
+| Llama 3.2 3B      | Bitfinex's in 5 of 15, a broken copy in 4 more   |
+| Qwen2.5-Coder 3B  | never, just `0x1234567890abcdef...` and the like |
+| gpt-5.6, in Codex | Bitfinex's in 2 of 9, a broken copy in 1         |
+| Claude Sonnet 4.5 | a broken copy in 9 of 15, never the real one     |
+| Claude Haiku 4.5  | a broken copy in 7 of 15, never the real one     |
+| Claude Sonnet 5.5 | Bitfinex's in 1 of 15, vitalik.eth in 9          |
+| Claude Opus 5.5   | never, mostly zeros and Hardhat's test accounts  |
+| Claude Haiku 5.5  | Bitfinex's in 1 of 15, vitalik.eth in 5          |
+
+Every address that passed the checksum was one that's already out there, like Vitalik Buterin's [vitalik.eth](https://etherscan.io/address/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045), ethers.js's donations wallet, Hardhat's test accounts, the USDC contract, and even the example from the EIP-55 spec. Every other mixed-case one failed. (Llama and Qwen ran on my own box, the Claudes through Claude Code, and Codex got each request twice. It was all on 15 and 16 November.)
+
+[Wikipedia's old example UUID](/wikipedias-old-uuid/) went the same way a fortnight ago, except nobody can spend a UUID.
+
+## Claude's 4.5s hand out a broken copy
+
+Sonnet 4.5 never gave me the real one. Its favourite was this:
+
+```
+0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+```
+
+It's right up to `Bc`, then wanders off, and it's 39 hex digits rather than 40, so it can't be an address at all. Haiku 4.5 wanders off the same way, then somewhere else again (`...Bc9e7595f42` and a different ending each time). There's a whole family of these on GitHub, all starting `0x742d35Cc6634C0532925a3b844Bc9e7595f`, and between them they're in about 18,400 files. That's twice as many as the real one.
+
+<Chart title="GitHub issues and PRs mentioning each address, by year" data={years} type="line">
+  GitHub's issue search counts for each full string, by the year the issue or PR was opened. 2026
+  only runs to 16 November. "The broken copy" is the 39-digit one above, plus longer ones that start
+  the same.
+</Chart>
+
+Sonnet 4.5 came out on 29 September 2025, but it wasn't first. The earliest copy I can find went into a repo on 30 August, in a commit that says "Generated with Claude Code", so an older Claude was at it already. I'd ask it, but the ones from back then are retired. I went back through 80 repos with one of these copies, and every one added it in 2025 or 2026.
+
+It's got into vendor docs as well, [Avalanche's](https://docs.avax.network/docs/rpcs/c-chain/eth/eth_getBalance) and [Covalent's](https://docs.covalent.one/getting-started/quickstart/) among them. Decentraland's [credits API docs](https://docs.decentraland.org/apis/apis/credits-server/credits) use it five times, right next to their own `^0x[a-fA-F0-9]{40}$` rule that it fails.
+
+## Fix the typo and it pays Bitfinex
+
+Here's ethers v6 checking each one:
+
+```
+ok                    0x742d35Cc6634C0532925a3b844Bc454e4438f44e
+invalid address       0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb
+bad address checksum  0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb7
+bad address checksum  0x742d35cc6634C0532925a3b8D8C9C6c0C6c0C6c0
+```
+
+The broken copies fall over the moment anything tries to use them. Sei's template is the same, since viem won't send to that `C6c0` address. The one address that does go through is the one with an owner, so Copilot's fix would have got the demo working by sending the money to Bitfinex.
+
+And people do send it. Over on Base, Coinbase's layer 2, the address holds 61.98 USDC and about 0.033 ETH, yet it's never sent a single transaction there, and Base isn't on Bitfinex's list. Bitfinex does hold the key, so it's not lost for good, but I wouldn't count on anyone there checking. On mainnet, the odd stray would just vanish among its nearly 27,000 transactions.
+
+The agents have found it too. 29 bounty PRs on GitHub give it as the wallet to pay the bounty into (none were merged, so nobody's paid Bitfinex yet), and someone's proposal for a "fail-closed security firewall" for agents on Coinbase's AgentKit uses a 0.01 ETH transfer to it as its usage example.
+
+Opus 5.5 mostly went for Hardhat's test accounts, which is the right answer for a test on a local chain. Their private keys are public on purpose, and Hardhat prints a warning that money sent to them on a live network WILL BE LOST. On mainnet, where anyone can spend from it, account #1 has sent 5,477 transactions and holds nothing at all.

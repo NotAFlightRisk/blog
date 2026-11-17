@@ -1,0 +1,78 @@
+---
+title: The hole you cut in your SSO gate is the app's login
+description: Phone apps need a hole in your Authelia or Pangolin gate. I sent 19 real Vaultwarden, Nextcloud and Navidrome bugs at those holes, and 10 reached the app.
+date: 2026-11-17
+tags: [security, self-hosting, authelia, homelab]
+---
+
+import Quote from '../../src/components/mdx/Quote.astro';
+
+I put Vaultwarden, Nextcloud, Audiobookshelf and Navidrome behind Authelia, with the bypass rules their phone apps need, and sent it the request from every bug a stranger could have used on them since January 2024. Of the 19 bugs, 10 got through to the app. Most of those were in the app's own login, because the login is what those rules open up.
+
+The point of an SSO gate like Authelia, Authentik or Pangolin is that nobody talks to your apps until they've passed one login, with 2FA on it. Phone apps can't do that dance. The Bitwarden app wants to send your password straight to Vaultwarden and has no idea what to do with somebody else's login page, so the guides have you add rules that let some paths skip the gate. [Pangolin's docs](https://docs.pangolin.net/self-host/community-guides/rules) keep a community table of them for about 30 apps, and that's what I used, as it was on 17 November. Navidrome isn't in it, so it got `/rest/*`, the API the Subsonic phone apps use.
+
+The gate was nginx and Authelia 4.39 on my own box, plus a copy of [Pangolin's own path matcher](https://github.com/fosrl/pangolin/blob/f82b209e69d3bd80d1ec7b51b387e93efd9ce42f/server/lib/pathMatch.ts) (the two let through the same requests), in front of a dummy app that just says which path reached it. So this is what gets past the gate, and I didn't fire anything at a real app. The bugs are every GitHub advisory and NVD entry that needs no account, no share link and nobody to click anything. Jellyfin went in too, as a control, since its rule is one exact path.
+
+| App | Through | On some installs | With the optional icons rule | Stopped |
+| --- | --: | --: | --: | --: |
+| Vaultwarden | 3 | | 3 | 1 |
+| Nextcloud | 4 | 3 | | |
+| Audiobookshelf | 1 | | | 1 |
+| Navidrome | 2 | | | 1 |
+| Jellyfin | | | | 3 |
+
+## The rule lets the login out
+
+Here's Vaultwarden's row:
+
+```text
+/api/*
+/identity/*
+/wl/*
+/notifications/hub
+/icons/*   (optional)
+Deny /admin/*
+```
+
+`/identity/connect/token` is where Bitwarden's apps send your email and a hash of your password, so the first thing that rule does is put Vaultwarden's own login back on the internet. 7 of the 10 bugs that got through are in the code that decides who you are: Vaultwarden's three, Audiobookshelf's, Navidrome's two and Nextcloud's ID4me login.
+
+The worst is [CVE-2024-55225](https://insinuator.net/2024/11/vulnerability-disclosure-authentication-bypass-in-vaultwarden-versions-1-32-5/), from a pentest by ERNW. Before 1.32.4, a stranger could create a "log in with another device" request through `/api/auth-requests`, then use it at `/identity/connect/token` to log in as any user, admins included. Both paths are on the list. It couldn't get past a second factor, and the vault stays encrypted with a password they never had, but they could still change or delete anything in it. ERNW's write-up says they started there because it's "the login endpoint since it is unauthenticated".
+
+Its brute-force protection [could be dodged](https://github.com/dani-garcia/vaultwarden/security/advisories/GHSA-c5rv-q295-7w4g) this April too, through `/api/two-factor/send-email-login` if you use email 2FA. Audiobookshelf's `/api/*` let anyone [skip its auth check](https://github.com/advplyr/audiobookshelf/security/advisories/GHSA-pg8v-5jcv-wrvw) by putting `/api/items/1/cover` anywhere in the URL, query string included. And if you add Vaultwarden's optional `/icons/*` rule for favicons, that's three more through, all ways round its guard against fetching icons from inside your network (one of them only with a non-default setting).
+
+## Navidrome has two logins
+
+Navidrome's Subsonic API takes a username and password on every request. Here's its web login and its Subsonic one, through the same gate:
+
+| Request | What the gate did |
+| --- | --- |
+| `POST /auth/login` | 302 to the login page |
+| `GET /rest/ping?u=admin&p=hunter2` | Passed it to Navidrome |
+
+Both had a brute-force bug this September. The web login's rate limit [could be dodged](https://github.com/navidrome/navidrome/security/advisories/GHSA-f295-6wp9-qqfg) with a fake `X-Forwarded-For`, and that one hit the gate. The Subsonic API [had no rate limit at all](https://github.com/navidrome/navidrome/security/advisories/GHSA-p994-r776-mw52), and walked straight through. Last year it also let in [a username that doesn't exist with an empty password](https://github.com/navidrome/navidrome/security/advisories/GHSA-c3p4-vm8f-386p). `/rest/*` was my pick, but Navidrome's own advisory reckons that's how most people run it:
+
+<Quote by="Navidrome's advisory" href="https://github.com/navidrome/navidrome/security/advisories/GHSA-p994-r776-mw52">
+  The Subsonic API is normally exposed to the internet so that mobile players can reach it, so any public instance could be targeted directly.
+</Quote>
+
+## The one being exploited got through too
+
+Nextcloud's row is twenty lines. The first is just `/`, and it goes on to `/login`, `/index.php/*` and `/apps/*`, which leaves the gate very little to guard.
+
+In September attackers started breaking into Nextcloud servers running Collabora's built-in CODE server, and a host who runs a bunch of them [posted their logs](https://github.com/CollaboraOnline/richdocumentscode/issues/354). Trimmed right down, the requests looked like this:
+
+```text
+/x$(...|sh)x/../apps/richdocumentscode/proxy.php?status
+```
+
+Both gates tidy up a path before checking it. The `..` cancels out the bit with the shell command in, so what they check is `/apps/richdocumentscode/proxy.php`, and that's on the list. What they pass on is the original, shell command and all. I sent the three real requests from that issue as they were, and both gates let all three through, with nginx handing them to the app byte for byte.
+
+CISA added it, CVE-2026-110447, to its list of exploited bugs on 23 October. It's fixed in 26.4.303 of the CODE server app, and only fires while the CODE server isn't running, after a restart say. Nextcloud's Docker image keeps that app in `/custom_apps`, which isn't on the list, so there the gate stops it by luck. That and an older bug in the same file (which also needs a particular proxy setup) are two of the "on some installs" three. The third is a Flow bug that depends on how Flow was set up.
+
+## The three it stopped
+
+The same tidying saved Audiobookshelf. Its [critical file read](https://github.com/advplyr/audiobookshelf/security/advisories/GHSA-m5hp-x2xc-7jqq) starts `/api/items/..%2F..%2F..%2F`, and once the matcher's decoded the `%2F`s and resolved the `..`s, the path's left `/api`, so it gets a login page. Behind nginx it didn't even get that far, as nginx threw it out with a 400.
+
+The other two were Navidrome's web login, and a Vaultwarden [websocket flood](https://github.com/dani-garcia/vaultwarden/security/advisories/GHSA-96f7-78q5-j345) on `/notifications/anonymous-hub`, which the exact `/notifications/hub` rule doesn't cover. Jellyfin's iOS row is just `/system/info/public`, and all three of its bugs were stopped.
+
+So the narrower the rule, the less gets through. If an app's only for you and the family, a VPN or a tailnet on the phone means no rule at all, and that's what [Immich's FAQ](https://docs.immich.app/FAQ) recommends over its own experimental workarounds.

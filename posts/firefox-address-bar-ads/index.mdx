@@ -1,0 +1,101 @@
+---
+title: Firefox's address-bar ads are a file anyone can read
+description: Firefox downloads its sponsored suggestions as a list, with the exact letters that trigger each one. In the UK, typing 'virgin media' gets you Sports Direct.
+date: 2026-11-18
+tags: [firefox, privacy, advertising, opensource]
+featured: true
+---
+
+import Dots from '../../src/components/mdx/Dots.astro';
+import Figure from '../../src/components/mdx/Figure.astro';
+import virginMedia from './virgin-media.png';
+import movers from './movers.json';
+
+In the UK, type "virgin media" into Firefox's address bar and the one ad it shows you is for Sports Direct. Keep typing "virgin media tv packages prices" and it changes hands three more times before you get to the end, and none of them is Virgin Media:
+
+| You've typed               | The ad's for  |
+| -------------------------- | ------------- |
+| virgin me                  | Sports Direct |
+| virgin media t             | Vodafone      |
+| virgin media tv p          | Amazon        |
+| virgin media tv packages p | Skyscanner    |
+
+<Figure
+  src={virginMedia}
+  alt="Firefox's address bar with 'virgin media' typed in. Under 'Search with Google' is one sponsored suggestion: virgin media, Sports Direct UK: Sports Shoes, Sportswear & Equipment."
+>
+  Firefox 160, a fresh profile with its region set to the UK and nothing else changed.
+</Figure>
+
+None of that's Firefox having a guess, or a server somewhere reading your keystrokes. It's all in a file Firefox downloads, every ad and the exact letters that bring it up, and anyone can read it.
+
+## One list per country
+
+The ads come from adMarketplace, and Mozilla ships them through [Remote Settings](https://remote-settings.readthedocs.io/), the same pipe it uses for blocklists and config. The `quicksuggest-amp` collection holds [41 lists](https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/quicksuggest-amp/records), one per country for desktops and another for phones. Firefox picks yours by region, loads it into a local database, and matches what you type against it on your own machine.
+
+Here's the entry behind the Sports Direct one, cut down a bit:
+
+```json title="sponsored-suggestions-gb-desktop.json"
+{
+  "advertiser": "Sports Direct",
+  "title": "Sports Direct UK: Sports Shoes, Sportswear & Equipment",
+  "keywords": ["virgin me", "virgin med", "virgin medi", "virgin media"],
+  "full_keywords": [["virgin media", 4]],
+  "url": "https://www.sportsdirect.com/searchresults?descriptionfilter=media...",
+  "click_url": "https://bridge.pdx1.admarketplace.net/ctp?...",
+  "impression_url": "https://imp.mt48.net/imp?id=..."
+}
+```
+
+Each ad is one phrase, with every prefix of it spelled out, a letter at a time. No prefix belongs to two ads, so whatever you've typed so far, there's exactly one ad waiting for it, or none. That's why it flips as you type: each extra letter can land you on a different ad. And the link is a Sports Direct search for "media". Virgin Media isn't on the list at all.
+
+## Skyscanner, for your broadband
+
+The UK desktop list has 2,714 ads from 25 advertisers. Amazon has 1,724 of them, Vodafone has iPhone deals and Sainsbury's has groceries. But try typing these:
+
+| Type this                              | And the ad is                                  |
+| -------------------------------------- | ---------------------------------------------- |
+| best broadband and tv deals in my area | Skyscanner - Millions of cheap flights         |
+| ai                                     | SAP, with the title "Learn More"               |
+| macy                                   | Sephora, suggesting "macy's"                   |
+| a bathing ape                          | Temu                                           |
+| wom                                    | Sports Direct, suggesting "women"              |
+| shein return policy                    | Amazon                                         |
+| lunc                                   | Iceland, with the title "Shop lunc at Iceland" |
+
+This is broad match, which search ads have always done. An advertiser bids on a term, like Sports Direct's "media", and the ad network shows the ad for searches that sort of look like it. Amazon's ads show it best. Each link is an Amazon search, and in 1,315 of the 1,724 it isn't a search for what you typed. "virgin media bundles" sends you to an Amazon search for "bundles", and "virgin best deals" to "black friday velvetiser deals", which is a hot chocolate machine. Amazon also has 166 phrases starting with "shein", from "shein login" to "shein return policy", that land on searches like "shein clothing".
+
+Skyscanner's links hide the term, but its phrases give it away. I counted 102 of its 129 that mention broadband, TV or phones, and 109 have "deals" or "packages" in them. My guess is somebody bid on "deals" and the matching took it from there. I don't know that, though, and nothing public says.
+
+The Iceland one's a different oddity. Some phrases are only a fragment ("lunc", "supermar"), and the title's built from the fragment, so you also get "Shop supermar at Iceland".
+
+## A new list every day
+
+Mozilla put's out a new set of lists every evening. Between the two UK desktop ones on Monday and Tuesday, 162 phrases came in and 44 went out, and 803 changed hands. 423 went from Amazon to Vodafone, and 357 from Sports Direct to Amazon.
+
+<Dots title="UK desktop ads per advertiser, one day apart" data={movers}>
+  The 16 and 17 November lists. Skyscanner and Sainsbury's barely moved, so their dots sit on top of
+  each other, and Amazon's left off, as it went from 1,770 to 1,724 and squashes everyone else.
+</Dots>
+
+Sports Direct dropped from 381 ads to 12, but kept "virgin media". SAP turned up from nowhere with 98.
+
+That's the UK, and the US list is much bigger again. Firefox 157 [switched these ads on by default](https://bugzilla.mozilla.org/show_bug.cgi?id=2066294) in 16 more European countries too, but their lists have between one and seven ads each, nearly all the brand's own name. In the Netherlands, "adi" gets you adidas and "tui" gets you TUI. Hungary's whole list is Allegro.
+
+## What leaves your machine
+
+The matching truly is local, so nothing about what you're typing goes to Mozilla or adMarketplace as you type. It's what happens next that gets sent, and turning telemetry off doesn't stop it.
+
+I ran Firefox 160 through a logging proxy that answered every request itself. Press Escape with an ad showing and nothing's sent. Press Enter to search Google for "virgin media", and Firefox sends Mozilla a quick-suggest ping saying a Sports Direct ad was on screen. Pick the Skyscanner ad and it sends two more, one saying it was shown and clicked and one with adMarketplace's click link in it, then takes you to the Skyscanner link from the list, untouched. Those three pings went out exactly the same with Firefox's data collection switched off. They're [defined](https://searchfox.org/firefox-main/source/browser/components/urlbar/pings.yaml) to follow the sponsored suggestions setting, not the telemetry one.
+
+They carry the advertiser, the ad's ID, its position, your country, and adMarketplace's tracking link. There's no client ID, and they go through an [OHTTP](https://www.ietf.org/rfc/rfc9458.html) relay run by Fastly, which is built so the relay sees your IP but not the ping, and Mozilla sees the ping but not your IP. The ad's ID is the same one it has in the public list, though, so it does say which phrase was on screen. (And unless you've turned search suggestions off, Google gets what you typed anyway.)
+
+The switch is in Settings, under Search, then Firefox Suggest, called "Suggestions from sponsors". Or if you'd like to see what you'd get for a phrase first, this looks it up in the UK desktop list:
+
+```sh
+list=sponsored-suggestions-gb-desktop
+rs=https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/quicksuggest-amp/records
+file=$(curl -s $rs | jq -r ".data[] | select(.id == \"$list\") | .attachment.location")
+curl -s https://firefox-settings-attachments.cdn.mozilla.net/$file > ads.json
+jq -r '.[] | select(.keywords | index("virgin media")) | "\(.advertiser): \(.title)"' ads.json
+```

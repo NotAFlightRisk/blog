@@ -3,6 +3,7 @@ title: Firefox's address-bar ads are a file anyone can read
 description: Firefox downloads its sponsored suggestions as a list, with the exact letters that trigger each one. In the UK, typing 'virgin media' gets you Sports Direct.
 date: 2026-11-18
 tags: [firefox, privacy, advertising, opensource]
+featured: true
 ---
 
 import Dots from '../../src/components/mdx/Dots.astro';
@@ -70,7 +71,7 @@ The Iceland one's a different oddity. Some phrases are only a fragment ("lunc", 
 
 ## A new list every day
 
-Mozilla put out a new set of lists on Monday evening, and another on Tuesday evening. Between the two UK desktop ones, 162 phrases came in and 44 went out, and 803 changed hands. 423 went from Amazon to Vodafone, and 357 from Sports Direct to Amazon.
+Mozilla put's out a new set of lists every evening. Between the two UK desktop ones on Monday and Tuesday, 162 phrases came in and 44 went out, and 803 changed hands. 423 went from Amazon to Vodafone, and 357 from Sports Direct to Amazon.
 
 <Dots title="UK desktop ads per advertiser, one day apart" data={movers}>
   The 16 and 17 November lists. Skyscanner and Sainsbury's barely moved, so their dots sit on top of
@@ -79,11 +80,11 @@ Mozilla put out a new set of lists on Monday evening, and another on Tuesday eve
 
 Sports Direct dropped from 381 ads to 12, but kept "virgin media". SAP turned up from nowhere with 98.
 
-That's the UK, and the US list is bigger again. Firefox 157 [switched these ads on by default](https://bugzilla.mozilla.org/show_bug.cgi?id=2066294) in 16 more European countries too, but their lists have between one and seven ads each, nearly all the brand's own name. In the Netherlands, "adi" gets you adidas and "tui" gets you TUI. Hungary's whole list is Allegro.
+That's the UK, and the US list is much bigger again. Firefox 157 [switched these ads on by default](https://bugzilla.mozilla.org/show_bug.cgi?id=2066294) in 16 more European countries too, but their lists have between one and seven ads each, nearly all the brand's own name. In the Netherlands, "adi" gets you adidas and "tui" gets you TUI. Hungary's whole list is Allegro.
 
 ## What leaves your machine
 
-The matching really is local, so nothing about what you're typing goes to Mozilla or adMarketplace as you type. It's what happens next that gets sent, and turning telemetry off doesn't stop it.
+The matching truly is local, so nothing about what you're typing goes to Mozilla or adMarketplace as you type. It's what happens next that gets sent, and turning telemetry off doesn't stop it.
 
 I ran Firefox 160 through a logging proxy that answered every request itself. Press Escape with an ad showing and nothing's sent. Press Enter to search Google for "virgin media", and Firefox sends Mozilla a quick-suggest ping saying a Sports Direct ad was on screen. Pick the Skyscanner ad and it sends two more, one saying it was shown and clicked and one with adMarketplace's click link in it, then takes you to the Skyscanner link from the list, untouched. Those three pings went out exactly the same with Firefox's data collection switched off. They're [defined](https://searchfox.org/firefox-main/source/browser/components/urlbar/pings.yaml) to follow the sponsored suggestions setting, not the telemetry one.
 

@@ -9,9 +9,15 @@ import Chart from '../../src/components/mdx/Chart.astro';
 import band from './band.json';
 import moves from './moves.json';
 
-Finish a Lichess puzzle while you're logged in and you get a thumbs up and a thumbs down. Lichess turns those votes into a score that tops out at 100, calls it popularity, and puts it in its [puzzle database](https://database.lichess.org/#puzzles) next to how many times each of the 6.2 million puzzles has been played. Here's a fairly typical rating band, the puzzles rated 1410 to 1480, by that score:
+[Lichess](https://lichess.org) is a free, open-source chess site, and one of the things you can do on it is puzzles. Each one is a position from a real game where you have to find the best move. Puzzles get a rating, the same way players do, and Lichess gives you ones near yours. It has 6.2 million of them, played nearly 11 billion times between them.
 
-<Chart title="Median plays per puzzle by popularity, rated 1410 to 1480" data={band} type="columns">
+Finish a puzzle while you're logged in and you get a thumbs up and a thumbs down. Lichess turns those votes into a score that tops out at 100, calls it popularity, and puts it in its [puzzle database](https://database.lichess.org/#puzzles) next to each puzzle's play count. Here's a fairly typical rating band, the puzzles rated 1410 to 1480, by that score:
+
+<Chart
+  title="How often puzzles rated 1410 to 1480 get played, by popularity"
+  data={band}
+  type="columns"
+>
   From Lichess's November puzzle dump. Puzzles at 94 have a median of 3,709 plays, and puzzles at 95
   have 17,406.
 </Chart>
@@ -20,7 +26,7 @@ One point of popularity, and nearly five times the plays. 95 is where Lichess dr
 
 The plays drop off again past 95, I think because a puzzle that gets played a lot picks up the odd downvote along the way. The busiest ones end up just over the line, and a perfect 100 is mostly a puzzle that hasn't been played much yet.
 
-## Sorted by votes, cut at 20%
+## How Lichess picks your next puzzle
 
 A job that's meant to run every hour, [`mongodb-puzzle-regen-paths.js`](https://github.com/lichess-org/lila/blob/2694bf575ef96e338e257f295b8853d027e4368b/cron/mongodb-puzzle-regen-paths.js), splits the puzzles into 24 bands by rating, sorts each band by its vote, and slices it like this:
 
@@ -36,19 +42,19 @@ const tiers = [
 
 Lichess's [2016 post about puzzles](https://lichess.org/@/lichess/blog/puzzles-update/WDY6cCEA) said "selection bias due to user votes is no longer a factor". That was an older trainer, and I couldn't find the tiers anywhere in Lichess's docs or FAQ for the one that replaced it. The only place I found the rule written down is the FAQ of [PlayStrategy](https://github.com/Mind-Sports-Games/lila/blob/master/translation/source/puzzle.xml), a fork of Lichess for other games.
 
-## The cliff follows the line
+## The jump happens wherever a band's line falls
 
 You could say a 95 is just a better puzzle than a 94, so of course it gets played more. Except each band works out its own line, and it usually falls partway through a score, letting some of the puzzles on that score in and leaving the rest out.
 
 The 1690 band (1690 to 1760) and the 1760 band next to it both draw their line through 94. In the 1690 band, only about one in ten of the 94s make it in. In the 1760 band, about eight in ten do. Here's where their cliffs land:
 
 <Chart
-  title="Median plays per puzzle by popularity, two neighbouring bands"
+  title="How often puzzles get played in two neighbouring bands, by popularity"
   data={moves}
   type="line"
 >
   The 1690 band's plays jump from 94 to 95. The 1760 band's jump a point earlier, from 93 to 94,
-  because most of its 94s are in.
+  because most of its 94s make the top fifth.
 </Chart>
 
 If the plays followed how good the puzzles are, they'd climb the same way in both bands. They jump where each band's line is.

@@ -18,6 +18,7 @@
     "crosspost": "node scripts/crosspost.ts",
     "indexnow": "node scripts/indexnow.ts",
     "og": "node scripts/og-cards.ts",
+    "readme": "node scripts/readme.ts",
     "test": "node --test \"src/**/*.test.ts\"",
     "format": "prettier --write src scripts astro.config.ts vercel.json .github/workflows",
     "format:check": "prettier --check src scripts astro.config.ts vercel.json .github/workflows"

@@ -1,0 +1,56 @@
+name: 📃 Readme posts
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: readme
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: 📃 List the posts in the README
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.event.deployment_status.state == 'success'
+      && github.event.deployment.environment == 'Production')
+    permissions:
+      contents: write
+    env:
+      HAS_BOT: ${{ secrets.BOT_PRIVATE_KEY != '' }}
+    steps:
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: bot
+        if: env.HAS_BOT == 'true'
+        with:
+          client-id: Iv23liPIG7E12UlaQMaD
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+          permission-contents: write
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          check-latest: true
+      - run: npm run -s readme >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit it to main
+        env:
+          GH_TOKEN: ${{ steps.bot.outputs.token || github.token }}
+        run: |
+          if git diff --quiet -- .github/README.md; then
+            echo "Nothing's changed since the last update" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          base64 -w0 .github/README.md > "$RUNNER_TEMP/readme"
+          gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/.github/README.md" \
+            -f message='docs: update the post list' -f branch=main \
+            -f sha="$(git rev-parse HEAD:.github/README.md)" -F content=@"$RUNNER_TEMP/readme" \
+            --jq '"✅ Committed [\(.commit.sha[:7])](\(.commit.html_url))"' >> "$GITHUB_STEP_SUMMARY"

@@ -1,23 +1,34 @@
 <h1 align="center">Peng.ly Blog</h1>
 <p align="center">
-<i>Occasional posts about code, security, and whatever else I've been poking at</i>
+<img src="https://pixelflare.cc/iain/images/tus-transparent.png/w256" width="64" /><br>
+<i>Occasional posts and analyses about code, security, and whatever else I've been poking at</i>
 <br />
 <b>🌐 <a href="https://blog.peng.ly/">blog.peng.ly</a></b><br />
 </p>
+
+## Posts
+
+<!-- posts-start -->
+<!-- posts-end -->
+
+---
+
+
+## About
+
+The writing bit of [peng.ly](https://peng.ly). It's a static [Astro](https://astro.build) site with hardly any JavaScript (the theme toggle, plus search, copy buttons and the contents' place marker where they're used), and every post also comes as full-text RSS, plain Markdown, a PDF and an [llms.txt](https://blog.peng.ly/llms.txt) entry. There's a JSON list of the lot at [`/api/posts.json`](https://blog.peng.ly/api/posts.json) too.
 
 <p align="center">
   <img src="screenshot.png" alt="A post on the blog, in the light and dark themes" width="800" />
 </p>
 
-## About
-
-The writing bit of [peng.ly](https://peng.ly). It's a static [Astro](https://astro.build) site with hardly any JavaScript (the theme toggle, plus search, copy buttons and the contents' place marker where they're used), and every post also comes as full-text RSS, plain Markdown, a PDF and an [llms.txt](https://blog.peng.ly/llms.txt) entry. There's a JSON list of the lot at [`/api/posts.json`](https://blog.peng.ly/api/posts.json) too, which is what peng.ly reads.
 
 ---
 
-## Writing a post
+### Writing a post
 
-Make a folder in `posts/` named after the address you want, then put an `index.md` in it (or `index.mdx`, for components). Pictures go in the same folder.
+Make a folder in `posts/` named after the address you want, then put an `index.md` in it (or `index.mdx`, for components).
+Pictures and other assets go in the same folder.
 
 ```yaml
 ---
@@ -28,15 +39,15 @@ tags: [meta, astro]
 ---
 ```
 
-`updated`, `draft`, `featured` and `cover` are optional, and an `.mdx` post can use the callouts, figures, videos, charts, stats, timelines and the rest in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong. The home page shows the 50 newest posts (the count lives in `src/site.ts`), and any marked `featured: true` get a whole row to themselves.
+`updated`, `draft`, `featured` and `cover` are optional, and an `.mdx` post can use the callouts, figures, videos, charts, stats, timelines and the rest in `src/components/mdx/`. The build checks every post, so a missing field or a typo in one stops it with a message saying what's wrong. The home page shows the 50 newest posts (the count lives in `src/site.ts`), and any marked `featured: true` get a bigger preview.
 
-Feed readers can't draw the charts, so the RSS feed swaps each one for a picture. After adding or changing a chart, run `npm run charts` and commit the PNGs it drops in the post's `charts/` folder. CI fails if a post's charts and pictures don't add up.
+Since feed readers and email clients can't draw the charts, the RSS feed swaps each one for a picture. So after adding or changing a chart, run `npm run charts` and commit the PNGs it drops in the post's `charts/` folder. CI fails if a post's charts and pictures don't add up.
 
-Links to a post show a yellow card with its title and the penguin, drawn at build time. To give a post its own instead, design it in `posts/<slug>/og.html` and run `npm run og -- <slug>`, which turns it into the `og.png` next to it. Only the PNG gets committed, the HTML's ignored. The page gets the site's colours, font and a `.penguin` to drop in, so the HTML's just the card itself. The site and DEV then use that picture, and so do the post lists and search results. They all fall back to the drawn card when it's missing or isn't 1200x630.
+Links to a post show a card with its title and the penguin, drawn at build time. To give a post its own instead, design it in `posts/<slug>/og.html` and run `npm run og -- <slug>`, which turns it into the `og.png` next to it. We only need to commit the PNG, not HTML. The page gets the site's colours, font and a `.penguin` to drop in, so the HTML's just the card itself. The site and DEV then use that picture, and so do the post lists and search results. They all fall back to the drawn card when it's missing or isn't the right (1200x630) dimensions.
 
 ---
 
-## Development
+### Development
 
 You'll need [Node](https://nodejs.org/) 22 or newer.
 
@@ -47,21 +58,17 @@ npm install
 npm run dev
 ```
 
-That's on [localhost:4321](http://localhost:4321), drafts included. `npm run build` puts the finished site in `dist/`, and `npm run check` and `npm test` are what CI runs. The build prints the PDF copies with a Chromium that only comes for x64 Linux, so anywhere else it borrows your Google Chrome. It only reprints the posts that changed, and one that won't print gets left out rather than failing the build (CI's link check flags it instead).
+That's on [localhost:4321](http://localhost:4321), drafts included. `npm run build` puts the finished site in `dist/`, and `npm run check` and `npm test` are what CI runs. The build prints the PDF copies with a Chromium either on x64 Linux or your own Google Chrome install. It only reprints the posts that changed, and one that won't print gets left out rather than failing the build (but CI's link check flags it instead).
 
 ---
 
-## Deployment
-
-### Option 1: Vercel
+### Deployment
 
 Fork it and import it into Vercel, or use the button 👇
 
-[![1-Click Deploy to Vercel](https://img.shields.io/badge/Deploy-Vercel-ffffff?style=for-the-badge&logo=vercel&labelColor=1b2744&link=https%3A%2F%2Fblog.peng.ly)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FNotAFlightRisk%2Fblog&demo-title=Peng.ly%20Blog&demo-url=https%3A%2F%2Fblog.peng.ly)
+[![1-Click Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FNotAFlightRisk%2Fblog&demo-title=Peng.ly%20Blog&demo-url=https%3A%2F%2Fblog.peng.ly)
 
-### Option 2: Any static host
-
-Grab `site.zip` from the [latest release](https://github.com/NotAFlightRisk/blog/releases/latest), or build it yourself, and upload what's inside. The security headers live in `vercel.json`, so copy them over to your host if you want them too.
+Or, just grab `site.zip` from the [latest release](https://github.com/NotAFlightRisk/blog/releases/latest), or build it yourself, and upload what's inside. The security headers live in `vercel.json`, so copy them over to your host if you want them too.
 
 ---
 

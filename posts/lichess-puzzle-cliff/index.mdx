@@ -1,0 +1,74 @@
+---
+title: The one-point cliff in Lichess's puzzle trainer
+description: Lichess starts you on the top fifth of its puzzles by votes. Ones just over that line get played three to seven times as often as ones just under.
+date: 2026-11-19
+tags: [chess, opensource, datascience]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import band from './band.json';
+import moves from './moves.json';
+
+[Lichess](https://lichess.org) is a free, open-source chess site, and one of the things you can do on it is puzzles. Each one is a position from a real game where you have to find the best move. Puzzles get a rating, the same way players do, and Lichess gives you ones near yours. It has 6.2 million of them, played nearly 11 billion times between them.
+
+Finish a puzzle while you're logged in and you get a thumbs up and a thumbs down. Lichess turns those votes into a score that tops out at 100, calls it popularity, and puts it in its [puzzle database](https://database.lichess.org/#puzzles) next to each puzzle's play count. Here's a fairly typical rating band, the puzzles rated 1410 to 1480, by that score:
+
+<Chart
+  title="How often puzzles rated 1410 to 1480 get played, by popularity"
+  data={band}
+  type="columns"
+>
+  From Lichess's November puzzle dump. Puzzles at 94 have a median of 3,709 plays, and puzzles at 95
+  have 17,406.
+</Chart>
+
+One point of popularity, and nearly five times the plays. 95 is where Lichess draws a line in this band, and when you sit down to do puzzles, it starts you above it. Across every band, the top fifth by votes gets about half of all the plays, and the bottom half gets a tenth.
+
+The plays drop off again past 95, I think because a puzzle that gets played a lot picks up the odd downvote along the way. The busiest ones end up just over the line, and a perfect 100 is mostly a puzzle that hasn't been played much yet.
+
+## How Lichess picks your next puzzle
+
+A job that's meant to run every hour, [`mongodb-puzzle-regen-paths.js`](https://github.com/lichess-org/lila/blob/2694bf575ef96e338e257f295b8853d027e4368b/cron/mongodb-puzzle-regen-paths.js), splits the puzzles into 24 bands by rating, sorts each band by its vote, and slices it like this:
+
+```js
+const tiers = [
+  ['top', 20 / 100],
+  ['good', 50 / 100],
+  ['all', 95 / 100],
+];
+```
+
+"top" is the best-voted fifth of the band, "good" the best half, and "all" everything but the bottom 5%. Every new puzzle session asks for a top one ([`PuzzleSession.scala`](https://github.com/lichess-org/lila/blob/2694bf575ef96e338e257f295b8853d027e4368b/modules/puzzle/src/main/PuzzleSession.scala#L114)), unless you've picked Easiest or Hardest, which start on "good". Logged out, you get "top" too. I asked Lichess for a puzzle ten times this morning without an account, and every one was in the top fifth of its band. Storm and Racer don't add to a puzzle's play count (and Streak next to never does), so the plays in the dump are nearly all from this trainer.
+
+Lichess's [2016 post about puzzles](https://lichess.org/@/lichess/blog/puzzles-update/WDY6cCEA) said "selection bias due to user votes is no longer a factor". That was an older trainer, and I couldn't find the tiers anywhere in Lichess's docs or FAQ for the one that replaced it. The only place I found the rule written down is the FAQ of [PlayStrategy](https://github.com/Mind-Sports-Games/lila/blob/master/translation/source/puzzle.xml), a fork of Lichess for other games.
+
+## The jump happens wherever a band's line falls
+
+You could say a 95 is just a better puzzle than a 94, so of course it gets played more. Except each band works out its own line, and it usually falls partway through a score, letting some of the puzzles on that score in and leaving the rest out.
+
+The 1690 band (1690 to 1760) and the 1760 band next to it both draw their line through 94. In the 1690 band, only about one in ten of the 94s make it in. In the 1760 band, about eight in ten do. Here's where their cliffs land:
+
+<Chart
+  title="How often puzzles get played in two neighbouring bands, by popularity"
+  data={moves}
+  type="line"
+>
+  The 1690 band's plays jump from 94 to 95. The 1760 band's jump a point earlier, from 93 to 94,
+  because most of its 94s make the top fifth.
+</Chart>
+
+If the plays followed how good the puzzles are, they'd climb the same way in both bands. They jump where each band's line is.
+
+The edge between those two bands shows it again. Take puzzles on 94 rated within 40 points of 1760. The ones just under 1760 are in the 1690 band, mostly below its line, and have a median of 3,345 plays. The ones just over are in the 1760 band, mostly above its line, and have 6,054. Do the same for every other score and the two sides come out within about 20% of each other.
+
+It's the same in all 13 bands from 1200 to 2100. Going from one point under the line to one point over it multiplies the median plays by 3.2 to 7.2, and going from three points under to one under only does 1.3 to 2.5. Above 2100 the cliff fades, and below 1200 so many puzzles sit on a perfect 100 that the top fifth is mostly puzzles nobody's downvoted yet. I'd be guessing at why the top end fades. The dump's popularity is also a rounded copy of the score Lichess sorts by, so my rebuilt lines may be a point out here and there.
+
+## New puzzles start at the top
+
+A puzzle's vote is its upvotes minus its downvotes, over the total, and each vote is weighted by how much Lichess trusts you. It trusts a downvote less from someone who's just got the puzzle wrong, so a player with a year-old account who does that counts for 1.
+
+New puzzles don't start from nothing. The [script that adds them](https://github.com/ornicar/lichess-puzzler/blob/master/bin/copy-to-play.js) gives each one 10 upvotes' worth before anyone's seen it, so a brand new puzzle has a perfect score and joins the ones at the very front of its band. One of the ten I got this morning, [vnZOs](https://lichess.org/training/vnZOs), was on 100 with 56 plays in the dump, and had 173 by the time Lichess handed it to me.
+
+But it only takes one downvote worth 1 to bring a new puzzle to 9 out of 11, which shows up in the dump as 82. Of the 72,700 puzzles with 10 plays or fewer, 7,192 sit on exactly 82. There are piles on 67, 54, 43 and 33 as well, which is one downvote worth 2, 3, 4 and 5. Getting back up to 95 would take another 29 upvotes' worth.
+
+And 82 isn't just under the top fifth. It's in the bottom half of every band, with the puzzles that share a tenth of all the plays between them.

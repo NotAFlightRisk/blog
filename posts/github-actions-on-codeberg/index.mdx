@@ -1,0 +1,99 @@
+---
+title: Which of your GitHub Actions survive a move to Codeberg
+description: Copy your GitHub workflows to Codeberg and a lot of them go red. Most fail for one boring reason, and one goes green while doing nothing at all.
+date: 2026-11-20
+tags: [github, opensource, self-hosting, devops]
+---
+
+import Waffle from '../../src/components/mdx/Waffle.astro';
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import waffle from './waffle.json';
+import actions from './actions.json';
+
+Moving a repo from GitHub to [Codeberg](https://codeberg.org) is mostly just pushing it somewhere else. The CI's the bit you can't tell in advance. Codeberg runs [Forgejo](https://forgejo.org), which has its own Actions that read the same YAML, and that Yorick Peterse, [writing up his own move](https://yorickpeterse.com/articles/migrating-from-github-to-codeberg/) last week, called "essentially a bootleg version of GitHub Actions". Forgejo's [list of differences](https://forgejo.org/docs/v17.0/user/actions/github-actions/) has four things on it, and ends "This list may be incomplete."
+
+So I took the 30 actions that turn up in the most GitHub workflow files, and ran each one's README example on Forgejo 17.0.2, with the runner image Codeberg's own runners use.
+
+<Waffle title="The 30 most-used GitHub Actions on Codeberg's runner image" data={waffle}>
+  Each square is one action, at its current major version, run on 20 November.
+</Waffle>
+
+Eleven work as they are (well, ten and a half, as you'll see). Most of the rest fall over before they've run a line, and for the same reason.
+
+## Short names go to Forgejo's mirror, not GitHub
+
+On GitHub, `uses: actions/checkout@v7` means github.com/actions/checkout. On Forgejo it means data.forgejo.org/actions/checkout, a mirror that Forgejo's admins [keep by hand](https://code.forgejo.org/forgejo/forgejo-actions-feature-requests/issues/57). Codeberg's hosted runners go there too, as [this public run](https://codeberg.org/dgkf/options-forgejo-actions/actions/runs/31) on one of them shows:
+
+```
+git clone 'https://data.forgejo.org/actions/checkout'
+```
+
+18 of the 30 are on the mirror. The other 12 stop dead at the clone, with "repository not found". Give it the whole URL and it fetches from GitHub instead:
+
+```yaml
+- uses: https://github.com/actions/github-script@v9
+```
+
+That fixes seven of the twelve, including two I'd have bet against. github-script and action-gh-release are built to talk to GitHub's API, and they carry on doing it against Forgejo's, which answers enough of the same calls. action-gh-release made the release and uploaded the file to it:
+
+```
+⬆️ Uploading notes.txt...
+✅ Uploaded notes.txt
+```
+
+The other five still fail with a URL. Three are GitHub Pages and one is CodeQL, which are further down. And Codecov's action runs `actions/github-script` itself, by its short name, so that goes to the mirror whatever you write in your workflow. That's [forgejo/runner#1169](https://code.forgejo.org/forgejo/runner/issues/1169), open since last November.
+
+## Artifacts need Forgejo's own copies
+
+`upload-artifact` and `download-artifact` are on the mirror, and still fail:
+
+```
+::error::@actions/artifact v2.0.0+, upload-artifact@v4+ and download-artifact@v4+ are not currently supported on GHES.
+```
+
+GHES is GitHub Enterprise Server. Since v4, the artifact actions read the server's hostname, decide pretty much anything that isn't GitHub's is one of those, and give up. Forgejo keeps its own forks, which do work:
+
+```yaml
+- uses: https://code.forgejo.org/forgejo/upload-artifact@v5
+- uses: https://code.forgejo.org/forgejo/download-artifact@v7
+```
+
+GitHub Pages goes down with them. upload-pages-artifact is upload-artifact underneath, and configure-pages and deploy-pages want GitHub's Pages API, which Forgejo hasn't got. Codeberg has [its own Pages](https://docs.codeberg.org/codeberg-pages/), but it's a separate thing you set up rather than an action you swap in.
+
+## The image looks like GitHub's, mostly
+
+Codeberg's runners use [catthehacker's Ubuntu image](https://github.com/catthehacker/docker_images), built to look like GitHub's runner, so setup-python and docker/login-action are happy (login once I'd told the job to trust my test server's certificate, which Codeberg wouldn't need). setup-dotnet isn't: .NET quits because the image hasn't got libicu. One environment variable sorts it:
+
+```yaml
+env:
+  DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: '1'
+```
+
+There's no Docker daemon, though, and build-push, buildx and qemu all want one. Codeberg's [runner README](https://codeberg.org/actions/meta) says running the daemon "is not officially supported", and that building images with Podman still works.
+
+## OIDC is a different switch
+
+configure-aws-credentials is on the mirror, runs, and finds no credentials. GitHub hands a job an OIDC token when it asks with `permissions: id-token: write`. Forgejo ignores that, and wants `enable-openid-connect: true` on the job instead, which is one of the four things on its list. With it, Forgejo makes a token and the action gets as far as AWS, which turned the token down, having never heard of my test server.
+
+## The green tick that did nothing
+
+gradle/actions is one of the eleven that pass, and its setup-gradle really does work. Its dependency-submission sends your dependencies to GitHub's dependency graph, for Dependabot to read. On Forgejo it goes green as well, having logged this and sent nothing:
+
+```
+Dependency graph not supported in the ACT environment.
+```
+
+A failed step you'd notice. That one you'd only find by reading the log.
+
+CodeQL at least fails properly. Its first two calls are to GitHub's version check and its code scanning API, both 404 on Forgejo, and it gives up before it's downloaded CodeQL.
+
+<Matrix title="What happened to each of the 30" data={actions}>
+  Ranked by how many GitHub workflow files mention them, counted with GitHub's code search on 18 and
+  19 November. "With a URL" is the same workflow with `https://github.com/` in front.
+</Matrix>
+
+## Gitea gets 21
+
+Forgejo started as a fork of [Gitea](https://about.gitea.com), which has Actions too. Earlier this week I ran the same 30 on Gitea 28.4 and its runner. Codeberg's image isn't part of that, so I compared the two on the plain Debian Node image that Forgejo's runner examples use, where setup-python and docker/login-action fail and Forgejo gets 10. Gitea got 21.
+
+Three defaults make the difference. Short names fetch from github.com. The runner [patches the artifact actions](https://blog.gitea.com/release-of-runner-3.0.0/) as it downloads them, so they stop thinking it's an Enterprise Server. And it mounts the host's Docker socket into every job, which is how build-push passes, and also means every workflow on that runner can start a container on the host with the host's disk inside it. Forgejo's runner doesn't, unless you tell it to.

@@ -1,0 +1,182 @@
+[
+  {
+    "Action": "actions/checkout",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "actions/setup-node",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "actions/upload-artifact",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "Forgejo's fork"
+  },
+  {
+    "Action": "actions/setup-python",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "actions/cache",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "actions/download-artifact",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "Forgejo's fork"
+  },
+  {
+    "Action": "actions/deploy-pages",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "Codeberg Pages instead"
+  },
+  {
+    "Action": "actions/upload-pages-artifact",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "Codeberg Pages instead"
+  },
+  {
+    "Action": "actions/setup-java",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "docker/login-action",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "docker/build-push-action",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "No Docker daemon"
+  },
+  {
+    "Action": "docker/setup-buildx-action",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "No Docker daemon"
+  },
+  {
+    "Action": "actions/configure-pages",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "Codeberg Pages instead"
+  },
+  {
+    "Action": "actions/setup-go",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "pnpm/action-setup",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "softprops/action-gh-release",
+    "As it is": false,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "actions/setup-dotnet",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "One env var"
+  },
+  {
+    "Action": "dtolnay/rust-toolchain",
+    "As it is": false,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "astral-sh/setup-uv",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "docker/metadata-action",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "github/codeql-action",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "GitHub only"
+  },
+  {
+    "Action": "actions/github-script",
+    "As it is": false,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "Swatinem/rust-cache",
+    "As it is": false,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "codecov/codecov-action",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "Nothing yet"
+  },
+  {
+    "Action": "aws-actions/configure-aws-credentials",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "enable-openid-connect"
+  },
+  {
+    "Action": "gradle/actions",
+    "As it is": true,
+    "With a URL": true,
+    "Otherwise": "dependency-submission does nothing"
+  },
+  {
+    "Action": "docker/setup-qemu-action",
+    "As it is": false,
+    "With a URL": false,
+    "Otherwise": "No Docker daemon"
+  },
+  {
+    "Action": "peaceiris/actions-gh-pages",
+    "As it is": false,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "appleboy/ssh-action",
+    "As it is": false,
+    "With a URL": true,
+    "Otherwise": ""
+  },
+  {
+    "Action": "pypa/gh-action-pypi-publish",
+    "As it is": false,
+    "With a URL": true,
+    "Otherwise": ""
+  }
+]

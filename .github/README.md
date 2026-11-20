@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/github-actions-on-codeberg/"><img src="https://blog.peng.ly/_astro/og.BitpcoZ8.png" alt="Which of your GitHub Actions survive a move to Codeberg" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/github-actions-on-codeberg/">Which of your GitHub Actions survive a move to Codeberg</a></b><br />
+      Copy your GitHub workflows to Codeberg and a lot of them go red. Most fail for one boring reason, and one goes green while doing nothing at all.<br />
+      <sub>20 November 2026 · 4 min read · <a href="https://blog.peng.ly/tags/github/">#github</a> <a href="https://blog.peng.ly/tags/opensource/">#opensource</a> <a href="https://blog.peng.ly/tags/self-hosting/">#self-hosting</a> <a href="https://blog.peng.ly/tags/devops/">#devops</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/lichess-puzzle-cliff/"><img src="https://blog.peng.ly/_astro/og.C0gaygIl.png" alt="The one-point cliff in Lichess's puzzle trainer" width="240" /></a>
     </td>
     <td valign="top">

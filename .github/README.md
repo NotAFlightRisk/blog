@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/npm-stopped-taking-weekends/"><img src="https://blog.peng.ly/_astro/og.Dw4S4iMF.png" alt="npm stopped taking weekends" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/npm-stopped-taking-weekends/">npm stopped taking weekends</a></b><br />
+      For six years npm went quiet on Saturdays and Sundays, like the people using it. Since spring 2025 it hasn't, even for packages nobody's touched in years.<br />
+      <sub>21 November 2026 · 5 min read · <a href="https://blog.peng.ly/tags/npm/">#npm</a> <a href="https://blog.peng.ly/tags/javascript/">#javascript</a> <a href="https://blog.peng.ly/tags/ai/">#ai</a> <a href="https://blog.peng.ly/tags/opensource/">#opensource</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/github-actions-on-codeberg/"><img src="https://blog.peng.ly/_astro/og.BitpcoZ8.png" alt="Which of your GitHub Actions survive a move to Codeberg" width="240" /></a>
     </td>
     <td valign="top">

@@ -1,0 +1,88 @@
+---
+title: npm stopped taking weekends
+description: For six years npm went quiet on Saturdays and Sundays, like the people using it. Since spring 2025 it hasn't, even for packages nobody's touched in years.
+date: 2026-11-21
+tags: [npm, javascript, ai, opensource]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Dots from '../../src/components/mdx/Dots.astro';
+import weekends from './weekends.json';
+import packages from './packages.json';
+import platforms from './platforms.json';
+
+For six years, npm had the same week. Five busy days, then a Saturday and Sunday at about a quarter of the pace, because the people running `npm install` were at work and then they weren't.
+
+Then in spring 2025 that started to go. npm's [downloads API](https://github.com/npm/registry/blob/main/docs/download-counts.md) has a daily total for the whole registry going back to 2015, so here's a weekend day as a share of a weekday, quarter by quarter, with PyPI beside it:
+
+<Chart
+  type="line"
+  title="A weekend day's downloads as a share of a weekday's, npm and PyPI"
+  data={weekends}
+  unit="%"
+>
+  The median weekend day over the median weekday, each quarter. npm's from its downloads API, PyPI's
+  from ClickHouse's public [ClickPy](https://clickpy.clickhouse.com) data. Days npm reports as zero
+  and the Christmas fortnight are left out, and 2026 Q4 runs to 19 November.
+</Chart>
+
+npm sat between 23% and 29% for 25 quarters in a row. It's at 47% now.
+
+I was pulling those totals to see how big the AI boom looks from the registry's side, and the size is daft enough on its own. npm served 292 billion downloads in October 2024, 424 billion in October 2025 and just over a trillion this October.
+
+But a bigger registry with the same weekly shape would just be more of the same. The extra downloads since summer 2024 run at 54% on weekends, so whatever's adding them barely keeps office hours. That's close to PyPI, which has been up there as far back as the data goes.
+
+## It isn't just the new stuff
+
+The obvious answer is all the new apps AI tools are spinning up, installing whatever's in fashion. So I looked at packages nobody starts a project with any more.
+
+node-sass has been deprecated on npm since 2024, with a notice telling you to use `sass` instead. In summer 2024 it got about 286,000 downloads on a normal weekday and 62,000 on a weekend day. Now it's 155,000 and 82,000. Fewer people install it on a Tuesday than two years ago, and more do on a Saturday. TSLint, which told everyone to move to ESLint back in 2019, has nearly doubled at weekends with its weekdays flat. And left-pad, of all things, went from 21% to 59%.
+
+<Dots title="Weekend downloads as a share of weekday ones, then and now" data={packages} unit="%">
+  Summer 2024 is July to September, autumn 2026 is 1 October to 19 November. Medians, like the chart
+  above.
+</Dots>
+
+Packages people still use moved just as much. When I checked 507 of the biggest on 14 November, 506 had gone up by at least 10 points, and none was still under 30%. Taking the biggest few hundred out of the registry's total leaves the line where it was, so it isn't a few giants dragging the average along.
+
+vaul is my favourite. It's a drawer component for React, and its [README](https://github.com/emilkowalski/vaul) opens with "This repo is unmaintained". The last release was December 2024. In summer 2024 it got 76,000 downloads a weekday, and now it gets 5.4 million, because the Radix version of shadcn/ui's [drawer](https://ui.shadcn.com/docs/components/radix/drawer) is built on it, and AI app builders like Lovable start you off with the whole shadcn set. Lovable also puts its own Vite plugin, `lovable-tagger`, in the projects it makes, and of the 76,416 `package.json` files on GitHub that list it, 75,904 list vaul too.
+
+## Linux went first
+
+So who's installing node-sass on a Saturday? A download count doesn't say who asked for it, but packages with a separate binary for each platform give a hint. esbuild ships one for Linux, one for Macs, one for Windows and a pile of others, and npm only fetches the one for the machine it's running on.
+
+<Chart
+  type="line"
+  title="Linux stopped taking weekends before Macs and Windows did"
+  data={platforms}
+  unit="%"
+>
+  Weekend downloads as a share of weekday ones for `@esbuild/linux-x64`, `@esbuild/darwin-arm64` and
+  `@esbuild/win32-x64`, worked out the same way as the first chart.
+</Chart>
+
+Linux started drifting in spring 2025, while the Mac and Windows binaries didn't budge all year. They only got going in 2026, and they're at 44% and 45% now to Linux's 54%. Rollup's binaries do exactly the same. Linux is also where the volume is: 59 million esbuild installs a weekday, up from 5 million in summer 2024, against 3.5 million for Macs.
+
+That gap rules out one boring answer. Anything that grabs packages wholesale, like a mirror or a security scanner, would fetch all three alike, and the three lines would have moved together. They didn't.
+
+Most CI runners, containers and cloud sandboxes are Linux, so the first wave looks like machines. OpenAI's Codex cloud agent and Claude Code's general release both came out in May 2025, which lines up nicely and proves nothing. I can't read the Macs and Windows PCs. That could be people building things at weekends now that something else does the typing, or more CI on Macs, or both, and download counts can't tell them apart.
+
+The weirdest one I found is create-vite, the thing you run to start a new Vite project. Scaffolders were always weekend-heavy, because starting a side project is a Saturday thing, and create-vite ran at 67% in summer 2024. It's at 93% now, on 12 times the volume. Vite projects get started on a Sunday nearly as often as on a Tuesday.
+
+## Checking a package yourself
+
+This gets a package's last month from the same API and gives you its weekend average as a percentage of its weekday one:
+
+```sh
+curl -s https://api.npmjs.org/downloads/range/last-month/react | jq '
+  [.downloads[] | select(.downloads > 0) | {
+    n: .downloads,
+    weekend: (.day | strptime("%Y-%m-%d") | mktime | strftime("%a") | test("Sat|Sun"))
+  }]
+  | group_by(.weekend) | map(map(.n) | add / length)
+  | .[1] / .[0] * 100 | round'
+```
+
+It's a straight average over the last 30 days rather than the medians in the charts, so it won't match them exactly. react comes out at 57 today, and node-sass at 46. In the summer of 2024, almost everything came out somewhere around 25.
+
+vaul's README still says it's unmaintained. Last Sunday it was downloaded 3.3 million times.

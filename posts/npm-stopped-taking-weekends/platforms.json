@@ -1,0 +1,68 @@
+[
+  {
+    "quarter": "Q2 '24",
+    "Linux": 21,
+    "Mac": 19,
+    "Windows": 21
+  },
+  {
+    "quarter": "Q3 '24",
+    "Linux": 21,
+    "Mac": 20,
+    "Windows": 21
+  },
+  {
+    "quarter": "Q4 '24",
+    "Linux": 23,
+    "Mac": 21,
+    "Windows": 22
+  },
+  {
+    "quarter": "Q1 '25",
+    "Linux": 25,
+    "Mac": 23,
+    "Windows": 24
+  },
+  {
+    "quarter": "Q2 '25",
+    "Linux": 30,
+    "Mac": 24,
+    "Windows": 25
+  },
+  {
+    "quarter": "Q3 '25",
+    "Linux": 33,
+    "Mac": 22,
+    "Windows": 24
+  },
+  {
+    "quarter": "Q4 '25",
+    "Linux": 34,
+    "Mac": 24,
+    "Windows": 26
+  },
+  {
+    "quarter": "Q1 '26",
+    "Linux": 41,
+    "Mac": 30,
+    "Windows": 31
+  },
+  {
+    "quarter": "Q2 '26",
+    "Linux": 55,
+    "Mac": 33,
+    "Windows": 36
+  },
+  {
+    "quarter": "Q3 '26",
+    "Linux": 53,
+    "Mac": 41,
+    "Windows": 42
+  },
+  {
+    "quarter": "Q4 '26",
+    "Linux": 54,
+    "Mac": 44,
+    "Windows": 45
+  }
+]

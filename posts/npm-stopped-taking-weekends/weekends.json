@@ -1,0 +1,162 @@
+[
+  {
+    "quarter": "2019 Q1",
+    "npm": 28,
+    "PyPI": 60
+  },
+  {
+    "quarter": "2019 Q2",
+    "npm": 27,
+    "PyPI": 60
+  },
+  {
+    "quarter": "2019 Q3",
+    "npm": 25,
+    "PyPI": 58
+  },
+  {
+    "quarter": "2019 Q4",
+    "npm": 25,
+    "PyPI": 60
+  },
+  {
+    "quarter": "2020 Q1",
+    "npm": 26,
+    "PyPI": 58
+  },
+  {
+    "quarter": "2020 Q2",
+    "npm": 28,
+    "PyPI": 63
+  },
+  {
+    "quarter": "2020 Q3",
+    "npm": 26,
+    "PyPI": 62
+  },
+  {
+    "quarter": "2020 Q4",
+    "npm": 28,
+    "PyPI": 62
+  },
+  {
+    "quarter": "2021 Q1",
+    "npm": 28,
+    "PyPI": 65
+  },
+  {
+    "quarter": "2021 Q2",
+    "npm": 26,
+    "PyPI": 58
+  },
+  {
+    "quarter": "2021 Q3",
+    "npm": 25,
+    "PyPI": 63
+  },
+  {
+    "quarter": "2021 Q4",
+    "npm": 25,
+    "PyPI": 63
+  },
+  {
+    "quarter": "2022 Q1",
+    "npm": 29,
+    "PyPI": 63
+  },
+  {
+    "quarter": "2022 Q2",
+    "npm": 23,
+    "PyPI": 61
+  },
+  {
+    "quarter": "2022 Q3",
+    "npm": 23,
+    "PyPI": 61
+  },
+  {
+    "quarter": "2022 Q4",
+    "npm": 23,
+    "PyPI": 63
+  },
+  {
+    "quarter": "2023 Q1",
+    "npm": 25,
+    "PyPI": 61
+  },
+  {
+    "quarter": "2023 Q2",
+    "npm": 24,
+    "PyPI": 60
+  },
+  {
+    "quarter": "2023 Q3",
+    "npm": 23,
+    "PyPI": 58
+  },
+  {
+    "quarter": "2023 Q4",
+    "npm": 25,
+    "PyPI": 59
+  },
+  {
+    "quarter": "2024 Q1",
+    "npm": 24,
+    "PyPI": 59
+  },
+  {
+    "quarter": "2024 Q2",
+    "npm": 23,
+    "PyPI": 57
+  },
+  {
+    "quarter": "2024 Q3",
+    "npm": 23,
+    "PyPI": 57
+  },
+  {
+    "quarter": "2024 Q4",
+    "npm": 25,
+    "PyPI": 59
+  },
+  {
+    "quarter": "2025 Q1",
+    "npm": 27,
+    "PyPI": 58
+  },
+  {
+    "quarter": "2025 Q2",
+    "npm": 30,
+    "PyPI": 62
+  },
+  {
+    "quarter": "2025 Q3",
+    "npm": 31,
+    "PyPI": 62
+  },
+  {
+    "quarter": "2025 Q4",
+    "npm": 33,
+    "PyPI": 62
+  },
+  {
+    "quarter": "2026 Q1",
+    "npm": 37,
+    "PyPI": 63
+  },
+  {
+    "quarter": "2026 Q2",
+    "npm": 44,
+    "PyPI": 66
+  },
+  {
+    "quarter": "2026 Q3",
+    "npm": 46,
+    "PyPI": 65
+  },
+  {
+    "quarter": "2026 Q4",
+    "npm": 47,
+    "PyPI": 60
+  }
+]

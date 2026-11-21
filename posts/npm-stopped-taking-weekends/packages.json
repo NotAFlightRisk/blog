@@ -1,0 +1,47 @@
+[
+  {
+    "package": "node-sass",
+    "Summer 2024": 22,
+    "Autumn 2026": 53
+  },
+  {
+    "package": "tslint",
+    "Summer 2024": 21,
+    "Autumn 2026": 41
+  },
+  {
+    "package": "left-pad",
+    "Summer 2024": 21,
+    "Autumn 2026": 59
+  },
+  {
+    "package": "request",
+    "Summer 2024": 31,
+    "Autumn 2026": 44
+  },
+  {
+    "package": "lodash",
+    "Summer 2024": 27,
+    "Autumn 2026": 46
+  },
+  {
+    "package": "express",
+    "Summer 2024": 25,
+    "Autumn 2026": 48
+  },
+  {
+    "package": "typescript",
+    "Summer 2024": 24,
+    "Autumn 2026": 52
+  },
+  {
+    "package": "react",
+    "Summer 2024": 25,
+    "Autumn 2026": 55
+  },
+  {
+    "package": "vaul",
+    "Summer 2024": 36,
+    "Autumn 2026": 62
+  }
+]

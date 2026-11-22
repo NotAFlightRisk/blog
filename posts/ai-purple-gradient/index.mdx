@@ -1,0 +1,83 @@
+---
+title: The AI purple is a 2017 gradient called Plum Plate
+description: 'That #667eea to #764ba2 hero on vibe-coded pages is one swatch from a 2017 gallery. Hardly anyone used it, until Claude 4 put it in 40% of its gradients.'
+date: 2026-11-22
+tags: [ai, css, webdev, claude]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import Breakdown from '../../src/components/mdx/Breakdown.astro';
+import Figure from '../../src/components/mdx/Figure.astro';
+import swatch from './plum-plate.png';
+import models from './models.json';
+import swatches from './swatches.json';
+
+<Figure
+  src={swatch}
+  alt="The Plum Plate gradient, running from a soft blue at the top left to plum at the bottom right"
+/>
+
+You've seen this one. If you've opened a vibe-coded landing page in the last year or so, there's a good chance its hero was `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`, with white text on top.
+
+GitHub's code search finds `#667eea 0%, #764ba2 100%` in about 1.3 million files. The agent skill packs have noticed: [ECC](https://github.com/affaan-m/ECC)'s generator agent says "#667eea -> #764ba2 is an instant tell", and [Impeccable](https://github.com/pbakaus/impeccable)'s slop detector counts both as AI purples. The usual explanation for AI going purple is [Tailwind](https://dev.to/alanwest/why-every-ai-built-website-looks-the-same-blame-tailwinds-indigo-500-3h2p), whose creator Adam Wathan half-apologised in August 2025 for making every Tailwind UI button `bg-indigo-500`.
+
+But this isn't a Tailwind colour. It's Plum Plate, number 28 of the 180 swatches in [WebGradients](https://webgradients.com), a free gallery [itmeo](https://github.com/itmeo/webgradients) put out in January 2017. And for most of its life, hardly anyone used it.
+
+## Nobody wanted it for eight years
+
+Stack Overflow has 17 posts with both colours in from 2017 to 2022. Over the same years, the old Flat UI blue, `#3498db`, is in 1,314. In a [2022 snapshot of GitHub](https://huggingface.co/datasets/codeparrot/github-code-clean) with 470,000 HTML files in it, Plum Plate is in one, and `#3498db` is in 121.
+
+The first wave of chatbots didn't go for it either. [WildChat](https://huggingface.co/datasets/allenai/WildChat-1M) is 838,000 real ChatGPT conversations from April 2023 to April 2024, and ChatGPT wrote Plum Plate in one of them. LMArena's public dumps from 2023 to summer 2024, the last one with Claude 3 and 3.5 Sonnet in, have it zero times.
+
+## Then Claude 4 came out
+
+Claude Sonnet 4 and Opus 4 launched on 22 May 2025. LMArena's [next dump](https://huggingface.co/datasets/lmarena-ai/arena-human-preference-140k) has 271,000 answers from April to July 2025, so I took every answer that wrote a CSS gradient and checked how many were this one:
+
+<Chart
+  title="How often a model's CSS gradient was Plum Plate, April to July 2025"
+  data={models}
+  unit="%"
+>
+  Answers in LMArena's arena-human-preference-140k that write a `linear-gradient`. Thinking variants
+  are counted with their model.
+</Chart>
+
+That's 93 of Claude 4's 232 gradients, against 20 of 670 for other companies' models. 83 of Claude's 93 are the line from the top of this post, word for word, and they start on cue: two Plum Plate answers in April from anyone, then 29 in May.
+
+Why Claude 4 took this one out of 180, I've no idea. It took a second one too: Ripe Malinka, number 17, a pink one, turns up 12 times in Claude 4's answers (a couple as extra stops on the end of Plum Plate) and twice in everyone else's. Keep that name in mind for the next bit.
+
+## Then it was all over GitHub
+
+Count GitHub's hits for every two-colour swatch in WebGradients, and it's barely a contest:
+
+<Breakdown
+  title="GitHub code-search hits for WebGradients' 123 two-colour swatches"
+  data={swatches}
+>
+  Exact-string searches like `#667eea 0%, #764ba2 100%`, one per swatch, 20 November 2026. GitHub
+  calls these totals estimates.
+</Breakdown>
+
+Plum Plate is 69% of the lot, 11 times the runner-up, and the runner-up's Ripe Malinka. The median swatch gets 609.
+
+Hit counts don't say when the files were written, so I took the first 100 CSS files the search gives for Plum Plate and found the commit that added the line to each. 95 were added in 2025 or 2026. Code search does lean towards recent files, so I did the same with the first 100 for `#3498db`, and only 34 of those were that new.
+
+In plain `.css` files, Plum Plate's now at 349,000 hits to `#3498db`'s 429,000. `#3498db` has been around since at least 2013, and Plum Plate only took off in 2025.
+
+I can't prove those 95 came from Claude. Three of the commits that added it were made by an agent (Claude Code once, Copilot twice), and the other 97 don't say. It's the timing that points at Claude 4, nothing more.
+
+## Newer Claudes leave it off their sites
+
+By July 2026, LMArena's [WebDev dump](https://huggingface.co/datasets/lmarena-ai/arena-webdev-preferences) has 12,780 generated sites. Claude 4.8 and the Claude 5 models put Plum Plate on none of the 600 that had a gradient. Everyone else, Claude 4.5 to 4.7 included, came to 1 or 2% between them.
+
+That's when they're building a whole site. Ask for nothing but a gradient and it comes straight back. A study of Claude's defaults called [priors](https://centricle.com/curios/priors/color/#gradient), by centricle, asked Sonnet 5 to "Write a CSS gradient." and got this exact pair 98 times in 100. I asked the same this morning, six times each, through Claude Code with my own settings loaded:
+
+| Model             | Answers with Plum Plate |
+| ----------------- | ----------------------- |
+| Claude Sonnet 4.5 | 6 of 6                  |
+| Claude Haiku 4.5  | 6 of 6                  |
+| Claude Opus 5.5   | 2 of 6                  |
+| Claude Haiku 5.5  | 1 of 6                  |
+| Claude Sonnet 5.5 | 0 of 6                  |
+
+Sonnet 5.5 never wrote it. All six of its answers were `linear-gradient(135deg, #ff7e5f 0%, #feb47b 50%, #86a8e7 100%)`, word for word. GitHub has that one in 11 files so far.

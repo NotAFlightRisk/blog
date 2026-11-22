@@ -1,0 +1,6 @@
+[
+  { "model": "Claude Sonnet 4", "share": 48 },
+  { "model": "Claude Opus 4", "share": 30 },
+  { "model": "Every other model", "share": 3 },
+  { "model": "Claude 3.5 and 3.7", "share": 1 }
+]

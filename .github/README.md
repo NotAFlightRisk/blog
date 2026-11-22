@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/ai-purple-gradient/"><img src="https://blog.peng.ly/_astro/og.D5EMuBjX.png" alt="The AI purple is a 2017 gradient called Plum Plate" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/ai-purple-gradient/">The AI purple is a 2017 gradient called Plum Plate</a></b><br />
+      That #667eea to #764ba2 hero on vibe-coded pages is one swatch from a 2017 gallery. Hardly anyone used it, until Claude 4 put it in 40% of its gradients.<br />
+      <sub>22 November 2026 · 4 min read · <a href="https://blog.peng.ly/tags/ai/">#ai</a> <a href="https://blog.peng.ly/tags/css/">#css</a> <a href="https://blog.peng.ly/tags/webdev/">#webdev</a> <a href="https://blog.peng.ly/tags/claude/">#claude</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/npm-stopped-taking-weekends/"><img src="https://blog.peng.ly/_astro/og.Dw4S4iMF.png" alt="npm stopped taking weekends" width="240" /></a>
     </td>
     <td valign="top">

@@ -1,0 +1,37 @@
+[
+  {
+    "Gallery": "Immich",
+    "Offset": true,
+    "No offset": true,
+    "UK time": true,
+    "Border": "-1h"
+  },
+  {
+    "Gallery": "PhotoPrism",
+    "Offset": true,
+    "No offset": true,
+    "UK time": "-9h",
+    "Border": true
+  },
+  {
+    "Gallery": "Memories",
+    "Offset": true,
+    "No offset": "+9h",
+    "UK time": true,
+    "Border": "+1h"
+  },
+  {
+    "Gallery": "PiGallery2",
+    "Offset": true,
+    "No offset": "+9h",
+    "UK time": true,
+    "Border": "+1h"
+  },
+  {
+    "Gallery": "Lychee",
+    "Offset": true,
+    "No offset": "+9h",
+    "UK time": true,
+    "Border": "+1h"
+  }
+]

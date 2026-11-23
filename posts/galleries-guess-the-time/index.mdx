@@ -1,0 +1,76 @@
+---
+title: Your photo gallery is guessing what time it was
+description: A photo's clock doesn't say which timezone it was on, so self-hosted galleries guess. I gave five the same files, and Immich put Portugal in Spain.
+date: 2026-11-23
+tags: [self-hosting, opensource, photography, timezones]
+---
+
+import Figure from '../../src/components/mdx/Figure.astro';
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import panel from './immich-tui.png';
+import results from './results.json';
+
+Here's a photo from the Portuguese bank of the river Minho, at 23:30 on a July night, about a kilometre and a half from the Spanish town of Tui on the other side. I didn't take it, I made it with exiftool. This is what Immich makes of it:
+
+<Figure
+  src={panel}
+  alt="Immich's info panel for the photo: 14 Jul 2026, Tue, 23:30:00 GMT+02:00, location Tui, Galicia, Spain, above a map with the pin on the Portuguese side of the river"
+>
+  Immich v3.4.2. The pin's on the Portuguese side of the river, with Valença at the bottom. The label says Spain, and the time's on Spanish summer time, an hour ahead of Portugal's. Map data from OpenStreetMap.
+</Figure>
+
+All the file says about when and where is `2026:07:14 23:30:00` and a GPS position, with no timezone. Everything else is Immich working it out, and every self-hosted gallery works it out a bit differently.
+
+## The time on a photo has no timezone
+
+The time in a photo's EXIF, `DateTimeOriginal`, is whatever the camera's clock said, as plain text with no zone on it. A separate tag for the offset, `OffsetTimeOriginal`, only arrived with EXIF 2.31 in 2016, and not every camera writes it. `exiftool -OffsetTimeOriginal photo.jpg` tells you if yours does: no output, no offset.
+
+Without one, a gallery has to pick a zone itself. It can read the time as UTC, which is only right if you were somewhere on UTC at the time, like London in winter. Or it can use the GPS, either by looking the position up on a map of timezone boundaries, or by finding the nearest town in a list and using that town's zone.
+
+So I made a handful of test files with exiftool, each with one awkward thing about it, and put them through [Immich](https://immich.app) v3.4.2, [PhotoPrism](https://www.photoprism.app) 261029, [PiGallery2](https://github.com/bpatrik/pigallery2) 3.8.0 and [Lychee](https://lycheeorg.dev) 7.13.1, each on a server set to New York time. [Memories](https://memories.gallery), the Nextcloud one, needs a whole Nextcloud to run, so I lifted its date code out and ran that on its own. Here's when each of them thought four of the photos were taken:
+
+<Matrix title="When five galleries think the same four photos were taken" data={results}>
+  Tokyo at 08:30 with its +09:00 offset, then without it, then from a camera left on UK time that wrote +00:00, and the photo by the river. All four have a GPS position. A tick means the gallery stored the right moment, and +9h means it stored one nine hours late. The clock it shows you is the camera's in every case. Memories is without its optional places database.
+</Matrix>
+
+PiGallery2, Lychee and Memories go with UTC, which is where the +9h and +1h come from. The clock they show you is still right, it's the moment underneath that's off, and that starts to matter once those photos sit next to ones that did have an offset, like your phone's. Immich and PhotoPrism both use the GPS, just not the same way.
+
+## Immich asks the nearest town
+
+Immich reads photos with [exiftool-vendored](https://github.com/photostructure/exiftool-vendored.js), with its `geolocation` option [switched on](https://github.com/immich-app/immich/blob/v3.4.2/server/src/repositories/metadata.repository.ts#L89-L100). That makes ExifTool look for the closest of the 116,000 places in its built-in list, and for my photo that's Tui, 1.4 km away across the river. Immich does hand over a proper boundary lookup too ([geo-tz](https://github.com/evansiroky/node-geo-tz)), and that one knows it's Portugal. It just [only gets asked](https://github.com/photostructure/exiftool-vendored.js/blob/6a8f371d62692366721ff07538e109d34e9da04f/src/ReadTask.ts#L322-L341) if the nearest town doesn't come up with a zone first.
+
+The clock still reads 23:30, so you'd only spot the `GMT+02:00`. Except Immich groups the timeline by the clock on the photo, then [sorts each day](https://github.com/immich-app/immich/blob/v3.4.2/server/src/repositories/asset.repository.ts#L933) by the moment underneath. So when I added a second photo from the same spot at 23:00, one that did have its `+01:00`, Immich decided my 23:30 photo was taken first.
+
+How often is the nearest town wrong? Not very, unless you take photos near a border. I took 20,000 spots people have taken photos from (the camera locations on [Wikimedia Commons](https://commons.wikimedia.org) pictures) and asked both lookups. Leaving out everything south of 50 degrees, where the nearest town in the list can be over a thousand kilometres away, 53 of 19,910 got a different offset, about 3 in 1,000. Brest in Belarus gets Warsaw's time. A corner of northern Pakistan gets India's, half an hour out. Bits of northern Portugal get Madrid's, like my photo. In the ten inhabited mismatches I looked up on OpenStreetMap, the boundary map gave the zone of the country the spot's actually in, every time.
+
+That only bites photos with no offset tag, though. Immich reads the offset first when there is one.
+
+## PhotoPrism trusts the map over the camera
+
+PhotoPrism uses a boundary map, so it gets Portugal right. It trusts it a bit too much, though: if a photo has a GPS position, PhotoPrism [takes the zone from that](https://github.com/photoprism/photoprism/blob/6383b439983d6a9d558876f64a5cdb83477df9df/internal/meta/exif.go#L264-L279) and nothing else, then reads the camera's clock as if it was set to it.
+
+That's fine until the camera's clock is on a different zone. Say you fly to Tokyo and leave the camera on UK time. Breakfast at 08:30 on New Year's Day gets stamped 23:30 on the 31st, `+00:00`, which is the right moment, just written in UK time. Add a location afterwards, from your phone's GPS track say, and PhotoPrism reads that 23:30 as Tokyo time, nine hours early. The other four go with the offset.
+
+## Memories puts videos on the server's day
+
+Phone videos have the opposite problem. An MP4 stores its time in UTC (that's the spec, [though plenty of cameras](https://exiftool.org/ExifTool.html#QuickTimeUTC) write local time anyway), so the moment's right and it's the clock that needs working out.
+
+Memories [asks ExifTool](https://github.com/pulsejet/memories/blob/v11.1.4/lib/Exif.php#L31) to turn those UTC times into local time, and the only local time ExifTool knows is the server's. Memories then files the clip under that day. A clip from 08:30 on New Year's Day in Tokyo turns up on New Year's Eve: at 18:30 with the server on New York time, and 23:30 with it left on UTC.
+
+Immich gets GPS clips right out of the box. A clip with no location lands on the 31st in both, which is about the best either can do.
+
+## The fix is one tag
+
+All five agree once the offset's written in and matches where you were, so that's the fix. For a camera left on home time, shift the clock by the difference and set the offset to match:
+
+```sh
+# the photo by the river
+exiftool -OffsetTimeOriginal=+01:00 -overwrite_original photo.jpg
+
+# a camera left on UK time in Tokyo
+exiftool "-AllDates+=9" -OffsetTimeOriginal=+09:00 -overwrite_original *.jpg
+```
+
+Then get the gallery to read them again (in Immich that's Refresh metadata, in the photo's menu).
+
+With its `+01:00`, Immich puts my photo at the right moment. It still says it was taken in Spain, mind.

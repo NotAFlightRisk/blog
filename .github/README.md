@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/galleries-guess-the-time/"><img src="https://blog.peng.ly/_astro/og.eLqv8gwG.png" alt="Your photo gallery is guessing what time it was" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/galleries-guess-the-time/">Your photo gallery is guessing what time it was</a></b><br />
+      A photo's clock doesn't say which timezone it was on, so self-hosted galleries guess. I gave five the same files, and Immich put Portugal in Spain.<br />
+      <sub>23 November 2026 · 5 min read · <a href="https://blog.peng.ly/tags/self-hosting/">#self-hosting</a> <a href="https://blog.peng.ly/tags/opensource/">#opensource</a> <a href="https://blog.peng.ly/tags/photography/">#photography</a> <a href="https://blog.peng.ly/tags/timezones/">#timezones</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/ai-purple-gradient/"><img src="https://blog.peng.ly/_astro/og.D5EMuBjX.png" alt="The AI purple is a 2017 gradient called Plum Plate" width="240" /></a>
     </td>
     <td valign="top">

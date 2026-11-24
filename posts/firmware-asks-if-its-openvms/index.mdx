@@ -8,7 +8,7 @@ tags: [linux, hardware, opensource]
 import Chart from '../../src/components/mdx/Chart.astro';
 import asks from './asks.json';
 
-The ASUS PRIME B850M-A is a motherboard that went on sale in January 2025. Every time it starts up, its firmware asks the operating system if it's FreeBSD, HP-UX (HP's Unix for its big servers) or OpenVMS, which started out on DEC's VAX minicomputers in the 1970s. Here's the bit that asks:
+The ASUS PRIME B850M-A is a motherboard that went on sale in January 2025. Every time it starts up, its firmware asks the operating system if it's FreeBSD, HP-UX (HP's Unix for its big servers) or OpenVMS. Here's the bit that asks:
 
 ```text title="ASUS PRIME B850M-A, BIOS 1642"
 If (_OSI ("FreeBSD"))
@@ -26,6 +26,8 @@ If (_OSI ("OpenVMS"))
     OSVR = 0x08
 }
 ```
+
+OpenVMS is the operating system DEC announced with its VAX minicomputers in 1977, when a computer came in cabinets the size of a wardrobe. Banks, hospitals and phone companies [still run it](https://en.wikipedia.org/wiki/OpenVMS), just not usually on a desktop motherboard.
 
 ## Firmware asks the OS what it is
 

@@ -1,0 +1,11 @@
+[
+  { "question": "Windows XP", "share": 95 },
+  { "question": "Windows 7", "share": 91 },
+  { "question": "Windows 10", "share": 64 },
+  { "question": "Linux", "share": 59 },
+  { "question": "FreeBSD", "share": 31 },
+  { "question": "HP-UX", "share": 24 },
+  { "question": "OpenVMS", "share": 24 },
+  { "question": "Windows 11 22H2", "share": 3 },
+  { "question": "Darwin (macOS)", "share": 3 }
+]

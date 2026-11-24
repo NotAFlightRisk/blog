@@ -1,0 +1,88 @@
+---
+title: Your new motherboard asks if it's running OpenVMS
+description: Every boot, your PC's firmware asks the OS what it is. ASUS's 2025 boards stopped asking if it's Linux, but they still ask if it's OpenVMS.
+date: 2026-11-24
+tags: [linux, hardware, opensource]
+---
+
+import Chart from '../../src/components/mdx/Chart.astro';
+import asks from './asks.json';
+
+The ASUS PRIME B850M-A is a motherboard that went on sale in January 2025. Every time it starts up, its firmware asks the operating system if it's FreeBSD, HP-UX (HP's Unix for its big servers) or OpenVMS, which started out on DEC's VAX minicomputers in the 1970s. Here's the bit that asks:
+
+```text title="ASUS PRIME B850M-A, BIOS 1642"
+If (_OSI ("FreeBSD"))
+{
+    OSVR = 0x06
+}
+
+If (_OSI ("HP-UX"))
+{
+    OSVR = 0x07
+}
+
+If (_OSI ("OpenVMS"))
+{
+    OSVR = 0x08
+}
+```
+
+## Firmware asks the OS what it is
+
+Your PC's firmware doesn't just start the OS and leave. It hands over ACPI tables, which are full of little programs the OS runs whenever it needs to sleep, wake, change the brightness or find out what hardware's plugged in. Those programs can call `_OSI` with a name, and the OS answers yes or no.
+
+Windows answers yes to one name per version, and to every version before it. `Windows 2009` is Windows 7, `Windows 2015` is Windows 10 and the newest, `Windows 2022`, is [Windows 11 22H2](https://learn.microsoft.com/en-us/windows-hardware/drivers/acpi/winacpi-osi). So firmware can switch things on for whichever Windows it's got, like modern standby only for Windows 8 and up.
+
+To see what else gets asked, I went through [linux-hardware.org's ACPI dumps](https://github.com/linuxhw/ACPI), which people upload from their own machines with its probe tool. That's 783 of them with a main table I could read, mostly laptops and desktops.
+
+<Chart title="What PC firmware asks the OS" data={asks} unit="%">
+  Share of 783 ACPI dumps from linux-hardware.org that ask each question somewhere in their tables. Windows versions go by the year in their name, so Windows XP is `Windows 2001`, and Windows 11 22H2's name only arrived in 2022.
+</Chart>
+
+The median machine asks 11 different names, and the keenest asks 26. Nearly a quarter ask about HP-UX and OpenVMS, and they always ask about both.
+
+## Nobody's listening for the answer
+
+The HP-UX and OpenVMS questions turn up on boards from most of the big names, Gigabyte, ASRock and MSI especially. Nearly all of them come from the code at the top, which is a routine of AMI's called `OSFL`. It goes down a list of names and sets `OSVR` to a number for each yes, so OpenVMS would get 8.
+
+Windows and Linux both say no, of course. To end up on 8 you'd need an OS that says yes to OpenVMS and no to every Windows question after it, and I'm not sure there is one. OpenVMS does run on x86 these days, as a guest on [KVM, VMware or VirtualBox](https://www.theregister.com/2022/05/10/openvms_92/), but I couldn't find out whether it answers this question. If it did, it wouldn't get much for it. I went through the B850's whole table, and `OSVR` only gets checked twice: once for Windows 98 or ME, and once to hide the HPET timer from anything older than Vista. The newest Windows on the list is 8.1, on a board that came out with Windows 11.
+
+I couldn't find anything from AMI on why OpenVMS is on there, but I've a good guess. In 2004, [ACPI 3.0](https://uefi.org/sites/default/files/resources/ACPI_3.pdf) added a table of OS names, and there are five of them: FreeBSD, HP-UX, Linux, OpenVMS and Windows. HP was one of the spec's authors by then, and its Itanium servers ran HP-UX and OpenVMS. The B850's version of AMI's routine has every name in that table. Linux is the odd one out there, only checked in a fallback for systems too old to have `_OSI`. The table's still in the [current spec](https://uefi.org/specs/ACPI/6.6/05_ACPI_Software_Programming_Model.html#predefined-operating-system-vendor-string-prefixes).
+
+It isn't fading out, either. In [this collection of ASUS BIOS tables](https://github.com/asus-wmi-boards-sensors/asus-board-dsdt), all 58 of the 2024-25 AMD boards (B840, B850 and X870) ask about OpenVMS. Not one of them asks about Linux, which all 33 of the AMD boards before them did. ASUS took the Linux question out and kept OpenVMS.
+
+## Linux says no to Linux
+
+So what does Linux answer? I booted a 6.12 kernel in QEMU with an extra table that asks 38 names and shows each answer. It says yes to all 22 of Microsoft's Windows names, from `Windows 2000` to `Windows 2022`, and no to Linux, FreeBSD, HP-UX, OpenVMS and Darwin. One of those gets a line of its own in the log:
+
+```text
+[Firmware Bug]: BIOS _OSI(Linux) query ignored
+```
+
+If you've seen that line in your own `dmesg`, there's nothing wrong with your machine. It means the firmware asked if it's Linux, and Linux said no.
+
+Linux used to say yes. A [comment in the kernel](https://github.com/torvalds/linux/blob/master/drivers/acpi/osi.c) tells the story: firmware writers put `_OSI("Linux")` in their example code and used it for odd things, like re-initialising a graphics card on wake because Linux couldn't do it quickly at the time. Once Linux could, it had no way to tell the firmware to stop. So since 2.6.23 in 2007 it's said no, and just claims to be every Windows, since Windows is what firmware actually gets tested on.
+
+## What a yes would change
+
+You can make Linux say yes with the `acpi_osi=Linux` boot option, and some machines do something different when it does. Of the 465 dumps that ask about Linux, I reckon 98 would, about one in five. 71 of those are Lenovos, mostly ThinkPads, and they mostly look like this one from an X1 Carbon from 2016:
+
+```text title="ThinkPad X1 Carbon 4th gen" {7-11}
+If (\_OSI ("Windows 2015"))
+{
+    \WIN8 = 0x01
+    OSYS = 0x07DF
+}
+
+If (\_OSI ("Linux"))
+{
+    \LNUX = 0x01
+    OSYS = 0x03E8
+}
+```
+
+With `LNUX` set, it tells the laptop's embedded controller that the mute and volume keys are just keys, so the OS does the muting. Linux's [ThinkPad driver](https://github.com/torvalds/linux/blob/master/drivers/platform/x86/lenovo/thinkpad_acpi.c) already asks for exactly that when it starts, so that bit makes no difference.
+
+The other line matters more. `OSYS` is the Windows version as a year, and the Linux branch sets it to 1000. Everything on that laptop that checks for Windows 8 or newer, like the brightness controls, or Windows 10, like an extra table for the CPU's power management, now thinks it's dealing with something older than Windows 2000.
+
+If you'd rather tell your B850 it's OpenVMS, `acpi_osi=OpenVMS` works too. My test VM said yes to it happily. On the B850 the 8 would last exactly one question, until Windows XP SP1 came along.

@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/firmware-asks-if-its-openvms/"><img src="https://blog.peng.ly/_astro/og.C7lb4gai.png" alt="Your new motherboard asks if it's running OpenVMS" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/firmware-asks-if-its-openvms/">Your new motherboard asks if it's running OpenVMS</a></b><br />
+      Every boot, your PC's firmware asks the OS what it is. ASUS's 2025 boards stopped asking if it's Linux, but they still ask if it's OpenVMS.<br />
+      <sub>24 November 2026 · 5 min read · <a href="https://blog.peng.ly/tags/linux/">#linux</a> <a href="https://blog.peng.ly/tags/hardware/">#hardware</a> <a href="https://blog.peng.ly/tags/opensource/">#opensource</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/galleries-guess-the-time/"><img src="https://blog.peng.ly/_astro/og.eLqv8gwG.png" alt="Your photo gallery is guessing what time it was" width="240" /></a>
     </td>
     <td valign="top">

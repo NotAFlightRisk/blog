@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/mesh-vpn-acls-skip-the-lan/"><img src="https://blog.peng.ly/_astro/og.CK3FegNP.png" alt="Mesh VPN ACLs don't cover your Wi-Fi" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/mesh-vpn-acls-skip-the-lan/">Mesh VPN ACLs don't cover your Wi-Fi</a></b><br />
+      Bind a service to your Tailscale or NetBird address on Linux, refuse a peer in the ACL, and a box on your Wi-Fi can still get in. So can your containers.<br />
+      <sub>25 November 2026 · 5 min read · <a href="https://blog.peng.ly/tags/security/">#security</a> <a href="https://blog.peng.ly/tags/self-hosting/">#self-hosting</a> <a href="https://blog.peng.ly/tags/tailscale/">#tailscale</a> <a href="https://blog.peng.ly/tags/networking/">#networking</a> <a href="https://blog.peng.ly/tags/linux/">#linux</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/firmware-asks-if-its-openvms/"><img src="https://blog.peng.ly/_astro/og.C7lb4gai.png" alt="Your new motherboard asks if it's running OpenVMS" width="240" /></a>
     </td>
     <td valign="top">

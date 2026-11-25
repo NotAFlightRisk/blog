@@ -1,0 +1,7 @@
+[
+  { "VPN": "Nebula", "Peer": false, "LAN box": true },
+  { "VPN": "Tailscale", "Peer": false, "LAN box": true },
+  { "VPN": "Tailscale v6", "Peer": false, "LAN box": true },
+  { "VPN": "NetBird", "Peer": false, "LAN box": true },
+  { "VPN": "ZeroTier", "Peer": false, "LAN box": true }
+]

@@ -1,0 +1,92 @@
+---
+title: Mesh VPN ACLs don't cover your Wi-Fi
+description: Bind a service to your Tailscale or NetBird address on Linux, refuse a peer in the ACL, and a box on your Wi-Fi can still get in. So can your containers.
+date: 2026-11-25
+tags: [security, self-hosting, tailscale, networking, linux]
+---
+
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import Quote from '../../src/components/mdx/Quote.astro';
+import Figure from '../../src/components/mdx/Figure.astro';
+import paths from './two-ways-in.png';
+import results from './results.json';
+
+Say you've got something running on a Linux box at home, bound to its Tailscale address so that only your tailnet can reach it. Your ACL says your mate's laptop, which is on the tailnet, can't have port 8000. And it can't. So can a laptop on your Wi-Fi, which isn't on the tailnet at all?
+
+It can, with one route. I tried it on Nebula, Tailscale, NetBird and ZeroTier, on a little LAN of containers with no internet, and every time the peer the policy refused got nothing while a box that had never been near the VPN got the page.
+
+<Matrix title="Who got the page the policy refused" data={results}>
+  Nebula 1.12.0, Tailscale 1.104.4 (with Headscale handing out the ACL, which the client enforces), NetBird 0.83.0 and ZeroTier 1.16.2, with the service bound to the server's VPN address. The peer is on the VPN, the LAN box is just on the same network.
+</Matrix>
+
+## The policy only sees what comes through the tunnel
+
+A mesh VPN gives your server a second address on a virtual interface: `100.64.0.1` on `tailscale0`, say, next to its normal `192.168.1.20` on the Wi-Fi. Everything from your peers arrives on that virtual interface, and that's where the policy is checked. Nebula, Tailscale and ZeroTier check it inside their own process, on packets they've just decrypted. NetBird writes it out as firewall rules when it can, and here are the ones it put on my server (port 9000 is the one my policy does let the peer have):
+
+```text
+chain NETBIRD-ACL-INPUT {
+    ip saddr 100.64.143.234 tcp dport 9000 accept
+}
+chain INPUT {
+    type filter hook input priority filter; policy accept;
+    iifname "wt0" xt match "conntrack" accept
+    iifname "wt0" jump NETBIRD-ACL-INPUT
+    iifname "wt0" drop
+}
+```
+
+Every rule starts with `iifname "wt0"`, so it only applies to packets that came in on the VPN's interface. Anything else falls through to `policy accept`. Nebula and ZeroTier don't add any firewall rules at all, and Tailscale's only care about packets from its `100.64.0.0/10` range turning up on the wrong interface (someone faking being your peer), not packets going to your address.
+
+That would be fine if Linux only accepted packets for `100.64.0.1` on the interface that has it. It doesn't. Linux treats an address as belonging to the whole machine, not to one interface (what [RFC 1122](https://datatracker.ietf.org/doc/html/rfc1122#page-63) calls the weak end system model), so a packet for `100.64.0.1` that turns up on the Wi-Fi gets handed to the service just the same. Binding to the VPN address picks which address the service answers on, not which interface the packets have to come in through.
+
+<Figure src={paths} alt="Two packets heading for a service on 100.64.0.1. One comes from a peer through the tunnel, into the VPN's policy, which turns it away. The other comes from a box on the Wi-Fi in through the server's Wi-Fi interface and reaches the service without going near the policy.">
+  The policy only sees what comes through the tunnel.
+</Figure>
+
+So all the box on the LAN has to do is send its packets for `100.64.0.1` to the server's normal address:
+
+```sh
+ip route add 100.64.0.1/32 via 192.168.1.20
+```
+
+It has to be on the same bit of network as the server, with nothing like guest Wi-Fi isolation in between, and something on it has to be able to run that. I had strict reverse-path filtering on, and it didn't stop it, since the packet's from a LAN address arriving on the LAN.
+
+## Your containers don't even need the route
+
+"Something dodgy already on my Wi-Fi" is a fair objection, but there's a closer neighbour. The LAN box needed a route because its packets for `100.64.0.1` would otherwise go to its own default gateway. A container on one of Docker's bridge networks has the server it's running on as its default gateway, so it gets there without one.
+
+I wired up a network namespace on the Tailscale server the way Docker wires up a container (a virtual cable to the host, and a default route through it), and it got the refused port straight away. So every container on that box can reach whatever you bound to the VPN address, past the ACL you wrote to keep your own mates off it.
+
+## Who's affected
+
+Anyone on Linux whose server doesn't have its own firewall turning away the LAN. No stock Debian install turns a firewall on for you, and Ubuntu ships ufw switched off. If you already run ufw the way Tailscale's own guide has it (deny incoming, allow in on `tailscale0`), the LAN box and the container get nothing, over IPv4 or IPv6, because ufw's doing the job the ACL looked like it was doing.
+
+That doesn't cover a container you've published on the VPN address itself, with `-p 100.64.0.1:8000:8000`. Docker's [firewall docs](https://docs.docker.com/engine/network/packet-filtering-firewalls/) are blunt about it:
+
+<Quote by="Docker's docs" href="https://docs.docker.com/engine/network/packet-filtering-firewalls/">
+  Docker routes container traffic in the nat table, which means that packets are diverted before it reaches the INPUT and OUTPUT chains that ufw uses.
+</Quote>
+
+The fix further down lives in INPUT too, so it's for services running on the server itself.
+
+For what it's worth, Tailscale's [ACL docs](https://tailscale.com/docs/features/access-control/acls) do say that ACLs "don't affect local network traffic", but they mean what your devices can reach on their own LAN, not what the LAN can reach on them. ZeroTier's [rules FAQ](https://docs.zerotier.com/faq/rulesvsfirewalls/) gives the host firewall the job of "protecting services running on physical interfaces", which a service on the ZeroTier address doesn't sound like. Nebula's [firewall docs](https://nebula.defined.net/docs/config/firewall) don't mention it.
+
+## Closing it on the server
+
+Drop anything for the VPN address that didn't come in on the VPN's interface, after letting the server talk to itself (its own traffic to `100.64.0.1` goes over `lo`):
+
+```sh
+iptables -I INPUT 1 -i lo -j ACCEPT
+iptables -I INPUT 2 -d 100.64.0.1 ! -i tailscale0 -j DROP
+```
+
+Swap in your own address and interface. Mine were `nebula1`, `tailscale0`, `wt0`, and for ZeroTier a `zt` name made from the network ID. On all four, the LAN box stopped getting the page, while the peers the policy allows (and the server itself) carried on as before. On Tailscale it stopped the container too. These rules don't survive a reboot, so they want to go wherever your firewall rules live.
+
+If your VPN gives the server an IPv6 address as well, it wants the same again in `ip6tables`. Headscale gave mine `fd7a:115c:a1e0::1`:
+
+```sh
+ip6tables -I INPUT 1 -i lo -j ACCEPT
+ip6tables -I INPUT 2 -d fd7a:115c:a1e0::1 ! -i tailscale0 -j DROP
+```
+
+With only the IPv4 rules in, the LAN box just asked for `[fd7a:115c:a1e0::1]:8000` instead, and got the page.

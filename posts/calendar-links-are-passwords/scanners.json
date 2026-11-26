@@ -1,0 +1,6 @@
+[
+  { "Scanner": "gitleaks", "Google": false, "Proton": true, "Token": true },
+  { "Scanner": "trufflehog", "Google": false, "Proton": false, "Token": false },
+  { "Scanner": "detect-secrets", "Google": false, "Proton": false, "Token": false },
+  { "Scanner": "My rule", "Google": true, "Proton": true, "Token": true }
+]

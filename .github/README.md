@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/calendar-links-are-passwords/"><img src="https://blog.peng.ly/_astro/og.CbpdaELZ.png" alt="Google Calendar's secret link is a password" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/calendar-links-are-passwords/">Google Calendar's secret link is a password</a></b><br />
+      Anyone with your calendar's secret iCal address can read it, no login needed. Hundreds sit in public GitHub repos, and the usual secret scanners miss them.<br />
+      <sub>26 November 2026 · 5 min read · <a href="https://blog.peng.ly/tags/security/">#security</a> <a href="https://blog.peng.ly/tags/privacy/">#privacy</a> <a href="https://blog.peng.ly/tags/git/">#git</a> <a href="https://blog.peng.ly/tags/self-hosting/">#self-hosting</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/mesh-vpn-acls-skip-the-lan/"><img src="https://blog.peng.ly/_astro/og.CK3FegNP.png" alt="Mesh VPN ACLs don't cover your Wi-Fi" width="240" /></a>
     </td>
     <td valign="top">

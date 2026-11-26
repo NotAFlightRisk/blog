@@ -1,0 +1,110 @@
+---
+title: Google Calendar's secret link is a password
+description: Anyone with your calendar's secret iCal address can read it, no login needed. Hundreds sit in public GitHub repos, and the usual secret scanners miss them.
+date: 2026-11-26
+tags: [security, privacy, git, self-hosting]
+---
+
+import Matrix from '../../src/components/mdx/Matrix.astro';
+import Chart from '../../src/components/mdx/Chart.astro';
+import scanners from './scanners.json';
+import ages from './ages.json';
+
+Here's the settings file for Obsidian's Full Calendar plugin, from a vault with one Google calendar added, and what gitleaks makes of it:
+
+```json title=".obsidian/plugins/obsidian-full-calendar/data.json"
+{
+  "calendarSources": [
+    {
+      "type": "ical",
+      "url":
+        "https://calendar.google.com/calendar/ical/me%40gmail.com/private-fd18a23bebd71ff6e3c9814ab3409be2/basic.ics"
+    }
+  ]
+}
+```
+
+```text
+$ gitleaks dir .
+INF no leaks found
+```
+
+trufflehog and detect-secrets didn't find anything either. Which would be fine, if that link weren't a password.
+
+It's Google Calendar's "secret address in iCal format", the one you copy out of a calendar's settings so another app can show it. It's shaped like `https://calendar.google.com/calendar/ical/<you>/private-<32 hex characters>/basic.ics`, and whoever has it can subscribe to that calendar in Apple Calendar or Outlook and see what's on it, with no login and no Google account. So the dentist, the school run, the fortnight you're away. Google's [help page](https://support.google.com/calendar/answer/37648) says "Only you should know the secret address for your calendar", and as far as I can tell it works until you press Reset. On your main calendar, the `<you>` bit is your email address, too.
+
+## Hundreds of them are on GitHub
+
+I went looking with GitHub's code search this week. It stops at 1,000 results a search, so I split the search up by file size and read about 2,200 files, judging each link by its shape alone. I didn't open any of them, so I can't tell you how many still work.
+
+That found 294 different Google secret addresses that look real (not `private-xxxx` placeholders, or MagicMirror's own test calendar, which turns up in over a hundred repos), and 98 of them have a gmail.com address in the link. That's from a sample, so the real total's higher.
+
+There's no single app behind them. I sorted 281 of the files by what they were, and the links were in JavaScript and Python, shell scripts, `.env` and YAML files, web pages, Emacs configs, notes, and 15 Obsidian vaults, ten of them in Full Calendar's settings like the one up top. Going by the repo's name, 19 were someone's dotfiles and 12 a notes vault. It's the stuff people keep their own setup in, and push to GitHub so it's on their next laptop.
+
+A lot of them went in recently, too. I went back to 276 of the links and looked up when each file was last changed:
+
+<Chart type="columns" title="Google secret addresses by when their file was last committed" data={ages}>
+  276 links, each counted once. It's the last change to the file rather than the day the link went in, so some older links will be sitting in files that changed since. 2026 only runs to November.
+</Chart>
+
+More than half are in files someone changed in 2025 or 2026. And three days after the first search, 195 of the 202 links I'd seen in the smaller files were still there.
+
+## Why the scanners walk past it
+
+I made up links in Google's shape and put them in the sorts of files they turn up in: an Obsidian settings file, a MagicMirror config, a `.env`, a Home Assistant-style YAML file and a Python script. I added a Proton Calendar link too, which is a slightly different beast (more on that in a sec), and a Google token on its own, without the rest of the URL round it. Then I ran three popular free scanners over them.
+
+<Matrix title="Which scanner flagged which made-up link" data={scanners}>
+  gitleaks 8.30.1, trufflehog 3.100.1 and detect-secrets 1.5.0, all the latest releases, with their default rules. My rule is gitleaks with the extra rule further down. The token is the private-and-hex part of a Google link, on its own after a name like calendar_token. I also tried Outlook, iCloud and Fastmail links, which you publish on purpose to share a calendar, so they're not counted above. None of the scanners flagged those either.
+</Matrix>
+
+The short version is that a link has a colon in it. None of these tools has a rule for calendar links, so it's down to their catch-all rules, and gitleaks' [generic one](https://github.com/gitleaks/gitleaks/blob/v8.30.1/config/gitleaks.toml) wants a word like `key`, `secret` or `token`, then an `=` or `:`, then a value that can't contain a colon. Anything starting `https://` is out before it starts. Pull out just the `private-...` part after `calendar_token =` and it's caught.
+
+The others don't get that far. trufflehog has hundreds of detectors and none for calendars, and its generic one is [switched off](https://github.com/trufflesecurity/trufflehog/blob/v3.100.1/pkg/engine/defaults/defaults.go) by default and skips anything that looks like a URL anyway. detect-secrets' entropy check only looks at strings made entirely of hex or base64, which a URL never is. GitHub's own secret scanning [lists 532 kinds of secret](https://docs.github.com/en/code-security/reference/secret-security/supported-secret-scanning-patterns), nine of them Google's, and they're all API, cloud and OAuth keys.
+
+Proton's the odd one out. Proton Calendar's end-to-end encrypted, so its share link [carries the key to decrypt the calendar](https://proton.me/support/share-calendar-via-link), in a parameter called `PassphraseKey`. gitleaks flags it, but only because that name has "key" in it.
+
+## Fixing yours
+
+If yours has ever been in a repo, reset it. Deleting the line doesn't help, as it's still in the history and in any clone that's already been made. In Google Calendar it's Settings, then the calendar under "Settings for my calendars", then Integrate calendar, and Reset next to the secret address. Then give the new one to whatever was using the old one.
+
+Then keep the new one out of the repo, wherever the app reads secrets from: an environment variable, a `.env` file that's in `.gitignore`, Home Assistant's `secrets.yaml`. MagicMirror's [docs](https://docs.magicmirror.builders/configuration/secrets.html) even name "Private calendar URLs" as something to protect, and since 2.35 its config reads `${SECRET_...}` variables from `config/config.env` (a folder its `.gitignore` already leaves out), without sending them to the browser:
+
+```js title="config/config.js"
+calendars: [
+  { url: "${SECRET_FAMILY_CALENDAR}" }
+]
+```
+
+Full Calendar has nothing like that, so in a vault that's pushed somewhere public, add `.obsidian/plugins/obsidian-full-calendar/data.json` to `.gitignore` and set the plugin up again on each device. Or make the vault's repo private, which is probably what it wanted to be anyway.
+
+And to catch the next one, here's a gitleaks rule:
+
+```toml title=".gitleaks.toml"
+[extend]
+useDefault = true
+
+[[rules]]
+id = "google-calendar-secret-address"
+description = "Google Calendar secret iCal address"
+regex = '''calendar\.google\.com/calendar/ical/[^/\s"'<>]+/(private-[0-9a-f]{32})/(?:basic|full)\.ics'''
+secretGroup = 1
+entropy = 3
+keywords = ["private-"]
+
+[[rules.allowlists]]
+regexes = ['''0123456789abcdef''']
+```
+
+Saved as `.gitleaks.toml` at the top of the repo, gitleaks picks it up on its own and keeps all its usual rules too. On my test files it caught every Google link and none of the five placeholders I gave it (the allowlist is for the `0123456789abcdef` one that turns up in examples). Its [pre-commit hook](https://github.com/gitleaks/gitleaks#pre-commit) uses the same file, and refused my test commit with a link in it.
+
+Run it over the history too, not just what's checked out. Here's a test repo where I'd committed two links, then swapped them for an environment variable:
+
+```text
+$ gitleaks dir .
+INF no leaks found
+$ gitleaks git .
+INF 2 commits scanned.
+WRN leaks found: 4
+```
+
+Four, because it reports each link twice: once as written, and once with the `%40` decoded back to an `@`.

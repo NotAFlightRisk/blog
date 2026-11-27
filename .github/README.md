@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/dot-cache-isnt-all-cache/"><img src="https://blog.peng.ly/_astro/og.DcwK5RoU.png" alt="What you lose when you delete ~/.cache" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/dot-cache-isnt-all-cache/">What you lose when you delete ~/.cache</a></b><br />
+      Everyone says ~/.cache is safe to wipe. Langflow's saved API keys, your pinned clips and your IDE's local history say otherwise, and GNOME's backups skip them.<br />
+      <sub>27 November 2026 · 4 min read · <a href="https://blog.peng.ly/tags/linux/">#linux</a> <a href="https://blog.peng.ly/tags/ai/">#ai</a> <a href="https://blog.peng.ly/tags/opensource/">#opensource</a> <a href="https://blog.peng.ly/tags/backups/">#backups</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/calendar-links-are-passwords/"><img src="https://blog.peng.ly/_astro/og.CbpdaELZ.png" alt="Google Calendar's secret link is a password" width="240" /></a>
     </td>
     <td valign="top">

@@ -1,0 +1,87 @@
+---
+title: What you lose when you delete ~/.cache
+description: Everyone says ~/.cache is safe to wipe. Langflow's saved API keys, your pinned clips and your IDE's local history say otherwise, and GNOME's backups skip them.
+date: 2026-11-27
+tags: [linux, ai, opensource, backups]
+---
+
+import FileTree from '../../src/components/mdx/FileTree.astro';
+
+I saved an OpenAI key in [Langflow](https://www.langflow.org), stopped it, deleted `~/.cache` and started it again. The key was still in Langflow's database. Langflow just couldn't read it any more, and every time it tried, its log said "API key decryption failed after retry. This may indicate a corrupted key or SECRET_KEY mismatch."
+
+If you install Langflow with pip or uv and don't set anything, the key it encrypts your saved credentials with lives in `~/.cache/langflow/secret_key`. Delete that and Langflow makes a new one on the next start, and every API key you saved in it is now noise. You'd have to paste each one back in. Langflow knows the key matters, it even ships a [script](https://github.com/langflow-ai/langflow/blob/main/scripts/migrate_secret_key.py) for changing it safely. It just keeps it in the cache.
+
+Which feels a bit unfair, because deleting `~/.cache` is the one bit of tidying everyone agrees is fine. The [XDG spec](https://specifications.freedesktop.org/basedir-spec/latest/) says it's for "non-essential data files". The top answer on askubuntu's [Is it okay to delete the ~/.cache folder?](https://askubuntu.com/questions/102046/is-it-okay-to-delete-the-cache-folder), which has been read over half a million times, says "IMO you can delete all of .cache with no long term detrimental effects". Mine's 8.9 GB, 6.4 of it uv's, so I get the temptation.
+
+Somebody did ask askubuntu, back in 2019, ["Is there anything in ~/.cache that is not really cache?"](https://askubuntu.com/questions/1178029/is-there-anything-in-cache-that-is-not-really-cache) It's still got no answers, so here's mine.
+
+## What's in there that isn't cache
+
+For Langflow, [cliphist](https://github.com/sentriz/cliphist) and Deno I pointed `XDG_CACHE_HOME` at a throwaway folder, used the thing, wiped the folder and looked at what was left. For the rest I read where their code puts things. Here's a `~/.cache` with the things you can't get back picked out:
+
+<FileTree>
+
+- ~/.cache
+  - uv/ _comes back_
+  - JetBrains
+    - IntelliJIdea2026.3
+      - **LocalHistory/** _5 days of edits_
+  - `clipboard-indicator@tudmotu.com`
+    - **registry.txt** _pinned clips_
+  - cliphist
+    - **db** _clip history_
+  - deno
+    - npm/
+    - **location_data/** _localStorage_
+  - langflow
+    - **secret_key** _unlocks saved keys_
+  - ibus
+    - **libpinyin/** _learned words_
+  - huggingface
+    - hub/
+    - token _just a login_
+
+</FileTree>
+
+JetBrains' [own docs](https://www.jetbrains.com/help/idea/directories-used-by-the-ide-to-store-settings-caches-plugins-and-logs.html) say that folder "contains caches and local history files". Local History is the IDE's own record of every change it saw you make, committed or not, so it's what gets you back the file you broke before you'd committed it. It only keeps [five working days](https://www.jetbrains.com/help/idea/local-history.html), and an IDE upgrade clears it anyway, so you'd lose a week at most. Which is the week you'd want.
+
+[Clipboard Indicator](https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator) is the GNOME clipboard manager, with 2.7 million downloads on GNOME's extensions site. Pinning a clip is how you tell it to keep something, and it keeps it in `registry.txt`, a file its own code calls "a cache file". cliphist, a clipboard history for Wayland, keeps its history in the cache too, and after the wipe it just said `opening db: please store something first`.
+
+Deno's the sneakier one. Its `localStorage` is [meant to stick around](https://docs.deno.com/runtime/reference/web_platform_apis/#web-storage) between runs, like a browser's, and it does, in `~/.cache/deno/location_data`. I wrote a little todo script that saved to it, and the list went with the cache.
+
+ibus-libpinyin, Fedora's default for typing Simplified Chinese, keeps what it's learned about the way you type in `~/.cache/ibus`. The Hugging Face token's only a login, so that one's fine.
+
+Clipboard managers have had this pointed out already. Clipboard History, the other big GNOME one, [merged a change](https://github.com/SUPERCILEX/gnome-clipboard-history/pull/233) on 12 November that moves its database out, because "clearing it wiped the whole history". Someone asked Clipboard Indicator for the same in [August](https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator/issues/636), and it's still open.
+
+On a Mac, JetBrains and Langflow put the same things in `~/Library/Caches` instead.
+
+## Getting yours out
+
+Most of them have a setting, it's just never the default:
+
+- Langflow takes `LANGFLOW_SECRET_KEY`. Set it to what's in `~/.cache/langflow/secret_key` now, wherever you start Langflow, and put a copy in your password manager.
+- cliphist takes `db-path` in `~/.config/cliphist/config`. Move the `db` file to wherever you point it.
+- Deno puts everything under `DENO_DIR`, so moving that moves the localStorage, and the downloaded modules with it.
+- JetBrains moves its whole system folder with `idea.system.path`, under Help, Edit Custom Properties.
+- Clipboard Indicator hasn't got a setting yet, so copy anything you've pinned somewhere else.
+
+## The cleaner empties it and the backup skips it
+
+[BleachBit](https://www.bleachbit.org) has a Cache option under System that empties `~/.cache` (it's off until you tick it). I gave BleachBit 6.0.6 a test home folder holding what my runs left behind and asked what it would do:
+
+```text
+$ bleachbit --preview system.cache
+Delete 4.1kB ~/.cache/langflow/secret_key
+...
+Delete 36.9kB ~/.cache/deno/location_data/35e4ee84.../kv.sqlite3
+Delete 12.3kB ~/.cache/deno/location_data/35e4ee84.../local_storage
+Delete 24.6kB ~/.cache/cliphist/db
+```
+
+BleachBit does know about some of this. Its code has a hardcoded list of folders in `~/.cache` it won't touch, and ibus has been on it since a [2016 bug report](https://bugs.launchpad.net/bleachbit/+bug/1538919) from someone who lost their learned phrases. You can add your own in its preferences, under Keep list. I added `~/.cache/langflow`, cleaned for real, and `secret_key` was still there. Kudu, another cleaner, goes the other way and lists ["Local History snapshots"](https://usekudu.com/cleaners/jetbrains) among the "rebuildable caches" it removes.
+
+And if you were hoping to restore any of it, [Déjà Dup](https://gitlab.gnome.org/World/deja-dup/-/blob/main/libdeja/OperationBackup.vala), GNOME's backup tool, leaves `~/.cache` out of every backup, whatever you've ticked. The line above it in the code reads:
+
+```text
+// User doesn't care about cache
+```

@@ -24,16 +24,16 @@
     "format:check": "prettier --check src scripts astro.config.ts vercel.json .github/workflows"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.3.9",
+    "@astrojs/markdown-remark": "^7.3.10",
     "@astrojs/mdx": "^8.1.6",
     "@astrojs/rss": "^4.0.19",
-    "@astrojs/sitemap": "^3.7.5",
+    "@astrojs/sitemap": "^3.7.6",
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource/bricolage-grotesque": "^5.3.0",
-    "@sentry/browser": "^11.13.0",
+    "@sentry/browser": "^11.17.0",
     "@shikijs/transformers": "^4.6.0",
-    "astro": "^7.4.12",
+    "astro": "^7.4.13",
     "rehype-autolink-headings": "^7.1.0",
     "satori": "^0.63.2",
     "sharp": "^0.35.5"

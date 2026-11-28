@@ -1,0 +1,97 @@
+---
+title: The Debian cleanup that deletes your auto-updates
+description: Some Debian 11 live ISOs turned on unattended-upgrades by accident. After upgrading to 12, apt autoremove deletes it, but its config still says it's still on.
+date: 2026-11-28
+tags: [debian, linux, security]
+---
+
+import Quote from '../../src/components/mdx/Quote.astro';
+
+In October 2007, Jon Dowland filed a bug against python-software-properties, the Debian package behind the "Software Sources" settings. It depended on unattended-upgrades, the thing that installs security updates for you, and he didn't think it should:
+
+<Quote by="Jon Dowland, Debian bug #447701" href="https://bugs.debian.org/447701">
+  Your dependency on unattended-upgrades means the package is pulled in and activated, quite possibly without the user's knowledge.
+</Quote>
+
+He was right, and for one group of people he stayed right until 2023: anyone who installed Debian 11 from its own GNOME, KDE or Cinnamon live ISO got automatic updates they never asked for. Then the fix for his bug arrived with Debian 12, and on those machines the first `apt autoremove` after the upgrade took the automatic updates away again, just as quietly. The setting that says they're on is still there.
+
+## How a live install got them
+
+The dependency did get [softened to a "recommends"](https://metadata.ftp-master.debian.org/changelogs/main/s/software-properties/software-properties_0.99.30-4.1~deb12u1_changelog) in 2016, in time for Debian 9. apt installs recommended packages by default, so that changed nothing. The same year, unattended-upgrades started [switching itself on](https://metadata.ftp-master.debian.org/changelogs/main/u/unattended-upgrades/unattended-upgrades_2.8_changelog) when it's installed, unless the installer says otherwise.
+
+On Debian 11's GNOME live image, it gets pulled in like this:
+
+```text
+gnome-core
+  needs gnome-software
+  needs software-properties-gtk
+  needs python3-software-properties
+  recommends unattended-upgrades
+```
+
+Cinnamon's image has the same gnome-software chain, and KDE's gets there through Discover and software-properties-kde.
+
+Whether it's on is a question the package asks while it installs. Debian's normal installer, the netinst one, [answers "no"](https://sources.debian.org/src/pkgsel/0.73/pre-pkgsel.d/20update-policy/) for you, so a netinst desktop got the package switched off and none of this matters to it.
+
+The live images are built with plain apt, nothing answers, and it takes the default. You can watch it switch itself on in the GNOME image's [build log](https://cdimage.debian.org/cdimage/archive/11.7.0-live/amd64/iso-hybrid/debian-live-11.7.0-amd64-gnome.log). The installer on those ISOs, Calamares, copies the live system onto your disk and then runs an autoremove of its own to clear off the live-only bits. On bullseye, unattended-upgrades was still recommended, so it stayed.
+
+I downloaded the 11.7.0 GNOME ISO and read its package database to be sure:
+
+```console
+$ cat /etc/apt/apt.conf.d/20auto-upgrades
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+$ grep -A2 'Package: unattended-upgrades' /var/lib/apt/extended_states
+Package: unattended-upgrades
+Architecture: amd64
+Auto-Installed: 1
+```
+
+`Auto-Installed: 1` means apt thinks it only pulled unattended-upgrades in for something else, rather than because you wanted it. So the day nothing else needs it, apt offers to tidy it away.
+
+The Xfce, MATE and LXQt images never had it, and Debian 12's live images don't install it at all. I can't tell you how many machines this is. The live images don't ship Debian's popularity contest, so nobody's counting them.
+
+## Then the upgrade
+
+Bookworm's software-properties stopped recommending unattended-upgrades, which is what closed Jon's bug, so after the upgrade nothing on the machine wants it. I gave a bullseye container that ISO's package lists, pointed it at bookworm and had apt plan the upgrade. At the end, among a long list of old libraries and input methods, it says:
+
+```text
+The following packages were
+automatically installed and are
+no longer required:
+  ...
+  unattended-upgrades
+  ...
+Use 'apt autoremove' to remove them.
+```
+
+That's good advice nearly every time, and the [release notes](https://www.debian.org/releases/bookworm/amd64/release-notes/ch-upgrading.en.html) tell you to do the same once the upgrade's finished. Run it and unattended-upgrades is removed but not purged, so its config file stays behind:
+
+```console
+$ dpkg -l unattended-upgrades | tail -1
+rc  unattended-upgrades 2.9.1+nmu3   all   automatic installation of security upgrades
+$ apt-config dump APT::Periodic::Unattended-Upgrade
+APT::Periodic::Unattended-Upgrade "1";
+```
+
+The daily timer still fires. The script it runs checks whether `unattended-upgrade` exists, finds it doesn't, and exits 0 without logging anything. Bookworm's Software & Updates app only [shows its Updates tab](https://sources.debian.org/src/software-properties/0.99.30-4.1~deb12u1/softwareproperties/gtk/SoftwarePropertiesGtk.py/#L259) when `/usr/bin/unattended-upgrade` is there, so the one screen that showed you the setting goes too.
+
+It's not as bad as a box with no updates at all. GNOME Software on bookworm still downloads them and tells you, but Debian packages wait for you to click Restart & Update, which isn't the same as it all happening at 6am while you're asleep. Discover's own automatic updates are off by default, so on KDE it's down to you clicking as well. And GNOME Software only [starts itself in the background](https://sources.debian.org/src/gnome-software/43.5-1~deb12u2/data/autostart/org.gnome.Software.desktop.in/) on GNOME, so on Cinnamon nothing goes looking unless you open it.
+
+Bullseye's long-term support [ended on 31 August](https://wiki.debian.org/LTS), so any of these machines still about are being upgraded round about now. And if you went to bookworm and skipped the autoremove, it's still on that list, and apt brings it up every time you install anything in a terminal. One `apt autoremove` later, for any reason at all, and it's gone.
+
+## Before and after the autoremove
+
+Before, see whether apt has it down as automatic:
+
+```sh
+apt-mark showauto unattended-upgrades
+```
+
+If that prints its name, `sudo apt-mark manual unattended-upgrades` tells apt you meant it. After, don't ask `apt-config`, since it only reads the config file that got left behind. Ask dpkg:
+
+```sh
+dpkg -l unattended-upgrades
+```
+
+`ii` at the start of the last line means it's there. `rc`, or no line at all, means it's gone. `sudo apt install unattended-upgrades` puts it back, picks up the old config, and marks it as yours, so the next autoremove leaves it alone.

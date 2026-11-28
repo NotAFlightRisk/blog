@@ -28,8 +28,8 @@ const posts = defineCollection({
       .strictObject({
         // search results start trimming around 60, with the site's name on the end
         title: z.string().min(1).max(65),
-        // long enough to say something, short enough that Google doesn't chop it
-        description: z.string().min(50).max(160),
+        // long enough to say something, Google trims anything past about 160 though
+        description: z.string().min(50).max(200),
         date: z.coerce.date(),
         updated: z.coerce.date().optional(),
         tags: z.array(z.string().regex(kebab, 'tags are lowercase-and-hyphens')).min(1).max(6),

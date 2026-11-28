@@ -8,6 +8,8 @@ export const site = {
     url: 'https://peng.ly/about',
     github: 'https://github.com/NotAFlightRisk',
     dev: 'https://dev.to/notaflightrisk',
+    mastodon: 'https://mastodon.social/@NotAFlightRisk',
+    fediverse: '@NotAFlightRisk@mastodon.social',
   },
   repo: 'https://github.com/NotAFlightRisk/blog',
   feed: '/rss.xml',

@@ -12,6 +12,16 @@
 <table>
   <tr>
     <td width="240">
+      <a href="https://blog.peng.ly/debian-autoremove-took-auto-updates/"><img src="https://blog.peng.ly/_astro/og.BbQ7GWdl.png" alt="The Debian cleanup that deletes your auto-updates" width="240" /></a>
+    </td>
+    <td valign="top">
+      <b><a href="https://blog.peng.ly/debian-autoremove-took-auto-updates/">The Debian cleanup that deletes your auto-updates</a></b><br />
+      Some Debian 11 live ISOs turned on unattended-upgrades by accident. After upgrading to 12, apt autoremove deletes it, but its config still says it's still on.<br />
+      <sub>28 November 2026 · 4 min read · <a href="https://blog.peng.ly/tags/debian/">#debian</a> <a href="https://blog.peng.ly/tags/linux/">#linux</a> <a href="https://blog.peng.ly/tags/security/">#security</a></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="240">
       <a href="https://blog.peng.ly/dot-cache-isnt-all-cache/"><img src="https://blog.peng.ly/_astro/og.DcwK5RoU.png" alt="What you lose when you delete ~/.cache" width="240" /></a>
     </td>
     <td valign="top">

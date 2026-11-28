@@ -495,7 +495,7 @@ Pictures and other assets go in the same folder.
 ```yaml
 ---
 title: Noot noot, it's a blog
-description: Between 50 and 160 characters, it's what shows up in search results
+description: Between 50 and 200 characters, it's what shows up in search results
 date: 2026-10-07
 tags: [meta, astro]
 ---

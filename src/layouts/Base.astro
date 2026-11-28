@@ -78,6 +78,8 @@ const graph = JSON.stringify({ '@context': 'https://schema.org', '@graph': schem
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={absolute(image.src)} />
     <meta name="twitter:image:alt" content={image.alt} />
+    <meta name="fediverse:creator" content={site.author.fediverse} />
+    <link rel="me" href={site.author.mastodon} />
     {schema.length > 0 && <script type="application/ld+json" set:html={graph} />}
     <script type="speculationrules" set:html={speculationRules} />
     <slot name="head" />

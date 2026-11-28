@@ -69,6 +69,9 @@ function tagsFor(post: Post, popular: string[]) {
   return [...tags].sort((a, b) => rank(a) - rank(b)).slice(0, 4);
 }
 
+// DEV's links send no referrer, so the ref is what tells Plausible a click came from there
+const footer = `*More like this on [blog.peng.ly](${site.url}/?ref=dev.to)*`;
+
 function markdownFor(post: Post) {
   const body = readFileSync(source(post.slug)!, 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '');
   const files = `${site.repo.replace('github.com', 'raw.githubusercontent.com')}/main/posts/${post.slug}/`;
@@ -107,7 +110,8 @@ for (const post of posts.filter((post) => wanted.includes(post.slug) || !copies.
     ai_assisted: true,
   };
   const front = Object.entries(meta).map(([key, value]) => `${key}: ${JSON.stringify(value)}`);
-  const article = { body_markdown: `---\n${front.join('\n')}\n---\n\n${markdownFor(post)}` };
+  const body = `${markdownFor(post).trimEnd()}\n\n${footer}\n`;
+  const article = { body_markdown: `---\n${front.join('\n')}\n---\n\n${body}` };
   const id = copies.get(post.url);
   if (dry) {
     console.log(JSON.stringify({ id, ...article }, null, 2));
